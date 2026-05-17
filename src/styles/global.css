@@ -1,0 +1,136 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cormorant+Garamond:wght@300;400&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* ── Backgrounds ── */
+  --bg:        #050409;
+  --surface:   #0b0916;
+  --surface2:  #110e20;
+  --surface3:  #181428;
+
+  /* ── Gold (primary brand) ── */
+  --gold:      #f5d060;
+  --gold-dim:  #e0a832;
+  --gold-pale: #fff4b0;
+  --gold-text: #f7dc58;
+
+  /* ── Text ── */
+  --text:      #e4dac8;
+  --text-muted: #806878;
+  --text-dim:  #382840;
+  --bone:      #ede4cc;
+  --mist:      #b8aed0;
+
+  /* ── Borders (gold-based alpha) ── */
+  --border:        rgba(220,185,100,0.10);
+  --border-mid:    rgba(220,185,100,0.20);
+  --border-bright: rgba(220,185,100,0.50);
+
+  /* ── Section accents ── */
+  --accent-films:       #e02828;   /* Laila red */
+  --accent-portfolio:   #7040b8;   /* violet */
+  --accent-about:       #ede4cc;   /* bone */
+  --accent-shop:        #42e0b0;   /* teal */
+  --accent-experiences: #78e058;   /* frog green */
+  --accent-coven:       #2a5a3a;   /* forest */
+
+  /* ── Supporting palette ── */
+  --violet:       #4a2d7a;
+  --violet-mid:   #7040b8;
+  --violet-light: #a878e8;
+  --teal:         #1e7060;
+  --teal-light:   #42e0b0;
+  --crimson:      #8a1a30;
+  --frog:         #4aaa40;
+  --frog-light:   #78e058;
+  --forest:       #1a3a28;
+  --forest-light: #2a5a3a;
+}
+
+/* ── Base ── */
+html {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 16px;
+  line-height: 1.6;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Noise overlay ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.032;
+}
+
+/* ── Typography ── */
+h1, h2, h3, .cinzel { font-family: 'Cinzel', serif; }
+em, .crimson { font-family: 'Crimson Pro', Georgia, serif; }
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Utility ── */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
+}
+
+/* ── Tarot card frame ── */
+.tarot-frame {
+  position: relative;
+  border: 1px solid var(--border-mid);
+  background: var(--surface);
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+
+.tarot-frame::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--border);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.tarot-frame:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6), 0 0 24px rgba(220,185,100,0.08);
+  border-color: var(--border-bright);
+}
+
+/* ── Divider rule ── */
+.rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-mid), transparent);
+  border: none;
+  margin: 0;
+}
+
+/* ── Gold decorative text ── */
+.eyebrow {
+  font-family: 'Cinzel', serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+}

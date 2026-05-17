@@ -1,0 +1,190 @@
+---
+const socials = [
+  { label: 'Instagram', href: 'https://www.instagram.com/whiteowlstudio', icon: 'ig' },
+  { label: 'Patreon',   href: 'https://www.patreon.com/whiteowlstudio',   icon: 'pt' },
+  { label: 'Vimeo',     href: 'https://vimeo.com/whiteowlstudio',         icon: 'vm' },
+  { label: 'YouTube',   href: 'https://www.youtube.com/@whiteowlstudio',  icon: 'yt' },
+];
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <hr class="footer-rule" />
+
+  <div class="footer-inner">
+    <!-- Logo + tagline -->
+    <div class="footer-brand">
+      <img src="/ui/logo.gif" alt="White Owl Studio" width="40" height="40" />
+      <span class="footer-studio">White Owl Studio</span>
+      <p class="footer-tagline">Tales of courage in broken worlds.<br/>Stories made to last.</p>
+    </div>
+
+    <!-- Contact -->
+    <div class="footer-contact">
+      <p class="footer-section-label">Contact</p>
+      <a href="mailto:hello@whiteowlhub.com" class="footer-email">hello@whiteowlhub.com</a>
+      <p class="footer-location">Tel Aviv · Negev Desert · Israel</p>
+    </div>
+
+    <!-- Socials -->
+    <div class="footer-socials">
+      <p class="footer-section-label">Find Us</p>
+      <ul class="social-list" role="list">
+        {socials.map(({ label, href }) => (
+          <li>
+            <a href={href} class="social-link" target="_blank" rel="noopener noreferrer">
+              {label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <span>© {year} White Owl Studio. All rights reserved.</span>
+    <span class="footer-glyph">✦</span>
+    <span>whiteowlhub.com</span>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-top: 120px;
+    padding-bottom: 40px;
+  }
+
+  .footer-rule {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-mid), transparent);
+    margin-bottom: 56px;
+  }
+
+  .footer-inner {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+
+  /* ── Brand ── */
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .footer-brand img {
+    display: block;
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    margin-bottom: 2px;
+  }
+
+  .footer-studio {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--bone);
+    opacity: 0.7;
+  }
+
+  .footer-tagline {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 0.88rem;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--text-muted);
+    line-height: 1.7;
+    max-width: 240px;
+  }
+
+  /* ── Contact ── */
+  .footer-section-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 12px;
+  }
+
+  .footer-email {
+    display: block;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 0.92rem;
+    color: var(--text);
+    text-decoration: none;
+    transition: color 0.2s;
+    margin-bottom: 6px;
+  }
+
+  .footer-email:hover { color: var(--gold); }
+
+  .footer-location {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ── Socials ── */
+  .social-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .social-link {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .social-link:hover { color: var(--gold-pale); }
+
+  /* ── Bottom bar ── */
+  .footer-bottom {
+    max-width: 960px;
+    margin: 48px auto 0;
+    padding: 20px 32px 0;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.08em;
+  }
+
+  .footer-glyph {
+    color: var(--gold-dim);
+    font-size: 0.5rem;
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 640px) {
+    .footer-inner {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+
+    .footer-bottom {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 6px;
+    }
+  }
+</style>

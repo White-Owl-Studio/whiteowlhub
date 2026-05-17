@@ -1,0 +1,34 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="White Owl Studio" description="Tales of courage in broken worlds. Stories made to last.">
+  <section class="landing-stub">
+    <p class="eyebrow">White Owl Studio</p>
+    <h1>Coming Soon</h1>
+    <p>Landing page — Stage 1</p>
+  </section>
+</Base>
+
+<style>
+  .landing-stub {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    text-align: center;
+    padding: 80px 24px;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: var(--gold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  p { color: var(--text-muted); }
+</style>
