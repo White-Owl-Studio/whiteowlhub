@@ -74,3 +74,45 @@
 ---
 
 ## Next session → Stage 2 Creative Review + Films page
+
+---
+
+## Session 3 — 2026-05-18
+
+**Goal:** Stage 2 — Films page
+
+### What was done
+
+**Film data (`src/data/films.ts`):**
+- 6 films: I The Owl's Descent, II The One Who Drives the Truck (featured), III Dawn, IV Let's Solve This Once and For All, V Torn Apart, VI Yaara's Place At Home
+- TypeScript Film interface: numeral, slug, title, year, format, stage, genre, runtime, logline, summary, credits, trailer, featured
+
+**Films page structure:**
+- Hero: Film II (The One Who Drives the Truck) — in active production, featured
+- Card index: all 6 films as CSS 3D flip cards (5:9 portrait ratio)
+- Film biography: 4 scroll-reveal chapters with IntersectionObserver
+- 6 film modals: trailer slot, poster, plot summary, credits, 3 stills strip
+
+**Card flip — final working approach:**
+- No `.card-inner` wrapper, no `transform-style: preserve-3d`
+- Both faces (`card-front`, `card-back`) sit directly in `.card-flip-wrap`
+- `.card-flip-wrap` has explicit `width: var(--card-w)`, `height: var(--card-h)`, `perspective: 1200px`
+- Each face has `transition: transform` and `backface-visibility: hidden`
+- Front: `rotateY(0deg)` → `rotateY(-180deg)` on hover
+- Back: `rotateY(180deg)` → `rotateY(0deg)` on hover
+- Troubleshooting: `transform-style: preserve-3d` on an intermediate element was causing inconsistent heights. Simpler dual-face approach is reliable.
+
+**Art placeholders:**
+- All image slots are CSS-styled divs with path labels
+- `ART_NEEDED.md` generated: 35 total assets across 6 films + biography section
+
+**Color:**
+- WOS default palette (dark/gold) throughout
+- Laila red (#e02828) on text hover states only (title hover, card label hover, button hover)
+- Stage badge: "In Production" = pulsing red dot + red border; "In Development" = dim gold
+
+### Stage 2 status: COMPLETE ✅
+
+---
+
+## Next session → Stage 3 Creative Review + Portfolio page

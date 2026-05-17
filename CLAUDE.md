@@ -14,7 +14,7 @@ The official White Owl Studio website at **whiteowlhub.com**. An Astro v5 static
 5. Run pre-stage creative review with user before writing any code
 
 ## Current stage
-**Stage 1 — Landing Page.** Stage 0 (foundation) is complete.
+**Stage 3 — Portfolio page.** Stages 0–2 complete.
 
 **Rule: always run the pre-stage creative review before writing code for a new stage.**
 
