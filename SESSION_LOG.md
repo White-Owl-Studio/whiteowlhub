@@ -115,4 +115,50 @@
 
 ---
 
-## Next session → Stage 3 Creative Review + Portfolio page
+## Session 4 — 2026-05-18 (continued)
+
+**Goal:** Stage 3 — Portfolio / Our Work page
+
+### What was done
+
+**Data (`src/data/portfolio.ts`):**
+- 9 categories: Animation, Illustration, Art Direction, Character Design, Projects for Clients, Michael's Portfolio, Oshrit's Portfolio, Puppets & Sets, Post-production
+- `layout: 'scroll'` property on Category — used by Character Design; renders images as a seamless vertical column instead of a grid
+- `editorialItems` array drives the main portfolio editorial grid — 11 character design images with span hints (featured/wide/tall/normal)
+- Client projects use a project-based grid structure (named projects containing items)
+
+**Main portfolio page (`/portfolio`):**
+- Header with page title and subtitle
+- 4-column editorial CSS grid with mixed span sizes (featured = 2×2, wide = 2×1, tall = 1×2, normal = 1×1)
+- Hover on grid item: subtle scale + overlay with category link
+- 9 category cards below in a 3-column grid with number, title, description, arrow
+- Lightbox on editorial grid items (opacity fade, left/right nav, keyboard support)
+
+**Category pages (`/portfolio/[category]`):**
+- Dynamic route via `getStaticPaths()` — one page per category
+- Scroll layout (Character Design): centered column at `min(88%, 1100px)`, `height: auto`, no gap between images — designed as one continuous visual sheet
+- Uniform grid (all other categories): 3-column, `aspect-ratio: 4/3`, `object-fit: cover`
+- Project grid (Clients): named project cards each containing a 4-column thumbnail strip
+- Empty state for categories with no content yet
+- Lightbox on all items
+
+**Character Design assets:**
+- 16 real assets copied from `character-portfolio/images/` to `public/portfolio/character-design/`
+- Mix of PNG, GIF (animated), and MP4 video — all render correctly in scroll and lightbox
+
+**Nav dropdown:**
+- Hover "Our Work" → dropdown lists all 9 categories with links
+- CSS-only hover trigger on the `<li>` — no JS needed
+- Invisible `::after` bridge prevents hover gap flicker
+- Hidden on mobile (existing mobile menu handles navigation)
+- `opacity + translateY` animation — compositor safe
+
+**Oshrit:**
+- Co-founder, art director, director of VI (Yaara's Place At Home), Art Director of II (The One Who Drives the Truck), Michael's fiancée
+- Has her own portfolio category on the site
+
+### Stage 3 status: COMPLETE ✅
+
+---
+
+## Next session → Stage 4 Creative Review + About page
