@@ -1,34 +1,1261 @@
 ---
 import Base from '../layouts/Base.astro';
+import { films, featuredFilm } from '../data/films';
 ---
 
-<Base title="Our Films" description="Our films — White Owl Studio">
-  <section class="page-stub" style="--page-accent: var(--accent-films)">
-    <p class="eyebrow">I · Our Films</p>
-    <h1>Our Films</h1>
-    <p>Films page — Stage 2</p>
+<Base title="Our Films" description="The complete works of White Owl Studio — six films from inception to production.">
+
+  <!-- ═══════════════════════════════════════════ HERO ══ -->
+  <section class="film-hero">
+    <div class="hero-inner">
+
+      <div class="hero-text">
+        <span class="hero-numeral">{featuredFilm.numeral}</span>
+        <h1 class="hero-title">{featuredFilm.title}</h1>
+        <p class="hero-meta">
+          <span>{featuredFilm.year}</span>
+          <span class="sep">·</span>
+          <span>{featuredFilm.format}</span>
+          <span class="sep">·</span>
+          <span class={`stage-tag stage-tag--${featuredFilm.stage.toLowerCase().replace(/\s+/g, '-')}`}>
+            {featuredFilm.stage}
+          </span>
+        </p>
+        <p class="hero-logline">{featuredFilm.logline}</p>
+        <div class="hero-actions">
+          <button class="btn-details" data-open-modal={featuredFilm.slug}>
+            Full Details
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="hero-poster-ph">
+          <!-- PLACEHOLDER: replace with <img src="/films/the-one-who-drives-the-truck/hero.jpg" alt="..." /> -->
+          <span class="ph-numeral">{featuredFilm.numeral}</span>
+          <span class="ph-label">Hero Art</span>
+          <code class="ph-path">hero.jpg</code>
+        </div>
+      </div>
+
+    </div>
+    <div class="hero-scroll-hint" aria-hidden="true">↓</div>
   </section>
+
+  <!-- ═══════════════════════════════════════ CARD INDEX ══ -->
+  <section class="film-index">
+    <header class="section-header">
+      <p class="eyebrow">The Works</p>
+      <h2 class="section-title">Our Films</h2>
+      <p class="section-sub">Hover to reveal · Click to enter</p>
+    </header>
+
+    <div class="card-rail">
+      {films.map(film => (
+        <article
+          class={`film-card${film.featured ? ' film-card--featured' : ''}`}
+          data-open-modal={film.slug}
+          role="button"
+          tabindex="0"
+          aria-label={`Open ${film.title}`}
+        >
+          <div class="card-flip-wrap">
+
+            <!-- Front: tarot card art -->
+            <div class="card-face card-front">
+              <!-- PLACEHOLDER: replace with <img src="/films/{film.slug}/card.png" alt="..." /> -->
+              <div class="front-art">
+                <span class="front-numeral">{film.numeral}</span>
+                <div class="front-rule"></div>
+                <span class="front-title">{film.title}</span>
+              </div>
+              {film.featured && (
+                <span class="card-live-badge">
+                  <span class="live-dot"></span>In Production
+                </span>
+              )}
+            </div>
+
+            <!-- Back: film poster -->
+            <div class="card-face card-back">
+              <!-- PLACEHOLDER: replace with <img src="/films/{film.slug}/poster.jpg" alt="..." /> -->
+              <div class="back-art">
+                <span class="back-numeral">{film.numeral}</span>
+                <div class="back-rule"></div>
+                <span class="back-title">{film.title}</span>
+                <code class="ph-path-sm">poster.jpg</code>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="card-label">
+            <p class="card-title-label">{film.title}</p>
+            <p class="card-meta-line">{film.year} · {film.format} · {film.stage}</p>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════ FILM BIOGRAPHY ══ -->
+  <section class="film-bio">
+    <header class="section-header">
+      <p class="eyebrow">Our Story</p>
+      <h2 class="section-title">Cinema as Calling</h2>
+    </header>
+
+    <div class="bio-chapter bio-chapter--full" data-bio-chapter>
+      <!-- PLACEHOLDER: replace div.bio-img-ph with <img src="/films/biography/biography-1.jpg" alt="..." class="bio-img" /> -->
+      <div class="bio-img-ph" data-ph="biography-1.jpg"></div>
+      <div class="bio-overlay">
+        <p class="bio-text">
+          At White Owl Studio, every film begins not with a script but with a
+          feeling — the particular texture of a world not yet made, pressing
+          against the inside of the mind.
+        </p>
+      </div>
+    </div>
+
+    <div class="bio-chapter bio-chapter--split" data-bio-chapter>
+      <div class="bio-text-block">
+        <h3 class="bio-heading">Stories of Courage</h3>
+        <p class="bio-body">
+          We are drawn to characters in motion — people pushed to the edge of
+          what they know about themselves, and what they discover when they
+          arrive there. Our films do not flinch.
+        </p>
+      </div>
+      <!-- PLACEHOLDER: replace div.bio-img-ph with <img src="/films/biography/biography-2.jpg" alt="..." class="bio-img" /> -->
+      <div class="bio-img-ph" data-ph="biography-2.jpg"></div>
+    </div>
+
+    <div class="bio-chapter bio-chapter--split bio-chapter--reverse" data-bio-chapter>
+      <!-- PLACEHOLDER: replace div.bio-img-ph with <img src="/films/biography/biography-3.jpg" alt="..." class="bio-img" /> -->
+      <div class="bio-img-ph" data-ph="biography-3.jpg"></div>
+      <div class="bio-text-block">
+        <h3 class="bio-heading">Broken Worlds</h3>
+        <p class="bio-body">
+          Our settings are fractured — cities, families, systems that no longer
+          hold. We believe these are the only honest backdrops for the stories
+          worth telling right now.
+        </p>
+      </div>
+    </div>
+
+    <div class="bio-chapter bio-chapter--quote" data-bio-chapter>
+      <blockquote class="bio-quote">
+        "Tales of courage in broken worlds.<br />Stories made to last."
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- ════════════════════════════════════════ MODALS ══ -->
+  {films.map(film => (
+    <div
+      class="film-modal"
+      id={`modal-${film.slug}`}
+      aria-hidden="true"
+      role="dialog"
+      aria-modal="true"
+      aria-label={film.title}
+    >
+      <div class="modal-backdrop" data-close-modal></div>
+
+      <div class="modal-panel">
+        <header class="modal-header">
+          <div class="modal-title-group">
+            <span class="modal-numeral">{film.numeral}</span>
+            <h2 class="modal-film-title">{film.title}</h2>
+          </div>
+          <button class="modal-close" data-close-modal aria-label="Close">✕</button>
+        </header>
+
+        <div class="modal-body">
+
+          <!-- Trailer -->
+          <div class="trailer-container">
+            {film.trailer
+              ? (
+                <iframe
+                  src={film.trailer}
+                  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  title={`${film.title} — Trailer`}
+                ></iframe>
+              )
+              : (
+                <div class="trailer-ph">
+                  <span class="trailer-ph-text">Trailer · Coming Soon</span>
+                  <!-- PLACEHOLDER: replace with <iframe src="[youtube/vimeo embed url]" ... /> -->
+                </div>
+              )
+            }
+          </div>
+
+          <!-- Details row -->
+          <div class="modal-details">
+            <div class="modal-poster-wrap">
+              <!-- PLACEHOLDER: replace with <img src="/films/{film.slug}/poster.jpg" alt="..." class="modal-poster-img" /> -->
+              <div class="modal-poster-ph">
+                <span class="ph-numeral-sm">{film.numeral}</span>
+                <code class="ph-path-sm">poster.jpg</code>
+              </div>
+            </div>
+
+            <div class="modal-info">
+              <div class="modal-meta-strip">
+                <span>{film.year}</span>
+                <span class="sep">·</span>
+                <span>{film.format}</span>
+                <span class="sep">·</span>
+                <span>{film.runtime}</span>
+                <span class="sep">·</span>
+                <span>{film.genre}</span>
+              </div>
+
+              <span class={`stage-tag stage-tag--${film.stage.toLowerCase().replace(/\s+/g, '-')}`}>
+                {film.stage}
+              </span>
+
+              <p class="modal-summary">{film.summary}</p>
+
+              <div class="modal-credits">
+                <div class="credit-row">
+                  <span class="credit-label">Director</span>
+                  <span class="credit-value">{film.credits.director}</span>
+                </div>
+                {film.credits.producer && (
+                  <div class="credit-row">
+                    <span class="credit-label">Producer</span>
+                    <span class="credit-value">{film.credits.producer}</span>
+                  </div>
+                )}
+                {film.credits.cast && (
+                  <div class="credit-row">
+                    <span class="credit-label">Cast</span>
+                    <span class="credit-value">{film.credits.cast}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <!-- Stills strip -->
+          <div class="stills-strip">
+            {[1, 2, 3].map(n => (
+              <div class="still-ph">
+                <!-- PLACEHOLDER: replace with <img src="/films/{film.slug}/still-{n}.jpg" alt="..." class="still-img" /> -->
+                <code class="ph-path-sm">still-{n}.jpg</code>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </div>
+    </div>
+  ))}
+
 </Base>
 
+<script>
+  // ── Modal system ──────────────────────────────────────
+  function openModal(slug: string) {
+    const modal = document.getElementById(`modal-${slug}`);
+    if (!modal) return;
+    modal.setAttribute('aria-hidden', 'false');
+    modal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    (modal.querySelector('.modal-close') as HTMLElement | null)?.focus();
+  }
+
+  function closeAllModals() {
+    document.querySelectorAll<HTMLElement>('.film-modal.is-open').forEach(m => {
+      m.setAttribute('aria-hidden', 'true');
+      m.classList.remove('is-open');
+    });
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-open-modal]').forEach(el => {
+    el.addEventListener('click', () => {
+      const slug = el.dataset.openModal;
+      if (slug) openModal(slug);
+    });
+  });
+
+  document.querySelectorAll('[data-close-modal]').forEach(el => {
+    el.addEventListener('click', closeAllModals);
+  });
+
+  // Keyboard: Escape closes, Enter/Space activates cards
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeAllModals();
+  });
+
+  document.querySelectorAll<HTMLElement>('.film-card').forEach(card => {
+    card.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const slug = card.dataset.openModal;
+        if (slug) openModal(slug);
+      }
+    });
+  });
+
+  // ── Biography scroll reveal ───────────────────────────
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  document.querySelectorAll('[data-bio-chapter]').forEach(el => observer.observe(el));
+</script>
+
 <style>
-  .page-stub {
-    min-height: 100vh;
+  /* ── Design tokens ─────────────────────────────────── */
+  :root {
+    --red: #e02828;
+    --gold: #f5d060;
+    --gold-dim: rgba(245, 208, 96, 0.35);
+    --gold-ghost: rgba(245, 208, 96, 0.12);
+    --red-dim: rgba(224, 40, 40, 0.2);
+    --bg: #050409;
+    --card-bg: #0d0a14;
+    --card-w: clamp(148px, 16vw, 196px);
+    --card-h: clamp(266px, 28.8vw, 353px);
+    --section-px: clamp(24px, 7vw, 96px);
+    --section-py: clamp(64px, 9vw, 128px);
+  }
+
+  /* ── Stage tags ────────────────────────────────────── */
+  .stage-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 2px;
+    white-space: nowrap;
+  }
+
+  .stage-tag--in-production {
+    color: var(--red);
+    background: rgba(224, 40, 40, 0.1);
+    border: 1px solid rgba(224, 40, 40, 0.35);
+  }
+
+  .stage-tag--in-production::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  .stage-tag--in-development {
+    color: var(--gold-dim);
+    background: var(--gold-ghost);
+    border: 1px solid rgba(245, 208, 96, 0.18);
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
+
+  /* ── Shared placeholder base ───────────────────────── */
+  .hero-poster-ph,
+  .bio-img-ph,
+  .modal-poster-ph,
+  .trailer-ph,
+  .still-ph {
+    background: var(--card-bg);
+    border: 1px solid rgba(245, 208, 96, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 16px;
-    text-align: center;
-    padding: 80px 24px;
+    gap: 6px;
   }
 
-  h1 {
+  .ph-numeral {
     font-family: 'Cinzel', serif;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    color: var(--page-accent);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    color: rgba(245, 208, 96, 0.18);
+    letter-spacing: 0.1em;
   }
 
-  p { color: var(--text-muted); }
+  .ph-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(245, 208, 96, 0.25);
+  }
+
+  .ph-path {
+    font-family: 'Courier New', monospace;
+    font-size: 0.65rem;
+    color: rgba(245, 208, 96, 0.18);
+    letter-spacing: 0.03em;
+  }
+
+  .ph-path-sm,
+  .ph-numeral-sm {
+    font-family: 'Courier New', monospace;
+    font-size: 0.6rem;
+    color: rgba(245, 208, 96, 0.2);
+    letter-spacing: 0.03em;
+    text-align: center;
+  }
+
+  .ph-numeral-sm {
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    color: rgba(245, 208, 96, 0.15);
+  }
+
+  /* ══════════════════════════════════════════ HERO ═══ */
+  .film-hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: clamp(100px, 12vw, 160px) var(--section-px) clamp(64px, 8vw, 96px);
+    z-index: 2;
+  }
+
+  .hero-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(40px, 6vw, 80px);
+    align-items: center;
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .hero-text {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .hero-numeral {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(4rem, 10vw, 10rem);
+    line-height: 0.85;
+    color: rgba(245, 208, 96, 0.07);
+    letter-spacing: -0.02em;
+    user-select: none;
+    margin-bottom: -16px;
+    display: block;
+  }
+
+  .hero-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.8rem, 3.8vw, 3.4rem);
+    color: var(--gold);
+    letter-spacing: 0.06em;
+    line-height: 1.15;
+    text-transform: uppercase;
+    transition: color 0.2s ease;
+  }
+
+  .hero-title:hover {
+    color: var(--red);
+  }
+
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+
+  .hero-meta .sep {
+    color: rgba(245, 208, 96, 0.2);
+  }
+
+  .hero-logline {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: clamp(1.05rem, 1.8vw, 1.3rem);
+    color: rgba(245, 208, 96, 0.45);
+    line-height: 1.65;
+    max-width: 480px;
+  }
+
+  .hero-actions {
+    margin-top: 8px;
+  }
+
+  .btn-details {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    background: transparent;
+    border: 1px solid rgba(245, 208, 96, 0.3);
+    padding: 12px 28px;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .btn-details:hover {
+    color: var(--red);
+    border-color: rgba(224, 40, 40, 0.5);
+    background: rgba(224, 40, 40, 0.06);
+  }
+
+  .hero-visual {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+  }
+
+  .hero-poster-ph {
+    width: 100%;
+    max-width: 400px;
+    aspect-ratio: 5 / 7;
+    border: 1px solid rgba(245, 208, 96, 0.12);
+  }
+
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    color: rgba(245, 208, 96, 0.2);
+    animation: float-hint 2.8s ease-in-out infinite;
+    letter-spacing: 0.1em;
+  }
+
+  @keyframes float-hint {
+    0%, 100% { transform: translateX(-50%) translateY(0); opacity: 0.3; }
+    50% { transform: translateX(-50%) translateY(6px); opacity: 0.6; }
+  }
+
+  /* ════════════════════════════════════ CARD INDEX ═══ */
+  .film-index {
+    padding: var(--section-py) 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .section-header {
+    padding: 0 var(--section-px);
+    margin-bottom: clamp(40px, 5vw, 64px);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s ease;
+  }
+
+  .section-title:hover {
+    color: var(--red);
+  }
+
+  .section-sub {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    color: rgba(245, 208, 96, 0.3);
+  }
+
+  .card-rail {
+    display: flex;
+    gap: clamp(16px, 2.5vw, 28px);
+    overflow-x: auto;
+    padding: 24px var(--section-px) 48px;
+    scroll-padding-inline: var(--section-px);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .card-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* ── Flip card ─────────────────────────────────────── */
+  .film-card {
+    flex: 0 0 auto;
+    width: var(--card-w);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .card-flip-wrap {
+    position: relative;
+    width: var(--card-w);
+    height: var(--card-h);
+    perspective: 1200px;
+  }
+
+  /* Both faces sit in the same space; each animates its own transform */
+  .card-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 3px;
+    overflow: hidden;
+    transition: transform 0.75s cubic-bezier(0.22, 1.35, 0.36, 1);
+  }
+
+  /* Front: starts facing viewer; flips away on hover */
+  .card-front {
+    transform: rotateY(0deg);
+    background: linear-gradient(155deg, #0d0a14 0%, #120d1c 100%);
+    border: 1px solid rgba(245, 208, 96, 0.18);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .film-card:hover .card-front {
+    transform: rotateY(-180deg);
+  }
+
+  .front-art {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .front-numeral {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    color: rgba(245, 208, 96, 0.45);
+    letter-spacing: 0.08em;
+  }
+
+  .front-rule {
+    width: 28px;
+    height: 1px;
+    background: rgba(245, 208, 96, 0.2);
+  }
+
+  .front-title {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.72rem;
+    color: rgba(245, 208, 96, 0.28);
+    line-height: 1.45;
+  }
+
+  /* "In Production" badge on featured card */
+  .card-live-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--red);
+    white-space: nowrap;
+  }
+
+  .live-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  /* Back: starts rotated away; flips into view on hover */
+  .card-back {
+    transform: rotateY(180deg);
+    background: linear-gradient(155deg, #160d0d 0%, #0d0a14 100%);
+    border: 1px solid rgba(224, 40, 40, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .film-card:hover .card-back {
+    transform: rotateY(0deg);
+  }
+
+  .back-art {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+    padding: 16px;
+  }
+
+  .back-numeral {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    color: rgba(224, 40, 40, 0.3);
+    letter-spacing: 0.08em;
+  }
+
+  .back-rule {
+    width: 28px;
+    height: 1px;
+    background: rgba(224, 40, 40, 0.2);
+  }
+
+  .back-title {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.72rem;
+    color: rgba(224, 40, 40, 0.25);
+    line-height: 1.45;
+  }
+
+  /* Card label below */
+  .card-label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .card-title-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    line-height: 1.4;
+    transition: color 0.2s ease;
+  }
+
+  .film-card:hover .card-title-label {
+    color: var(--red);
+  }
+
+  .card-meta-line {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.7rem;
+    color: rgba(245, 208, 96, 0.2);
+    font-style: italic;
+  }
+
+  /* ══════════════════════════════════ BIOGRAPHY ═══ */
+  .film-bio {
+    padding: var(--section-py) 0;
+    position: relative;
+    z-index: 2;
+  }
+
+  .film-bio .section-header {
+    margin-bottom: clamp(48px, 6vw, 80px);
+  }
+
+  /* Scroll reveal base state */
+  .bio-chapter {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 1.1s ease, transform 1.1s ease;
+  }
+
+  .bio-chapter.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Full-width chapter */
+  .bio-chapter--full {
+    position: relative;
+    height: clamp(360px, 50vw, 600px);
+    overflow: hidden;
+    margin-bottom: clamp(32px, 4vw, 64px);
+  }
+
+  .bio-img-ph {
+    position: absolute;
+    inset: 0;
+    background: var(--card-bg);
+    border-top: 1px solid rgba(245, 208, 96, 0.08);
+    border-bottom: 1px solid rgba(245, 208, 96, 0.08);
+  }
+
+  .bio-img-ph::before {
+    content: attr(data-ph);
+    position: absolute;
+    font-family: 'Courier New', monospace;
+    font-size: 0.7rem;
+    color: rgba(245, 208, 96, 0.15);
+    letter-spacing: 0.05em;
+  }
+
+  .bio-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .bio-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(5,4,9,0.88) 0%, rgba(5,4,9,0.4) 100%);
+    display: flex;
+    align-items: center;
+    padding: var(--section-py) var(--section-px);
+  }
+
+  .bio-text {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: clamp(1.15rem, 2vw, 1.55rem);
+    color: rgba(245, 208, 96, 0.75);
+    line-height: 1.7;
+    max-width: 560px;
+  }
+
+  /* Split chapters */
+  .bio-chapter--split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: clamp(300px, 40vw, 500px);
+    margin-bottom: clamp(32px, 4vw, 64px);
+  }
+
+  .bio-chapter--reverse {
+    direction: rtl;
+  }
+
+  .bio-chapter--reverse > * {
+    direction: ltr;
+  }
+
+  .bio-text-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+    padding: clamp(40px, 6vw, 80px) var(--section-px);
+  }
+
+  .bio-heading {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.2rem, 2.2vw, 1.8rem);
+    color: var(--gold);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s ease;
+  }
+
+  .bio-heading:hover {
+    color: var(--red);
+  }
+
+  .bio-body {
+    font-family: 'Crimson Pro', serif;
+    font-size: clamp(1rem, 1.6vw, 1.2rem);
+    color: rgba(245, 208, 96, 0.5);
+    line-height: 1.75;
+    max-width: 420px;
+  }
+
+  /* Quote chapter */
+  .bio-chapter--quote {
+    padding: clamp(64px, 8vw, 120px) var(--section-px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-top: 1px solid rgba(245, 208, 96, 0.08);
+    border-bottom: 1px solid rgba(245, 208, 96, 0.08);
+  }
+
+  .bio-quote {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+    color: rgba(245, 208, 96, 0.55);
+    line-height: 1.6;
+    text-align: center;
+    max-width: 640px;
+    border: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+  }
+
+  .bio-quote::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: rgba(245, 208, 96, 0.25);
+    margin: 0 auto 28px;
+  }
+
+  .bio-quote::after {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 1px;
+    background: rgba(245, 208, 96, 0.25);
+    margin: 28px auto 0;
+  }
+
+  /* ════════════════════════════════════ MODALS ═══ */
+  .film-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+    padding: 0;
+  }
+
+  .film-modal.is-open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(5, 4, 9, 0.88);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    cursor: pointer;
+  }
+
+  .modal-panel {
+    position: relative;
+    z-index: 1;
+    width: min(900px, 94vw);
+    max-height: 92vh;
+    overflow-y: auto;
+    background: #0a0810;
+    border: 1px solid rgba(245, 208, 96, 0.12);
+    margin: 4vh auto;
+    transform: translateY(20px);
+    transition: transform 0.38s cubic-bezier(0.22, 1.35, 0.36, 1);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(245, 208, 96, 0.15) transparent;
+  }
+
+  .film-modal.is-open .modal-panel {
+    transform: translateY(0);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid rgba(245, 208, 96, 0.1);
+    position: sticky;
+    top: 0;
+    background: #0a0810;
+    z-index: 2;
+  }
+
+  .modal-title-group {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .modal-numeral {
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    color: var(--gold-dim);
+    flex-shrink: 0;
+  }
+
+  .modal-film-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1rem, 2.2vw, 1.6rem);
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s ease;
+  }
+
+  .modal-film-title:hover {
+    color: var(--red);
+  }
+
+  .modal-close {
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid rgba(245, 208, 96, 0.18);
+    color: var(--gold-dim);
+    font-size: 0.9rem;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+
+  .modal-close:hover {
+    color: var(--red);
+    border-color: rgba(224, 40, 40, 0.4);
+  }
+
+  .modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* Trailer */
+  .trailer-container {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #050409;
+    overflow: hidden;
+  }
+
+  .trailer-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .trailer-ph {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #050409;
+    border-bottom: 1px solid rgba(245, 208, 96, 0.08);
+  }
+
+  .trailer-ph-text {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(245, 208, 96, 0.2);
+  }
+
+  /* Details row */
+  .modal-details {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 0;
+    border-bottom: 1px solid rgba(245, 208, 96, 0.08);
+  }
+
+  .modal-poster-wrap {
+    border-right: 1px solid rgba(245, 208, 96, 0.08);
+  }
+
+  .modal-poster-ph {
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #0d0a14;
+  }
+
+  .modal-poster-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .modal-info {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 24px 28px;
+  }
+
+  .modal-meta-strip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+  }
+
+  .modal-meta-strip .sep {
+    color: rgba(245, 208, 96, 0.15);
+  }
+
+  .modal-summary {
+    font-family: 'Crimson Pro', serif;
+    font-size: 1rem;
+    color: rgba(245, 208, 96, 0.5);
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  .modal-credits {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid rgba(245, 208, 96, 0.08);
+  }
+
+  .credit-row {
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+  }
+
+  .credit-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(245, 208, 96, 0.3);
+    min-width: 64px;
+    flex-shrink: 0;
+  }
+
+  .credit-value {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.9rem;
+    color: rgba(245, 208, 96, 0.55);
+  }
+
+  /* Stills strip */
+  .stills-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid rgba(245, 208, 96, 0.08);
+  }
+
+  .still-ph {
+    aspect-ratio: 16 / 9;
+    border-right: 1px solid rgba(245, 208, 96, 0.08);
+  }
+
+  .still-ph:last-child {
+    border-right: none;
+  }
+
+  .still-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ══════════════════════════════════ RESPONSIVE ═══ */
+  @media (max-width: 900px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+    }
+
+    .hero-visual {
+      display: none;
+    }
+
+    .hero-numeral {
+      font-size: clamp(5rem, 18vw, 9rem);
+    }
+
+    .bio-chapter--split {
+      grid-template-columns: 1fr;
+      min-height: auto;
+    }
+
+    .bio-chapter--reverse {
+      direction: ltr;
+    }
+
+    .bio-chapter--split .bio-img-ph {
+      aspect-ratio: 16 / 9;
+      position: relative;
+      height: auto;
+    }
+
+    .modal-details {
+      grid-template-columns: 1fr;
+    }
+
+    .modal-poster-wrap {
+      border-right: none;
+      border-bottom: 1px solid rgba(245, 208, 96, 0.08);
+    }
+
+    .modal-poster-ph {
+      min-height: 140px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .stills-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .still-ph {
+      border-right: none;
+      border-bottom: 1px solid rgba(245, 208, 96, 0.08);
+    }
+
+    .still-ph:last-child {
+      border-bottom: none;
+    }
+  }
 </style>
