@@ -275,6 +275,7 @@ import Base from '../layouts/Base.astro';
     justify-content: center;
     padding: 64px 24px 24px;
     position: relative;
+    z-index: 2; /* sits above background grain canvas (z-index:1) */
     overflow: hidden;
   }
 
@@ -297,29 +298,49 @@ import Base from '../layouts/Base.astro';
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 26px;
+    gap: 44px; /* airy space between prompt and deck */
   }
 
-  /* Prompt: hidden by default, shown only on hover */
+  /* translateY + opacity only — the two properties
+     that are always compositor-thread-safe on text.
+     The elastic easing gives the watery settling feel. */
+  @keyframes promptIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes promptOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-8px); }
+  }
+
   .deck-prompt {
     font-family: 'Crimson Pro', Georgia, serif;
-    font-size: 1rem;
+    font-size: clamp(1.45rem, 2.8vw, 2rem);
     font-style: italic;
     font-weight: 300;
     color: var(--gold-dim);
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     opacity: 0;
-    transform: translateY(5px);
-    transition: opacity 0.32s ease, transform 0.32s ease;
     pointer-events: none;
     user-select: none;
     margin: 0;
+    white-space: nowrap;
+    /* Static glow — cost-free, always present, gives the misty quality */
+    text-shadow:
+      0 0 28px rgba(224,168,50,0.35),
+      0 0 60px rgba(224,168,50,0.12);
+    /* Promote to own layer before first hover */
+    transform: translateY(0);
+    will-change: transform, opacity;
   }
 
-  /* Only show when hovering the deck-wrap itself */
-  .deck-wrap:hover .deck-prompt {
-    opacity: 1;
-    transform: translateY(0);
+  .deck-prompt.is-entering {
+    animation: promptIn 1.45s cubic-bezier(0.22, 1.35, 0.36, 1) forwards;
+  }
+
+  .deck-prompt.is-exiting {
+    animation: promptOut 0.28s cubic-bezier(0.4, 0, 1, 1) forwards;
   }
 
   /* Stack hit area */
@@ -565,6 +586,18 @@ import Base from '../layouts/Base.astro';
   const deckWrap = document.getElementById('deck-wrap')!;
   const deckBtn  = document.getElementById('deck-btn')!;
   const spreadEl = document.getElementById('spread')!;
+  const promptEl = deckWrap.querySelector<HTMLElement>('.deck-prompt')!;
+
+  // ── Smoke prompt: enter / exit animations via class toggle ──
+  deckWrap.addEventListener('mouseenter', () => {
+    promptEl.classList.remove('is-exiting');
+    promptEl.classList.add('is-entering');
+  });
+
+  deckWrap.addEventListener('mouseleave', () => {
+    promptEl.classList.remove('is-entering');
+    promptEl.classList.add('is-exiting');
+  });
 
   let spread = false;
 
