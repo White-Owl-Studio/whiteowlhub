@@ -1,14 +1,9 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
-import cloudflare from '@astrojs/cloudflare';
 
-// https://astro.build/config
+// Static output for Cloudflare Pages — no Worker bindings needed.
+// Switch to SSR + Cloudflare adapter in Stage 7 when Coven auth is added.
 export default defineConfig({
-  output: 'server',
-  adapter: cloudflare({
-    platformProxy: {
-      enabled: true,
-    },
-  }),
+  output: 'static',
   site: 'https://whiteowlhub.com',
 });
