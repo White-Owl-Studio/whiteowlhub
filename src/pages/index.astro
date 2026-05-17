@@ -3,32 +3,595 @@ import Base from '../layouts/Base.astro';
 ---
 
 <Base title="White Owl Studio" description="Tales of courage in broken worlds. Stories made to last.">
-  <section class="landing-stub">
-    <p class="eyebrow">White Owl Studio</p>
-    <h1>Coming Soon</h1>
-    <p>Landing page — Stage 1</p>
-  </section>
+<section class="hero">
+
+  <div class="atmos" aria-hidden="true"></div>
+
+  <!-- ══════════════════════════════
+       DECK STATE (shown on load)
+  ══════════════════════════════ -->
+  <div class="deck-wrap" id="deck-wrap">
+
+    <p class="deck-prompt" aria-hidden="true">Spread your cards?</p>
+
+    <div class="deck-stack" id="deck-btn" role="button" tabindex="0" aria-label="Spread the cards to explore the site">
+      <!-- depth layers -->
+      <div class="deck-layer dl-4"></div>
+      <div class="deck-layer dl-3"></div>
+      <div class="deck-layer dl-2"></div>
+      <div class="deck-layer dl-1"></div>
+
+      <!-- top card — card back illustration -->
+      <div class="deck-layer deck-top">
+        <div class="back-wrap">
+          <svg viewBox="0 0 100 180" fill="none" xmlns="http://www.w3.org/2000/svg" class="back-svg" aria-hidden="true">
+
+            <!-- corner ornaments -->
+            <text x="8"  y="13" font-family="Georgia, serif" font-size="5.5" fill="currentColor" opacity="0.28" text-anchor="middle">◈</text>
+            <text x="92" y="13" font-family="Georgia, serif" font-size="5.5" fill="currentColor" opacity="0.28" text-anchor="middle">◈</text>
+            <text x="8"  y="175" font-family="Georgia, serif" font-size="5.5" fill="currentColor" opacity="0.28" text-anchor="middle">◈</text>
+            <text x="92" y="175" font-family="Georgia, serif" font-size="5.5" fill="currentColor" opacity="0.28" text-anchor="middle">◈</text>
+
+            <!-- scattered stars in upper sky -->
+            <circle cx="20" cy="34" r="0.8" fill="currentColor" opacity="0.45"/>
+            <circle cx="34" cy="25" r="0.6" fill="currentColor" opacity="0.35"/>
+            <circle cx="73" cy="27" r="0.9" fill="currentColor" opacity="0.50"/>
+            <circle cx="84" cy="42" r="0.7" fill="currentColor" opacity="0.38"/>
+            <circle cx="80" cy="60" r="0.55" fill="currentColor" opacity="0.28"/>
+            <circle cx="16" cy="51" r="0.65" fill="currentColor" opacity="0.28"/>
+            <circle cx="26" cy="69" r="0.5"  fill="currentColor" opacity="0.22"/>
+            <circle cx="86" cy="68" r="0.5"  fill="currentColor" opacity="0.22"/>
+
+            <!-- ── crescent moon ──
+                 outer circle: center (50,56) R=20
+                 inner circle: center (58,56) r=15
+                 intersection tips at ≈ (65,43) and (65,69) -->
+            <path d="M 65 43
+                     A 20 20 0 1 0 65 69
+                     A 15 15 0 0 1 65 43
+                     Z"
+                  stroke="currentColor" stroke-width="1.35" fill="none"/>
+
+            <!-- moon ambient dots -->
+            <circle cx="70" cy="48" r="0.7"  fill="currentColor" opacity="0.38"/>
+            <circle cx="73" cy="57" r="0.55" fill="currentColor" opacity="0.28"/>
+            <circle cx="70" cy="65" r="0.5"  fill="currentColor" opacity="0.22"/>
+
+            <!-- ── W / Owl Wing Mark ──
+                 Left tuft tip  → LO     → LB       → CB       → RB       → RO     → Right tuft tip
+                 (13,74)        (21,88)   (31,126)   (50,110)   (69,126)   (79,88)  (87,74)         -->
+            <polyline
+              points="13,74 21,88 31,126 50,110 69,126 79,88 87,74"
+              stroke="currentColor" stroke-width="2.2" fill="none"
+              stroke-linecap="round" stroke-linejoin="round"/>
+
+            <!-- inner geometric detail — lighter inner V -->
+            <polyline
+              points="27,120 50,102 73,120"
+              stroke="currentColor" stroke-width="1.1" fill="none" opacity="0.42"
+              stroke-linecap="round" stroke-linejoin="round"/>
+
+            <!-- diagonal depth lines from outer corners toward center -->
+            <line x1="21" y1="88"  x2="42" y2="110" stroke="currentColor" stroke-width="0.85" opacity="0.32" stroke-linecap="round"/>
+            <line x1="79" y1="88"  x2="58" y2="110" stroke="currentColor" stroke-width="0.85" opacity="0.32" stroke-linecap="round"/>
+
+            <!-- base ornament -->
+            <line x1="34" y1="150" x2="66" y2="150" stroke="currentColor" stroke-width="0.55" opacity="0.18"/>
+            <circle cx="50" cy="150" r="1.1"  fill="currentColor" opacity="0.22"/>
+            <circle cx="40" cy="150" r="0.65" fill="currentColor" opacity="0.15"/>
+            <circle cx="60" cy="150" r="0.65" fill="currentColor" opacity="0.15"/>
+
+          </svg>
+        </div>
+      </div>
+    </div><!-- /deck-stack -->
+
+  </div><!-- /deck-wrap -->
+
+  <!-- ══════════════════════════════
+       SPREAD STATE (hidden on load)
+  ══════════════════════════════ -->
+  <nav class="spread" id="spread" aria-label="Site sections">
+
+    <!-- I — Our Films -->
+    <a href="/films" class="card" style="--accent:#e02828;--r:-4deg;--dy:6px;--i:0" aria-label="Our Films">
+      <div class="card-inner">
+        <span class="numeral">I</span>
+        <div class="sigil">
+          <svg viewBox="0 0 80 80" fill="none">
+            <line x1="40" y1="4"  x2="40" y2="12" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="65" y1="15" x2="60" y2="21" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="76" y1="40" x2="68" y2="40" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="65" y1="65" x2="60" y2="59" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="40" y1="76" x2="40" y2="68" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="15" y1="65" x2="20" y2="59" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="4"  y1="40" x2="12" y2="40" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="15" y1="15" x2="20" y2="21" stroke="currentColor" stroke-width="1.1"/>
+            <path d="M12,40 C22,23 58,23 68,40 C58,57 22,57 12,40 Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <circle cx="40" cy="40" r="11" stroke="currentColor" stroke-width="1.2" fill="none"/>
+            <circle cx="40" cy="40" r="7"  stroke="currentColor" stroke-width="0.7" fill="none" opacity="0.45"/>
+            <circle cx="40" cy="40" r="4.5" fill="currentColor"/>
+            <circle cx="43" cy="37" r="1.5" fill="#050409"/>
+          </svg>
+        </div>
+        <div class="card-foot">
+          <span class="card-label">Our Films</span>
+          <div class="card-rule"></div>
+          <span class="card-sub">The moving dark</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- II — Our Work -->
+    <a href="/portfolio" class="card" style="--accent:#7040b8;--r:1deg;--dy:-3px;--i:1" aria-label="Our Work">
+      <div class="card-inner">
+        <span class="numeral">II</span>
+        <div class="sigil">
+          <svg viewBox="0 0 80 80" fill="none">
+            <path d="M40 72 C39 55,36 38,40 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M39 18 C33 17,25 19,17 25" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <path d="M38 26 C31 25,22 28,14 35" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <path d="M38 34 C30 34,21 38,13 45" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <path d="M38 42 C30 43,22 48,15 55" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <path d="M38 50 C32 52,26 57,20 63" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <path d="M41 18 C47 17,55 19,63 25" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <path d="M42 26 C49 25,58 28,66 35" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <path d="M42 34 C50 34,59 38,67 45" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <path d="M42 42 C50 43,58 48,65 55" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <path d="M42 50 C48 52,54 57,60 63" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+            <circle cx="40" cy="8" r="1.8" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="card-foot">
+          <span class="card-label">Our Work</span>
+          <div class="card-rule"></div>
+          <span class="card-sub">Ink and light</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- III — About Us -->
+    <a href="/about" class="card" style="--accent:#c8b89a;--r:5deg;--dy:5px;--i:2" aria-label="About Us">
+      <div class="card-inner">
+        <span class="numeral">III</span>
+        <div class="sigil">
+          <svg viewBox="0 0 80 80" fill="none">
+            <ellipse cx="40" cy="45" rx="26" ry="27" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <path d="M17 26 L13 10 L22 20" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="none"/>
+            <path d="M63 26 L67 10 L58 20" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round" fill="none"/>
+            <path d="M20 36 C27 30,53 30,60 36" stroke="currentColor" stroke-width="1" fill="none" opacity="0.5"/>
+            <circle cx="30" cy="42" r="9.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <circle cx="50" cy="42" r="9.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <circle cx="30" cy="42" r="4" fill="currentColor"/>
+            <circle cx="50" cy="42" r="4" fill="currentColor"/>
+            <circle cx="32" cy="40" r="1.2" fill="#050409"/>
+            <circle cx="52" cy="40" r="1.2" fill="#050409"/>
+            <path d="M37 52 L40 59 L43 52" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="card-foot">
+          <span class="card-label">About Us</span>
+          <div class="card-rule"></div>
+          <span class="card-sub">The makers</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- IV — Market of Stuff -->
+    <a href="/shop" class="card" style="--accent:#42e0b0;--r:-6deg;--dy:3px;--i:3" aria-label="Market of Stuff">
+      <div class="card-inner">
+        <span class="numeral">IV</span>
+        <div class="sigil">
+          <svg viewBox="0 0 80 80" fill="none">
+            <path d="M52 14 C39 14,28 23,28 38 C28 53,39 64,52 66 C37 65,22 54,22 38 C22 22,37 13,52 14 Z"
+                  stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <line x1="40" y1="66" x2="40" y2="71" stroke="currentColor" stroke-width="1"/>
+            <path d="M40 78 L42 73 L47 71 L42 69 L40 64 L38 69 L33 71 L38 73 Z"
+                  stroke="currentColor" stroke-width="0.9" fill="currentColor" opacity="0.75"/>
+            <circle cx="56" cy="20" r="1.1" fill="currentColor" opacity="0.5"/>
+            <circle cx="62" cy="33" r="0.9" fill="currentColor" opacity="0.4"/>
+            <circle cx="28" cy="12" r="0.8" fill="currentColor" opacity="0.3"/>
+          </svg>
+        </div>
+        <div class="card-foot">
+          <span class="card-label">Market of Stuff</span>
+          <div class="card-rule"></div>
+          <span class="card-sub">The offering</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- V — Online Playthings -->
+    <a href="/experiences" class="card" style="--accent:#78e058;--r:-2deg;--dy:0px;--i:4" aria-label="Online Playthings">
+      <div class="card-inner">
+        <span class="numeral">V</span>
+        <div class="sigil">
+          <svg viewBox="0 0 80 80" fill="none">
+            <rect x="22" y="22" width="36" height="36" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <rect x="22" y="22" width="36" height="36" stroke="currentColor" stroke-width="1.3" fill="none" transform="rotate(45 40 40)"/>
+            <line x1="40" y1="6"  x2="40" y2="14" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="74" y1="40" x2="66" y2="40" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="40" y1="74" x2="40" y2="66" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="6"  y1="40" x2="14" y2="40" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="68" y1="12" x2="62" y2="18" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="68" y1="68" x2="62" y2="62" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="12" y1="68" x2="18" y2="62" stroke="currentColor" stroke-width="1.1"/>
+            <line x1="12" y1="12" x2="18" y2="18" stroke="currentColor" stroke-width="1.1"/>
+            <circle cx="40" cy="40" r="8" stroke="currentColor" stroke-width="1" fill="none"/>
+            <circle cx="40" cy="40" r="3" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="card-foot">
+          <span class="card-label">Online Playthings</span>
+          <div class="card-rule"></div>
+          <span class="card-sub">Enter the game</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- VI — The Coven -->
+    <a href="/coven" class="card" style="--accent:#3a7a50;--r:3deg;--dy:2px;--i:5" aria-label="The Coven">
+      <div class="card-inner">
+        <span class="numeral">VI</span>
+        <div class="sigil">
+          <svg viewBox="0 0 80 80" fill="none">
+            <circle cx="40" cy="34" r="13" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            <circle cx="40" cy="34" r="8"  stroke="currentColor" stroke-width="0.7" fill="none" opacity="0.4"/>
+            <path d="M20 34 C20 25,24 18,30 16 C25 19,22 26,22 34 C22 42,25 49,30 52 C24 50,20 43,20 34 Z"
+                  stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <path d="M60 34 C60 25,56 18,50 16 C55 19,58 26,58 34 C58 42,55 49,50 52 C56 50,60 43,60 34 Z"
+                  stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <line x1="8" y1="52" x2="72" y2="52" stroke="currentColor" stroke-width="0.7" opacity="0.35"/>
+            <path d="M34 57 C32 61,31 65,33 69 C34 67,35 64,34 61 C34 64,36 67,37 69 C37 65,36 61,34 57 Z"
+                  fill="currentColor" opacity="0.7"/>
+            <path d="M40 55 C38 60,37 66,39 71 C40 68,41 64,40 60 C40 64,42 68,43 71 C45 66,44 60,40 55 Z"
+                  fill="currentColor" opacity="0.9"/>
+            <path d="M46 57 C48 61,49 65,47 69 C46 67,45 64,46 61 C46 64,44 67,43 69 C43 65,44 61,46 57 Z"
+                  fill="currentColor" opacity="0.7"/>
+            <circle cx="40" cy="7"  r="1.2" fill="currentColor" opacity="0.5"/>
+            <circle cx="33" cy="9"  r="0.8" fill="currentColor" opacity="0.4"/>
+            <circle cx="47" cy="9"  r="0.8" fill="currentColor" opacity="0.4"/>
+          </svg>
+        </div>
+        <div class="card-foot">
+          <span class="card-label">The Coven</span>
+          <div class="card-rule"></div>
+          <span class="card-sub">For initiates only</span>
+        </div>
+      </div>
+    </a>
+
+  </nav><!-- /spread -->
+
+</section>
 </Base>
 
 <style>
-  .landing-stub {
+  /* ── Hero shell ── */
+  .hero {
     min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 64px 24px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .atmos {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 70% 60% at 50% 0%,   rgba(52,24,82,0.22) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 35% at 12% 88%,  rgba(12,6,28,0.38) 0%, transparent 65%),
+      radial-gradient(ellipse 35% 30% at 88% 78%,  rgba(6,18,12,0.26) 0%, transparent 60%);
+  }
+
+  /* ══════════════
+     DECK
+  ══════════════ */
+  .deck-wrap {
+    position: relative;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 26px;
+  }
+
+  /* Prompt: hidden by default, shown only on hover */
+  .deck-prompt {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 1rem;
+    font-style: italic;
+    font-weight: 300;
+    color: var(--gold-dim);
+    letter-spacing: 0.06em;
+    opacity: 0;
+    transform: translateY(5px);
+    transition: opacity 0.32s ease, transform 0.32s ease;
+    pointer-events: none;
+    user-select: none;
+    margin: 0;
+  }
+
+  /* Only show when hovering the deck-wrap itself */
+  .deck-wrap:hover .deck-prompt {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Stack hit area */
+  .deck-stack {
+    position: relative;
+    width: clamp(140px, 17vw, 170px);
+    aspect-ratio: 5 / 9;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .deck-stack:focus-visible {
+    outline: 1px solid var(--border-bright);
+    outline-offset: 8px;
+  }
+
+  /* Hover: lift the whole stack */
+  .deck-wrap:hover .deck-stack {
+    transform: translateY(-5px);
+    transition: transform 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+
+  /* Stack layers */
+  .deck-layer {
+    position: absolute;
+    inset: 0;
+    background: var(--surface2);
+    border: 1px solid rgba(220,185,100,0.28);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  /* Natural misalignment — each card solid, visible, individually placed */
+  .dl-4 { transform: rotate(-2.6deg) translate(-7px,  7px); }
+  .dl-3 { transform: rotate( 1.9deg) translate( 5px,  5px); }
+  .dl-2 { transform: rotate(-0.9deg) translate(-3px,  2px); }
+  .dl-1 { transform: rotate( 1.3deg) translate( 3px, -1px); }
+
+  /* Top card */
+  .deck-top {
+    transform: rotate(0.2deg);
+    border-color: rgba(220,185,100,0.32);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.55), 0 0 18px rgba(220,185,100,0.06);
+    transition: box-shadow 0.32s, border-color 0.32s;
+  }
+
+  .deck-wrap:hover .deck-top {
+    border-color: rgba(220,185,100,0.52);
+    box-shadow: 0 14px 52px rgba(0,0,0,0.65), 0 0 28px rgba(220,185,100,0.11);
+  }
+
+  /* Inner border frame */
+  .deck-top::before {
+    content: '';
+    position: absolute;
+    inset: 7px;
+    border: 1px solid rgba(220,185,100,0.12);
+    pointer-events: none;
+  }
+
+  .back-wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 16px;
-    text-align: center;
-    padding: 80px 24px;
+    padding: 8px;
   }
 
-  h1 {
+  .back-svg {
+    width: 100%;
+    height: 100%;
+    color: var(--gold-dim);
+  }
+
+  /* ══════════════
+     SPREAD
+  ══════════════ */
+  .spread {
+    display: none; /* hidden until deck click */
+    position: relative;
+    z-index: 2;
+    grid-template-columns: repeat(3, clamp(115px, 14vw, 150px));
+    grid-template-rows: repeat(2, auto);
+    gap: clamp(10px, 1.8vw, 20px);
+  }
+
+  /* ── Card ── */
+  .card {
+    aspect-ratio: 5 / 9;
+    display: block;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-mid);
+    position: relative;
+    /* initial state for fly-in */
+    opacity: 0;
+    transform: rotate(var(--r)) translateY(calc(var(--dy) + 38px)) scale(0.9);
+    transition:
+      opacity   0.45s ease,
+      transform 0.65s cubic-bezier(0.34, 1.4, 0.64, 1),
+      border-color 0.3s,
+      box-shadow 0.35s;
+    transform-origin: center 88%;
+  }
+
+  /* Revealed state (added via JS) */
+  .card.card-reveal {
+    opacity: 1;
+    transform: rotate(var(--r)) translateY(var(--dy));
+  }
+
+  /* Hover (only when revealed) */
+  .card.card-reveal:hover {
+    transform: rotate(var(--r)) translateY(calc(var(--dy) - 14px));
+    border-color: var(--border-bright);
+    box-shadow:
+      0 22px 64px rgba(0,0,0,0.55),
+      0 0 34px color-mix(in srgb, var(--accent) 13%, transparent);
+  }
+
+  /* Inner border */
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border: 1px solid var(--border);
+    pointer-events: none;
+    z-index: 1;
+    transition: border-color 0.3s;
+  }
+
+  .card::after {
+    content: '◈';
+    position: absolute;
+    top: 9px; right: 9px;
+    font-size: 0.38rem;
+    color: var(--border-mid);
+    z-index: 2;
+    transition: color 0.3s;
+  }
+
+  .card.card-reveal:hover::before { border-color: var(--border-mid); }
+  .card.card-reveal:hover::after  { color: var(--accent); }
+
+  /* ── Card interior ── */
+  .card-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 12px 10px 13px;
+  }
+
+  .numeral {
     font-family: 'Cinzel', serif;
-    font-size: clamp(2rem, 6vw, 4rem);
-    color: var(--gold);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-size: 0.5rem;
+    letter-spacing: 0.32em;
+    color: var(--gold-dim);
+    opacity: 0.65;
+    transition: opacity 0.3s;
   }
 
-  p { color: var(--text-muted); }
+  .card.card-reveal:hover .numeral { opacity: 1; }
+
+  .sigil {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 0;
+    color: var(--gold-dim);
+    transition: color 0.35s;
+  }
+
+  .sigil svg {
+    width: clamp(46px, 6.5vw, 62px);
+    height: clamp(46px, 6.5vw, 62px);
+    transition: transform 0.4s cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+
+  .card.card-reveal:hover .sigil     { color: var(--accent); }
+  .card.card-reveal:hover .sigil svg { transform: scale(1.07); }
+
+  .card-foot { width: 100%; text-align: center; }
+
+  .card-label {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: clamp(0.38rem, 0.9vw, 0.48rem);
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 6px;
+    transition: color 0.3s;
+  }
+
+  .card.card-reveal:hover .card-label { color: var(--accent); }
+
+  .card-rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-mid), transparent);
+    margin: 0 0 6px;
+  }
+
+  .card-sub {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: clamp(0.58rem, 0.85vw, 0.66rem);
+    font-style: italic;
+    font-weight: 300;
+    color: var(--text-muted);
+    transition: color 0.3s;
+  }
+
+  .card.card-reveal:hover .card-sub {
+    color: color-mix(in srgb, var(--accent) 55%, var(--text-muted));
+  }
+
+  /* ── Mobile: 2 × 3 grid ── */
+  @media (max-width: 720px) {
+    .hero { padding: 72px 16px 20px; }
+
+    .spread {
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(3, auto);
+      max-width: 320px;
+    }
+
+    .card {
+      --r: 0deg !important;
+      --dy: 0px !important;
+    }
+
+    .card.card-reveal:hover { transform: translateY(-8px); }
+
+    .deck-stack { width: clamp(120px, 32vw, 150px); }
+  }
 </style>
+
+<script>
+  const deckWrap = document.getElementById('deck-wrap')!;
+  const deckBtn  = document.getElementById('deck-btn')!;
+  const spreadEl = document.getElementById('spread')!;
+
+  let spread = false;
+
+  function doSpread() {
+    if (spread) return;
+    spread = true;
+
+    // 1. Animate deck out
+    deckWrap.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
+    deckWrap.style.opacity    = '0';
+    deckWrap.style.transform  = 'scale(0.9)';
+
+    setTimeout(() => {
+      // 2. Hide deck, show spread grid
+      deckWrap.style.display = 'none';
+      spreadEl.style.display = 'grid';
+
+      // 3. Stagger cards into view
+      const cards = Array.from(spreadEl.querySelectorAll<HTMLElement>('.card'));
+      cards.forEach((card, i) => {
+        setTimeout(() => card.classList.add('card-reveal'), i * 90);
+      });
+    }, 260);
+  }
+
+  deckBtn.addEventListener('click', doSpread);
+  deckBtn.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSpread(); }
+  });
+</script>
