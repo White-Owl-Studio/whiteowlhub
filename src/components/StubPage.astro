@@ -1,0 +1,40 @@
+---
+interface Props {
+  numeral: string;
+  label: string;
+  accent: string;
+  stage: number;
+}
+const { numeral, label, accent, stage } = Astro.props;
+---
+
+<section class="page-stub" style={`--page-accent: ${accent}`}>
+  <p class="eyebrow">{numeral} · {label}</p>
+  <h1>{label}</h1>
+  <p class="stage-note">{label} page — Stage {stage}</p>
+</section>
+
+<style>
+  .page-stub {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    text-align: center;
+    padding: 80px 24px;
+    position: relative;
+    z-index: 2;
+  }
+
+  h1 {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    color: var(--page-accent);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .stage-note { color: var(--text-muted); }
+</style>

@@ -1,34 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
+import StubPage from '../components/StubPage.astro';
 ---
-
 <Base title="About Us" description="About White Owl Studio">
-  <section class="page-stub" style="--page-accent: var(--accent-about)">
-    <p class="eyebrow">III · About Us</p>
-    <h1>About Us</h1>
-    <p>About page — Stage 4</p>
-  </section>
+  <StubPage numeral="III" label="About Us" accent="var(--accent-about)" stage={4} />
 </Base>
-
-<style>
-  .page-stub {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    text-align: center;
-    padding: 80px 24px;
-  }
-
-  h1 {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    color: var(--page-accent);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  p { color: var(--text-muted); }
-</style>

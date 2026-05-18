@@ -52,7 +52,7 @@ import { films, featuredFilm } from '../data/films';
 
     <div class="card-rail">
       {films.map(film => (
-        <article
+        <div
           class={`film-card${film.featured ? ' film-card--featured' : ''}`}
           data-open-modal={film.slug}
           role="button"
@@ -93,7 +93,7 @@ import { films, featuredFilm } from '../data/films';
             <p class="card-title-label">{film.title}</p>
             <p class="card-meta-line">{film.year} · {film.format} · {film.stage}</p>
           </div>
-        </article>
+        </div>
       ))}
     </div>
   </section>
@@ -180,6 +180,7 @@ import { films, featuredFilm } from '../data/films';
                 <iframe
                   src={film.trailer}
                   allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                  allowfullscreen
                   title={`${film.title} — Trailer`}
                 ></iframe>
               )
@@ -316,19 +317,13 @@ import { films, featuredFilm } from '../data/films';
 </script>
 
 <style>
-  /* ── Design tokens ─────────────────────────────────── */
+  /* ── Films page tokens (page-specific only; shared tokens live in global.css) ── */
   :root {
-    --red: #e02828;
-    --gold: #f5d060;
-    --gold-dim: rgba(245, 208, 96, 0.35);
-    --gold-ghost: rgba(245, 208, 96, 0.12);
+    --red: #e02828;          /* Laila red — same as --accent-films */
     --red-dim: rgba(224, 40, 40, 0.2);
-    --bg: #050409;
     --card-bg: #0d0a14;
     --card-w: clamp(148px, 16vw, 196px);
     --card-h: clamp(266px, 28.8vw, 353px);
-    --section-px: clamp(24px, 7vw, 96px);
-    --section-py: clamp(64px, 9vw, 128px);
   }
 
   /* ── Stage tags ────────────────────────────────────── */
@@ -361,7 +356,7 @@ import { films, featuredFilm } from '../data/films';
   }
 
   .stage-tag--in-development {
-    color: var(--gold-dim);
+    color: var(--gold-faint);
     background: var(--gold-ghost);
     border: 1px solid rgba(245, 208, 96, 0.18);
   }
@@ -484,7 +479,7 @@ import { films, featuredFilm } from '../data/films';
     font-size: 0.7rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: var(--gold-dim);
+    color: var(--gold-faint);
   }
 
   .hero-meta .sep {
@@ -573,7 +568,7 @@ import { films, featuredFilm } from '../data/films';
     font-size: 0.6rem;
     letter-spacing: 0.28em;
     text-transform: uppercase;
-    color: var(--gold-dim);
+    color: var(--gold-faint);
   }
 
   .section-title {
@@ -764,7 +759,7 @@ import { films, featuredFilm } from '../data/films';
     font-size: 0.62rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--gold-dim);
+    color: var(--gold-faint);
     line-height: 1.4;
     transition: color 0.2s ease;
   }
@@ -1011,7 +1006,7 @@ import { films, featuredFilm } from '../data/films';
     font-family: 'Cinzel', serif;
     font-size: 0.8rem;
     letter-spacing: 0.2em;
-    color: var(--gold-dim);
+    color: var(--gold-faint);
     flex-shrink: 0;
   }
 
@@ -1032,7 +1027,7 @@ import { films, featuredFilm } from '../data/films';
     flex-shrink: 0;
     background: transparent;
     border: 1px solid rgba(245, 208, 96, 0.18);
-    color: var(--gold-dim);
+    color: var(--gold-faint);
     font-size: 0.9rem;
     width: 32px;
     height: 32px;
@@ -1133,7 +1128,7 @@ import { films, featuredFilm } from '../data/films';
     font-size: 0.62rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: var(--gold-dim);
+    color: var(--gold-faint);
   }
 
   .modal-meta-strip .sep {

@@ -39,6 +39,17 @@
   --accent-experiences: #78e058;   /* frog green */
   --accent-coven:       #2a5a3a;   /* forest */
 
+  /* ── Alpha variants (transparent) ── */
+  --gold-faint:        rgba(245, 208, 96, 0.35);
+  --gold-ghost:        rgba(245, 208, 96, 0.12);
+  --violet-faint:      rgba(112, 64, 184, 0.35);
+  --violet-ghost:      rgba(112, 64, 184, 0.12);
+  --red-faint:         rgba(224,  40,  40, 0.20);
+
+  /* ── Layout spacing (shared across pages) ── */
+  --section-px: clamp(24px, 7vw, 96px);
+  --section-py: clamp(64px, 9vw, 128px);
+
   /* ── Supporting palette ── */
   --violet:       #4a2d7a;
   --violet-mid:   #7040b8;

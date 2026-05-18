@@ -35,17 +35,18 @@ const currentPath = Astro.url.pathname;
         </a>
 
         {label === 'Our Work' && (
-          <div class="nav-dropdown" role="list">
+          <ul class="nav-dropdown">
             {categories.map(cat => (
-              <a
-                href={`/portfolio/${cat.slug}`}
-                class:list={['nav-dropdown-link', { active: currentPath === `/portfolio/${cat.slug}` }]}
-                role="listitem"
-              >
-                {cat.title}
-              </a>
+              <li>
+                <a
+                  href={`/portfolio/${cat.slug}`}
+                  class:list={['nav-dropdown-link', { active: currentPath === `/portfolio/${cat.slug}` }]}
+                >
+                  {cat.title}
+                </a>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </li>
     ))}
@@ -65,8 +66,6 @@ const currentPath = Astro.url.pathname;
     padding: 0 32px;
     height: 64px;
     background: linear-gradient(to bottom, rgba(5,4,9,0.95) 0%, rgba(5,4,9,0.0) 100%);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
   }
 
   /* ── Logo ── */
@@ -141,6 +140,7 @@ const currentPath = Astro.url.pathname;
     top: calc(100% + 16px);
     left: 50%;
     transform: translateX(-50%);
+    list-style: none;
     background: rgba(5, 4, 9, 0.97);
     border: 1px solid rgba(245, 208, 96, 0.1);
     backdrop-filter: blur(10px);
@@ -156,7 +156,8 @@ const currentPath = Astro.url.pathname;
     z-index: 200;
   }
 
-  .nav-item--has-dropdown:hover .nav-dropdown {
+  .nav-item--has-dropdown:hover .nav-dropdown,
+  .nav-item--has-dropdown:focus-within .nav-dropdown {
     opacity: 1;
     pointer-events: all;
     transform: translateX(-50%) translateY(0);
@@ -258,12 +259,14 @@ const currentPath = Astro.url.pathname;
   toggle?.addEventListener('click', () => {
     const open = links.classList.toggle('open');
     toggle.setAttribute('aria-expanded', String(open));
+    links.setAttribute('aria-hidden', String(!open));
   });
 
   document.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
       links.classList.remove('open');
       toggle?.setAttribute('aria-expanded', 'false');
+      links.setAttribute('aria-hidden', 'true');
     });
   });
 </script>

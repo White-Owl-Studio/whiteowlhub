@@ -1,34 +1,7 @@
 ---
 import Base from '../layouts/Base.astro';
+import StubPage from '../components/StubPage.astro';
 ---
-
 <Base title="Online Playthings" description="Interactive experiences and games — White Owl Studio">
-  <section class="page-stub" style="--page-accent: var(--accent-experiences)">
-    <p class="eyebrow">V · Online Playthings</p>
-    <h1>Online Playthings</h1>
-    <p>Experiences page — Stage 6</p>
-  </section>
+  <StubPage numeral="V" label="Online Playthings" accent="var(--accent-experiences)" stage={6} />
 </Base>
-
-<style>
-  .page-stub {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    text-align: center;
-    padding: 80px 24px;
-  }
-
-  h1 {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    color: var(--page-accent);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  p { color: var(--text-muted); }
-</style>

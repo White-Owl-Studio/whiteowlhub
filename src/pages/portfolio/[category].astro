@@ -1,6 +1,7 @@
 ---
 import type { GetStaticPaths } from 'astro';
 import Base from '../../layouts/Base.astro';
+import Lightbox from '../../components/Lightbox.astro';
 import { categories } from '../../data/portfolio';
 import type { Category } from '../../data/portfolio';
 
@@ -135,105 +136,11 @@ const hasProjects = category.grid === 'project' && (category.projects?.length ??
     </section>
   )}
 
-  <!-- ══════════════════════════════════════ LIGHTBOX ══ -->
-  <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
-    <button class="lightbox-close" id="lightbox-close" aria-label="Close">✕</button>
-    <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous">‹</button>
-    <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next">›</button>
-    <div class="lightbox-media-wrap" id="lightbox-media-wrap"></div>
-    <div class="lightbox-counter" id="lightbox-counter"></div>
-  </div>
+  <Lightbox items={category.items} />
 
 </Base>
 
-<script define:vars={{ items: category.items, gridType: category.grid }}>
-  const lightbox = document.getElementById('lightbox');
-  const mediaWrap = document.getElementById('lightbox-media-wrap');
-  const counter = document.getElementById('lightbox-counter');
-  let current = 0;
-  let activeItems = items;
-
-  function renderMedia(index) {
-    const item = activeItems[index];
-    if (!item) return;
-    mediaWrap.innerHTML = '';
-    let el;
-    if (item.type === 'video') {
-      el = document.createElement('video');
-      el.src = item.src;
-      el.autoplay = true;
-      el.loop = true;
-      el.muted = true;
-      el.playsInline = true;
-      el.className = 'lightbox-media';
-    } else {
-      el = document.createElement('img');
-      el.src = item.src;
-      el.alt = item.alt;
-      el.className = 'lightbox-media';
-    }
-    mediaWrap.appendChild(el);
-    counter.textContent = `${index + 1} / ${activeItems.length}`;
-  }
-
-  function open(index, itemSet) {
-    if (itemSet) activeItems = itemSet;
-    current = index;
-    renderMedia(current);
-    lightbox.setAttribute('aria-hidden', 'false');
-    lightbox.classList.add('is-open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function close() {
-    lightbox.setAttribute('aria-hidden', 'true');
-    lightbox.classList.remove('is-open');
-    document.body.style.overflow = '';
-    mediaWrap.innerHTML = '';
-  }
-
-  function navigate(dir) {
-    current = (current + dir + activeItems.length) % activeItems.length;
-    renderMedia(current);
-  }
-
-  document.querySelectorAll('[data-lightbox-trigger]').forEach(el => {
-    el.addEventListener('click', () => {
-      open(Number(el.dataset.lightboxIndex), null);
-    });
-    el.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        open(Number(el.dataset.lightboxIndex), null);
-      }
-    });
-  });
-
-  document.getElementById('lightbox-backdrop').addEventListener('click', close);
-  document.getElementById('lightbox-close').addEventListener('click', close);
-  document.getElementById('lightbox-prev').addEventListener('click', () => navigate(-1));
-  document.getElementById('lightbox-next').addEventListener('click', () => navigate(1));
-
-  document.addEventListener('keydown', e => {
-    if (!lightbox.classList.contains('is-open')) return;
-    if (e.key === 'Escape') close();
-    if (e.key === 'ArrowLeft') navigate(-1);
-    if (e.key === 'ArrowRight') navigate(1);
-  });
-</script>
-
 <style>
-  :root {
-    --violet: #7040b8;
-    --violet-dim: rgba(112, 64, 184, 0.35);
-    --violet-ghost: rgba(112, 64, 184, 0.1);
-    --gold: #f5d060;
-    --gold-dim: rgba(245, 208, 96, 0.35);
-    --section-px: clamp(24px, 7vw, 96px);
-    --section-py: clamp(64px, 9vw, 128px);
-  }
-
   /* ══════════════════════════════════════ HEADER ══ */
   .cat-hero {
     padding: clamp(100px, 14vw, 160px) var(--section-px) clamp(32px, 4vw, 56px);
@@ -254,22 +161,14 @@ const hasProjects = category.grid === 'project' && (category.projects?.length ??
     font-size: 0.58rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--violet-dim);
+    color: var(--violet-faint);
     text-decoration: none;
     display: inline-block;
     margin-bottom: 8px;
     transition: color 0.2s ease;
   }
 
-  .back-link:hover { color: var(--violet); }
-
-  .eyebrow {
-    font-family: 'Cinzel', serif;
-    font-size: 0.58rem;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: var(--gold-dim);
-  }
+  .back-link:hover { color: var(--accent-portfolio); }
 
   .cat-title {
     font-family: 'Cinzel', serif;
@@ -281,7 +180,7 @@ const hasProjects = category.grid === 'project' && (category.projects?.length ??
     transition: color 0.2s ease;
   }
 
-  .cat-title:hover { color: var(--violet); }
+  .cat-title:hover { color: var(--accent-portfolio); }
 
   .cat-desc {
     font-family: 'Crimson Pro', serif;
@@ -380,7 +279,7 @@ const hasProjects = category.grid === 'project' && (category.projects?.length ??
     transition: color 0.2s ease;
   }
 
-  .project-card:hover .project-name { color: var(--violet); }
+  .project-card:hover .project-name { color: var(--accent-portfolio); }
 
   .project-count {
     font-family: 'Crimson Pro', serif;
@@ -417,12 +316,12 @@ const hasProjects = category.grid === 'project' && (category.projects?.length ??
     font-size: 0.6rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--violet-dim);
+    color: var(--violet-faint);
     text-decoration: none;
     transition: color 0.2s ease;
   }
 
-  .empty-back:hover { color: var(--violet); }
+  .empty-back:hover { color: var(--accent-portfolio); }
 
   /* ══════════════════════════════════════ LIGHTBOX ══ */
   .lightbox {
@@ -486,8 +385,8 @@ const hasProjects = category.grid === 'project' && (category.projects?.length ??
   }
 
   .lightbox-close:hover {
-    color: var(--violet);
-    border-color: var(--violet-dim);
+    color: var(--accent-portfolio);
+    border-color: var(--violet-faint);
   }
 
   .lightbox-nav {
@@ -511,8 +410,8 @@ const hasProjects = category.grid === 'project' && (category.projects?.length ??
   }
 
   .lightbox-nav:hover {
-    color: var(--violet);
-    border-color: var(--violet-dim);
+    color: var(--accent-portfolio);
+    border-color: var(--violet-faint);
   }
 
   .lightbox-prev { left: 24px; }

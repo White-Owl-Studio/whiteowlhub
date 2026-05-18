@@ -1,34 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
+import StubPage from '../../components/StubPage.astro';
 ---
-
 <Base title="The Coven" description="The Coven — members only — White Owl Studio">
-  <section class="page-stub" style="--page-accent: var(--accent-coven)">
-    <p class="eyebrow">VI · The Coven</p>
-    <h1>The Coven</h1>
-    <p>Member portal — Stage 7</p>
-  </section>
+  <StubPage numeral="VI" label="The Coven" accent="var(--accent-coven)" stage={7} />
 </Base>
-
-<style>
-  .page-stub {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    text-align: center;
-    padding: 80px 24px;
-  }
-
-  h1 {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    color: var(--page-accent);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-
-  p { color: var(--text-muted); }
-</style>

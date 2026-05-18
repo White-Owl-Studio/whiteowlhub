@@ -28,6 +28,9 @@ const {
     <canvas id="grain-bg" aria-hidden="true"></canvas>
     <!-- Top grain: near-invisible dark texture above everything -->
     <canvas id="grain-top" aria-hidden="true"></canvas>
+    <!-- Edge blur: gradient-faded backdrop-filter at top and bottom of viewport -->
+    <div class="edge-blur edge-blur--top" aria-hidden="true"></div>
+    <div class="edge-blur edge-blur--bottom" aria-hidden="true"></div>
     <Nav />
     <main>
       <slot />
@@ -36,7 +39,7 @@ const {
   </body>
 </html>
 
-<style is:global>
+<style>
   /* Behind all page content — only visible in open background areas */
   #grain-bg {
     position: fixed;
@@ -46,6 +49,36 @@ const {
     pointer-events: none;
     z-index: 1;
     mix-blend-mode: screen;
+  }
+
+  /* ── Edge blur ──────────────────────────────────────────────────────────
+     background gradient: dark→transparent reveals the blurred content
+     gradually (same technique as the original nav).
+     mask-image: fades the element itself to invisible at the inner edge,
+     removing the hard cutoff line where the blur zone ends.              */
+  .edge-blur {
+    position: fixed;
+    left: 0;
+    right: 0;
+    height: 72px;
+    pointer-events: none;
+    z-index: 10;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .edge-blur--top {
+    top: 0;
+    background: linear-gradient(to bottom, rgba(5,4,9,0.30) 0%, rgba(5,4,9,0.0) 65%);
+    mask-image: linear-gradient(to bottom, black 0%, black 35%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 0%, black 35%, transparent 100%);
+  }
+
+  .edge-blur--bottom {
+    bottom: 0;
+    background: linear-gradient(to top, rgba(5,4,9,0.30) 0%, rgba(5,4,9,0.0) 65%);
+    mask-image: linear-gradient(to top, black 0%, black 35%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to top, black 0%, black 35%, transparent 100%);
   }
 
   /* Whisper-thin dark texture sitting above everything */
@@ -129,7 +162,16 @@ const {
   resize();
   window.addEventListener('resize', resize, { passive: true });
 
-  // 6 FPS for the background grain
-  setInterval(drawBgGrain, 1000 / 6);
+  // 6 FPS for the background grain — paused when tab is hidden
+  let grainTimer = setInterval(drawBgGrain, 1000 / 6);
   drawBgGrain();
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      clearInterval(grainTimer);
+    } else {
+      grainTimer = setInterval(drawBgGrain, 1000 / 6);
+      drawBgGrain();
+    }
+  });
 </script>

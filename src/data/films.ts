@@ -106,4 +106,4 @@ export const films: Film[] = [
   },
 ];
 
-export const featuredFilm = films.find(f => f.featured)!;
+export const featuredFilm = films.find(f => f.featured) ?? films[0];;

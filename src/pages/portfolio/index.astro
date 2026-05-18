@@ -1,5 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
+import Lightbox from '../../components/Lightbox.astro';
 import { categories, editorialItems } from '../../data/portfolio';
 ---
 
@@ -22,13 +23,16 @@ import { categories, editorialItems } from '../../data/portfolio';
           class={`grid-item grid-item--${item.span}`}
           data-lightbox-index={i}
           data-lightbox-trigger
+          role="button"
+          tabindex="0"
+          aria-label={`View ${item.alt}`}
         >
           {item.type === 'video'
             ? <video src={item.src} autoplay loop muted playsinline class="grid-media" />
             : <img src={item.src} alt={item.alt} loading="lazy" class="grid-media" />
           }
           <div class="grid-overlay">
-            <a href={`/portfolio/${item.categorySlug}`} class="grid-category-link" onclick="event.stopPropagation()">
+            <a href={`/portfolio/${item.categorySlug}`} class="grid-category-link" data-category-link>
               {categories.find(c => c.slug === item.categorySlug)?.title}
             </a>
           </div>
@@ -56,96 +60,18 @@ import { categories, editorialItems } from '../../data/portfolio';
     </nav>
   </section>
 
-  <!-- ══════════════════════════════════════ LIGHTBOX ══ -->
-  <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
-    <button class="lightbox-close" id="lightbox-close" aria-label="Close">✕</button>
-    <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous">‹</button>
-    <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next">›</button>
-    <div class="lightbox-media-wrap" id="lightbox-media-wrap"></div>
-    <div class="lightbox-counter" id="lightbox-counter"></div>
-  </div>
+  <Lightbox items={editorialItems} />
 
 </Base>
 
-<script define:vars={{ items: editorialItems }}>
-  const lightbox = document.getElementById('lightbox');
-  const mediaWrap = document.getElementById('lightbox-media-wrap');
-  const counter = document.getElementById('lightbox-counter');
-  let current = 0;
-
-  function renderMedia(index) {
-    const item = items[index];
-    mediaWrap.innerHTML = '';
-    let el;
-    if (item.type === 'video') {
-      el = document.createElement('video');
-      el.src = item.src;
-      el.autoplay = true;
-      el.loop = true;
-      el.muted = true;
-      el.playsInline = true;
-      el.className = 'lightbox-media';
-    } else {
-      el = document.createElement('img');
-      el.src = item.src;
-      el.alt = item.alt;
-      el.className = 'lightbox-media';
-    }
-    mediaWrap.appendChild(el);
-    counter.textContent = `${index + 1} / ${items.length}`;
-  }
-
-  function open(index) {
-    current = index;
-    renderMedia(current);
-    lightbox.setAttribute('aria-hidden', 'false');
-    lightbox.classList.add('is-open');
-    document.body.style.overflow = 'hidden';
-  }
-
-  function close() {
-    lightbox.setAttribute('aria-hidden', 'true');
-    lightbox.classList.remove('is-open');
-    document.body.style.overflow = '';
-    mediaWrap.innerHTML = '';
-  }
-
-  function navigate(dir) {
-    current = (current + dir + items.length) % items.length;
-    renderMedia(current);
-  }
-
-  document.querySelectorAll('[data-lightbox-trigger]').forEach(el => {
-    el.addEventListener('click', () => {
-      open(Number(el.dataset.lightboxIndex));
-    });
-  });
-
-  document.getElementById('lightbox-backdrop').addEventListener('click', close);
-  document.getElementById('lightbox-close').addEventListener('click', close);
-  document.getElementById('lightbox-prev').addEventListener('click', () => navigate(-1));
-  document.getElementById('lightbox-next').addEventListener('click', () => navigate(1));
-
-  document.addEventListener('keydown', e => {
-    if (!lightbox.classList.contains('is-open')) return;
-    if (e.key === 'Escape') close();
-    if (e.key === 'ArrowLeft') navigate(-1);
-    if (e.key === 'ArrowRight') navigate(1);
+<script>
+  // Stop category links from triggering the lightbox on their parent
+  document.querySelectorAll('[data-category-link]').forEach(el => {
+    el.addEventListener('click', e => e.stopPropagation());
   });
 </script>
 
 <style>
-  :root {
-    --violet: #7040b8;
-    --violet-dim: rgba(112, 64, 184, 0.35);
-    --violet-ghost: rgba(112, 64, 184, 0.1);
-    --section-px: clamp(24px, 7vw, 96px);
-    --section-py: clamp(64px, 9vw, 128px);
-    --gold: #f5d060;
-    --gold-dim: rgba(245, 208, 96, 0.35);
-  }
-
   /* ══════════════════════════════════════ HEADER ══ */
   .port-hero {
     padding: clamp(100px, 14vw, 160px) var(--section-px) clamp(40px, 5vw, 64px);
@@ -159,14 +85,6 @@ import { categories, editorialItems } from '../../data/portfolio';
     gap: 12px;
   }
 
-  .eyebrow {
-    font-family: 'Cinzel', serif;
-    font-size: 0.6rem;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: var(--gold-dim);
-  }
-
   .port-title {
     font-family: 'Cinzel', serif;
     font-size: clamp(2.4rem, 5vw, 4.5rem);
@@ -177,7 +95,7 @@ import { categories, editorialItems } from '../../data/portfolio';
     transition: color 0.2s ease;
   }
 
-  .port-title:hover { color: var(--violet); }
+  .port-title:hover { color: var(--accent-portfolio); }
 
   .port-sub {
     font-family: 'Crimson Pro', serif;
@@ -210,7 +128,6 @@ import { categories, editorialItems } from '../../data/portfolio';
   .grid-item--featured { grid-column: span 2; grid-row: span 2; }
   .grid-item--wide     { grid-column: span 2; }
   .grid-item--tall     { grid-row: span 2; }
-  .grid-item--normal   {}
 
   .grid-media {
     width: 100%;
@@ -250,7 +167,7 @@ import { categories, editorialItems } from '../../data/portfolio';
   }
 
   .grid-category-link:hover {
-    color: var(--violet);
+    color: var(--accent-portfolio);
   }
 
   /* ══════════════════════════════ CATEGORY NAV ══ */
@@ -277,7 +194,7 @@ import { categories, editorialItems } from '../../data/portfolio';
     transition: color 0.2s ease;
   }
 
-  .section-title:hover { color: var(--violet); }
+  .section-title:hover { color: var(--accent-portfolio); }
 
   .category-grid {
     display: grid;
@@ -309,7 +226,7 @@ import { categories, editorialItems } from '../../data/portfolio';
     font-family: 'Cinzel', serif;
     font-size: 0.58rem;
     letter-spacing: 0.15em;
-    color: var(--violet-dim);
+    color: var(--violet-faint);
     grid-row: 1;
     grid-column: 1;
     padding-top: 3px;
@@ -326,7 +243,7 @@ import { categories, editorialItems } from '../../data/portfolio';
     transition: color 0.2s ease;
   }
 
-  .category-card:hover .cat-title { color: var(--violet); }
+  .category-card:hover .cat-title { color: var(--accent-portfolio); }
 
   .cat-desc {
     font-family: 'Crimson Pro', serif;
@@ -340,7 +257,7 @@ import { categories, editorialItems } from '../../data/portfolio';
 
   .cat-arrow {
     font-size: 0.9rem;
-    color: var(--violet-dim);
+    color: var(--violet-faint);
     grid-row: 1;
     grid-column: 3;
     align-self: center;
@@ -348,7 +265,7 @@ import { categories, editorialItems } from '../../data/portfolio';
   }
 
   .category-card:hover .cat-arrow {
-    color: var(--violet);
+    color: var(--accent-portfolio);
     transform: translateX(4px);
   }
 
@@ -414,8 +331,8 @@ import { categories, editorialItems } from '../../data/portfolio';
   }
 
   .lightbox-close:hover {
-    color: var(--violet);
-    border-color: var(--violet-dim);
+    color: var(--accent-portfolio);
+    border-color: var(--violet-faint);
   }
 
   .lightbox-nav {
@@ -439,8 +356,8 @@ import { categories, editorialItems } from '../../data/portfolio';
   }
 
   .lightbox-nav:hover {
-    color: var(--violet);
-    border-color: var(--violet-dim);
+    color: var(--accent-portfolio);
+    border-color: var(--violet-faint);
   }
 
   .lightbox-prev { left: 24px; }
