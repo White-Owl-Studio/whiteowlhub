@@ -161,4 +161,32 @@
 
 ---
 
+## Session 5 — 2026-05-18 (continued)
+
+**Goal:** Edge blur effect + full codebase quality pass
+
+### What was done
+
+**Edge blur effect (Base.astro):**
+- Added two fixed `.edge-blur` divs (top + bottom) to every page
+- Final working technique: `background: linear-gradient(to bottom, rgba(5,4,9,0.30) 0%, transparent 65%)` + `backdrop-filter: blur(2px)` + `mask-image: linear-gradient(to bottom, black 0%, black 35%, transparent 100%)`
+- Height: 72px. Dark gradient (0.30 opacity) provides the "out of focus" reveal — blur applies everywhere, content only visible where background fades to transparent
+- Key learning: backdrop-filter with NO dark background → glow. With dark background gradient → out-of-focus / stained-glass. Blur must be the SAME technique as the nav (dark gradient + blur) not mask-only
+- Nav's own `backdrop-filter: blur(2px)` removed to avoid double-layering
+
+**Quality pass:**
+- `global.css`: added shared alpha tokens (`--gold-faint`, `--gold-ghost`, `--violet-faint`, `--violet-ghost`, `--red-faint`) and layout tokens (`--section-px`, `--section-py`)
+- Extracted `Lightbox.astro` component — removed ~130 lines of duplicated lightbox HTML/JS/CSS from both portfolio pages
+- Extracted `StubPage.astro` — 4 stub pages (about, shop, experiences, coven) each collapsed from 34 lines to 6 lines
+- `Nav.astro`: fixed `<nav role="list">` → `<ul>`; added `:focus-within` for keyboard dropdown access; synced mobile `aria-hidden`
+- `Base.astro`: removed unnecessary `is:global`; grain setInterval pauses on `visibilitychange`
+- `films.astro`: removed duplicate `:root` vars; `<article role="button">` → `<div role="button">`; added `allowfullscreen` to iframe
+- `portfolio/index.astro` + `[category].astro`: removed duplicate `:root` blocks; replaced all local `--violet`/`--gold-dim` refs with global tokens; fixed inline `onclick`; added `role`/`tabindex`/`aria-label` to grid items
+- `films.ts`: `featuredFilm ?? films[0]` (was unsafe non-null assertion)
+- `Footer.astro`: `loading="lazy"` on footer logo
+
+### Session 5 status: COMPLETE ✅
+
+---
+
 ## Next session → Stage 4 Creative Review + About page

@@ -14,7 +14,7 @@ The official White Owl Studio website at **whiteowlhub.com**. An Astro v5 static
 5. Run pre-stage creative review with user before writing any code
 
 ## Current stage
-**Stage 4 — About page.** Stages 0–3 complete.
+**Stage 4 — About page.** Stages 0–3 complete. Edge blur + quality pass done.
 
 **Rule: always run the pre-stage creative review before writing code for a new stage.**
 
