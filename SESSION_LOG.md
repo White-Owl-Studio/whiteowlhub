@@ -256,4 +256,17 @@
 
 ---
 
+### Intelligence run — Stage 5
+Ran 7 parallel WebSearch queries before finalising the shop page:
+- Indie studio shop design best practices
+- LAIKA + Cartoon Saloon shop examples
+- Product page psychology (scarcity, curiosity, conversion)
+- Coming-soon pages that build desire
+- Dark/niche aesthetic brand drops
+- Limited edition art print storytelling copy
+
+Key findings applied: film-anchored product copy (LAIKA model), concrete spec line alongside charming blurb, price ranging, preview band (Jimmy Fairly "whole collection visible" pattern), film filter tabs, staggered entrance animations. Michael rated this as the most useful reference run to date.
+
+---
+
 ## Next session → Stage 6 Creative Review + Online Experiences page
