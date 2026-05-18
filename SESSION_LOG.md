@@ -269,4 +269,60 @@ Key findings applied: film-anchored product copy (LAIKA model), concrete spec li
 
 ---
 
-## Next session → Stage 6 Creative Review + Online Experiences page
+## Session 8 — 2026-05-18 (continued)
+
+**Goal:** Stage 6 — Online Experiences / Online Playthings
+
+### Creative review decisions
+- Hero element: circular lake / glass orb, full-viewport
+- Press orb → glitter-fog swirl → reveals random experience (weighted)
+- 4 slots: Laila's Descent (50%), two placeholders (24% each), secret (2%)
+- Each slot has its own swirl colour signature
+- Game opens on dedicated page (`/experiences/lailas-descent`) in fullscreen iframe
+- Reveal panel: genre label + title + Enter button only (no tagline, no "press again")
+- Laila sprite: small, lower-middle of orb; lake fills upper portion
+- Orb background: dark purple glittersmoke (fog wisps as fillRect radial gradients, not arcs)
+- Orb rim: soft diffuse purple aurora glow, no hard outline; shifts to experience accent on reveal
+- Background crossfades: neutral purple → experience-specific on press
+
+### What was done
+
+**`src/pages/experiences.astro`** — full page:
+- Canvas orb: dark purple void + 5 rotating fog-wisp smoke plumes + 48 orbiting glitter particles
+- Press triggers inward glitter swirl → background crossfades → experience reveals
+- Outward swirl on re-press → crossfade to neutral → next random pick → inward swirl
+- 4 experiences with weights; secret auto-resets after 7s
+- Reveal panel: genre eyebrow + title + centred Enter button
+
+**`src/pages/experiences/lailas-descent.astro`** — game host:
+- Fullscreen fixed layout, hides site nav/footer
+- Laila-red minimal nav bar with Exit button → back to orb
+- Iframe loads `public/games/lailas-descent.html`
+
+**`public/games/lailas-descent.html`** — game file copied from `Lailas-Descent-game/game.html`
+
+**Sprite — key lessons learned (hard way):**
+- Initial implementation used named hair waypoints as bezier CONTROL POINTS → duck shape
+- Fix: implemented catmull-rom (`crPath`) so curve passes THROUGH each point
+- Fix: L1 hair was drawn AFTER head → fixed draw order
+- Fix: L2 bangs were only drawn on right side → game draws normal + X-mirrored (both sides)
+- Final fix: read the actual game source (`game.html`) and copied `_crPath`, `_L1PTS`, `_L2PTS`, draw order exactly
+- Key pattern: use `ctx.translate(CX, CY + offset) + ctx.scale(s,s)`, then draw in raw game units
+
+**Sprite constants (from game source):**
+- `_L1PTS` includes closing point `[4,-4.3]` (= first point) for smooth catmull-rom closure
+- `_L2PTS = [[11.8,-10.6],[5,-22],[0,-17.8],[5,-13],[11.8,-10.6]]` — drawn twice (+ X-mirror)
+- `_crPath` uses `a=1/6` (standard catmull-rom to bezier conversion)
+- Draw order: L1 hair → feet → hands → dress (trapezoid) → sleeves → face → eyes → L2×2 → strands
+- Dress is a simple `moveTo/lineTo` trapezoid, NOT bezier curves
+
+**Zone 1 background (from game source `drawBg_stillWater`):**
+- Linear gradient: `#060c16 → #050a14 → #020408` (top → bottom)
+- Cold light radial: `rgba(184,212,240,0.24)` centred above orb, fading to transparent
+- 55 `#8ab0cc` sediment particles drifting UPWARD (disorienting, Zone 1 design choice)
+
+### Stage 6 status: COMPLETE ✅
+
+---
+
+## Next session → Stage 7 Creative Review + The Coven
