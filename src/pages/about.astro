@@ -1,7 +1,900 @@
 ---
 import Base from '../layouts/Base.astro';
-import StubPage from '../components/StubPage.astro';
+
+const clients = [
+  { id: 1, name: 'Studio Partner',   top:  '8%', left: '38%' },
+  { id: 2, name: 'Client Name Two',  top: '14%', left: '66%' },
+  { id: 3, name: 'Partner Three',    top: '42%', left: '51%' },
+  { id: 4, name: 'Agency Four',      top: '65%', left: '35%' },
+  { id: 5, name: 'Studio Five',      top: '58%', left: '70%' },
+  { id: 6, name: 'Client Six',       top: '82%', left: '54%' },
+];
+
+const phases = [
+  {
+    num: '01', title: 'Pre-Production', slug: 'pre-prod',
+    body: 'Every film begins in conversation — a feeling, an image, a question that won\'t leave us alone. We develop scripts through voice and iteration, building the world from the ground up: concept art, character design, colour keys, storyboards. We don\'t move forward until the animatic earns every beat. The story has to be solid before a single frame is drawn.',
+    tags: ['Development', 'Scripting', 'Visual Development', 'Storyboard', 'Animatic'],
+    postitsRight: true,
+  },
+  {
+    num: '02', title: 'Production', slug: 'prod',
+    body: 'Animation at White Owl is deliberate. Every pose is considered, every transition authored. We work with voice talent, composers, and sound designers as collaborators — not vendors — because the film\'s world needs to be consistent in every layer at once. Production is where the work becomes undeniable.',
+    tags: ['Animation', 'Voice Recording', 'Sound Design', 'Music Composition'],
+    postitsRight: false,
+  },
+  {
+    num: '03', title: 'Post-Production', slug: 'post-prod',
+    body: 'Editing, colour, and sound mix are the last acts of authorship. We finish our work to festival and broadcast standards, and we accompany each film through submission, programming, and release. The work doesn\'t end when the export does. We follow our films into the world.',
+    tags: ['Editing', 'Colour Grading', 'Sound Mix', 'Delivery', 'Festival Distribution'],
+    postitsRight: true,
+  },
+];
 ---
-<Base title="About Us" description="About White Owl Studio">
-  <StubPage numeral="III" label="About Us" accent="var(--accent-about)" stage={4} />
+
+<Base title="About Us" description="White Owl Studio — who we are, how we work, and what we make.">
+
+  <!-- ═══════════════════════════════════════════ INTRO ══ -->
+  <section class="about-intro">
+    <div class="intro-inner">
+
+      <div class="intro-left">
+        <div class="intro-header-row">
+
+          <div class="sketch-ph">
+            <!-- PLACEHOLDER: replace inner content with:
+                 <img src="/about/founders-sketch.jpg"
+                      alt="Michael and Oshrit with their cats — a pen sketch"
+                      class="sketch-img" />
+            -->
+            <span class="ph-label">Sketch</span>
+            <span class="ph-desc">founders<br/>+ cats</span>
+          </div>
+
+          <div class="intro-title-block">
+            <p class="eyebrow">Who We Are</p>
+            <h1 class="intro-title">White Owl<br/>Studio</h1>
+          </div>
+
+        </div>
+
+        <div class="intro-bio">
+          <p>
+            Michael B. Jacob and Oshrit [___] are the founders of White Owl Studio —
+            an independent animation production house making hand-crafted films about
+            people navigating broken worlds with something approaching courage.
+          </p>
+          <p>
+            Michael directs and animates. Oshrit directs, designs, and builds the
+            visual worlds their stories inhabit. Together they are the studio: its
+            creative voice, its aesthetic conscience, its engine.
+          </p>
+        </div>
+
+        <blockquote class="intro-manifesto">
+          <p>
+            We are not a pipeline. We are not a content studio. We make films
+            the way other people make furniture — slowly, by hand, with care for
+            the person who will eventually sit in it.
+          </p>
+          <p class="manifesto-tagline">Stories made to last.</p>
+        </blockquote>
+      </div>
+
+      <div class="intro-right">
+        {[
+          { n: 1, ratio: '4/3' },
+          { n: 2, ratio: '1/1' },
+          { n: 3, ratio: '4/3' },
+        ].map(({ n, ratio }) => (
+          <div class="studio-ph" style={`aspect-ratio: ${ratio}`}>
+            <!-- PLACEHOLDER: replace with <img src={`/about/studio-${n}.jpg`} alt={`White Owl Studio — photo ${n}`} class="studio-img" /> -->
+            <span class="ph-label">Studio Photo {n}</span>
+            <code class="ph-path">{`public/about/studio-${n}.jpg`}</code>
+          </div>
+        ))}
+      </div>
+
+    </div>
+  </section>
+
+  <hr class="section-rule" />
+
+  <!-- ═══════════════════════════════════════ PROCESS ══ -->
+  <section class="about-process">
+    <header class="section-header">
+      <p class="eyebrow">How We Work</p>
+      <h2 class="section-title">From First Spark<br/>to Final Frame</h2>
+      <p class="section-sub">A complete in-house production — development through delivery</p>
+    </header>
+
+    <div class="process-scrapbook">
+      {phases.map((phase, phaseIdx) => (
+        <div
+          class={`phase-row phase-row--${phaseIdx + 1}${!phase.postitsRight ? ' phase-row--flip' : ''}`}
+          data-reveal
+        >
+          <!-- Card (always in source order; CSS grid flips visually for phase 2) -->
+          <div class={`phase-card-wrap${!phase.postitsRight ? ' phase-card-wrap--pushed' : ''}`}>
+            <article class={`phase-card phase-card--${phaseIdx + 1}`}>
+              <span class="phase-num">{phase.num}</span>
+              <h3 class="phase-title">{phase.title}</h3>
+              <p class="phase-body">{phase.body}</p>
+              <ul class="phase-tags">
+                {phase.tags.map(t => <li>{t}</li>)}
+              </ul>
+            </article>
+          </div>
+
+          <!-- Post-its (3 overlapping image slots) -->
+          <div class={`phase-postits${!phase.postitsRight ? ' phase-postits--left' : ''}`}>
+            {[1, 2, 3].map(n => (
+              <div class={`postit postit--${n}`}>
+                {/* PLACEHOLDER: replace inner content with
+                    <img src={`/about/process/${phase.slug}-${n}.jpg`}
+                         alt={`${phase.title} visual ${n}`}
+                         class="postit-img" />  */}
+                <span class="ph-label">Visual {n}</span>
+                <code class="ph-path">{`process/${phase.slug}-${n}.jpg`}</code>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <hr class="section-rule" />
+
+  <!-- ═══════════════════════════════════════ CLIENTS ══ -->
+  <section class="about-clients">
+    <header class="section-header">
+      <p class="eyebrow">Trusted By</p>
+      <h2 class="section-title">Some of Our Clients<br/>& Partners</h2>
+    </header>
+
+    <div class="clients-field">
+      {clients.map(c => (
+        <div
+          class="client-item"
+          style={`top: ${c.top}; left: ${c.left}`}
+          data-client-id={String(c.id)}
+          data-client-name={c.name}
+        >
+          <!-- Work image — revealed darkened behind the name -->
+          <div class="client-bg" aria-hidden="true">
+            {/* PLACEHOLDER: replace inner div with
+                <img src={`/about/clients/work-${c.id}.jpg`}
+                     alt={`Work for ${c.name}`}
+                     class="preview-img" />  */}
+            <div class="preview-ph">
+              <code>{`work-${c.id}.jpg`}</code>
+            </div>
+          </div>
+          <button class="client-name" type="button" aria-label={`${c.name} — view work`}>
+            {c.name}
+          </button>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- Client work lightbox -->
+  <div id="client-lb" class="client-lb" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Client work">
+    <div class="client-lb-backdrop" id="client-lb-backdrop"></div>
+    <button id="client-lb-close" class="client-lb-close" aria-label="Close">✕</button>
+    <figure class="client-lb-figure" id="client-lb-figure"></figure>
+    <p class="client-lb-caption" id="client-lb-caption"></p>
+  </div>
+
+  <hr class="section-rule" />
+
+  <!-- ═══════════════════════════════════════════ PRESS ══ -->
+  <section class="about-press">
+    <header class="section-header">
+      <p class="eyebrow">In Print</p>
+      <h2 class="section-title">Press</h2>
+    </header>
+
+    <div class="press-grid">
+      {[
+        '"A studio that understands animation not as a genre but as a language — and uses it accordingly."',
+        '"White Owl Studio is one of the most interesting emerging animation voices working today."',
+        '"Stories that ask something of the viewer — and trust them enough to answer."',
+      ].map(quote => (
+        <article class="press-card">
+          <!-- PLACEHOLDER: replace with real press quote and publication info -->
+          <p class="press-quote">{quote}</p>
+          <footer class="press-source">
+            <span class="press-outlet">Publication Name</span>
+            <span class="press-sep">·</span>
+            <span class="press-date">[Month Year]</span>
+          </footer>
+        </article>
+      ))}
+    </div>
+  </section>
+
 </Base>
+
+<style>
+  /* ── Shared layout ── */
+  .about-intro,
+  .about-process,
+  .about-clients,
+  .about-press {
+    padding: var(--section-py) var(--section-px);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-rule {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0 var(--section-px);
+  }
+
+  .section-header { margin-bottom: clamp(40px, 6vw, 72px); }
+  .eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-about);
+    margin-bottom: 0.75rem;
+  }
+  .section-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.75rem, 4vw, 3rem);
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.15;
+    margin-bottom: 0.6rem;
+  }
+  .section-sub {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--text-muted);
+  }
+
+  /* ════════════════════════════════ INTRO ══ */
+  .intro-inner {
+    display: grid;
+    grid-template-columns: 1fr min(36%, 340px);
+    gap: clamp(36px, 5vw, 72px);
+    align-items: start;
+  }
+
+  .intro-header-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 1.25rem;
+    margin-bottom: 2.25rem;
+  }
+
+  .sketch-ph {
+    width: 80px;
+    flex-shrink: 0;
+    aspect-ratio: 3/4;
+    border: 1px dashed var(--border-mid);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    background: var(--surface);
+    padding: 0.5rem;
+    text-align: center;
+  }
+  .sketch-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .intro-title-block { flex: 1; }
+  .intro-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(2.4rem, 5.5vw, 4.5rem);
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.08;
+    margin: 0;
+  }
+
+  .intro-bio {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2.25rem;
+  }
+  .intro-bio p {
+    font-family: 'Crimson Pro', serif;
+    font-size: clamp(1.05rem, 1.7vw, 1.2rem);
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .intro-manifesto {
+    border-left: 2px solid var(--accent-about);
+    padding-left: 1.5rem;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+  .intro-manifesto p {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: clamp(1.15rem, 2vw, 1.4rem);
+    line-height: 1.65;
+    color: var(--bone);
+  }
+  .manifesto-tagline {
+    font-style: normal !important;
+    font-family: 'Cinzel', serif !important;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.18em;
+    color: var(--accent-about) !important;
+    opacity: 0.65;
+  }
+
+  .intro-right {
+    position: sticky;
+    top: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .studio-ph {
+    width: 100%;
+    border: 1px dashed var(--border-mid);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 1.5rem;
+    text-align: center;
+  }
+  .studio-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* ════════════════════════════════ PROCESS / SCRAPBOOK ══ */
+  .about-process .section-header { max-width: 560px; }
+
+  .process-scrapbook {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(3rem, 6vw, 5rem);
+  }
+
+  /* Each row: 2-col grid — card + postits */
+  .phase-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 4vw, 4rem);
+    align-items: center;
+
+    opacity: 0;
+    translate: 0 20px;
+    transition: opacity 0.7s ease, translate 0.7s ease;
+  }
+  .phase-row.revealed {
+    opacity: 1;
+    translate: 0 0;
+  }
+
+  /* Phase 2: flip columns — postits left, card right */
+  .phase-row--flip .phase-card-wrap { order: 2; }
+  .phase-row--flip .phase-postits   { order: 1; }
+
+  /* Phase 2 card pushed further right within its column */
+  .phase-card-wrap--pushed {
+    padding-left: clamp(1.25rem, 4vw, 3.5rem);
+  }
+
+  /* ── Phase card (the paper note) ── */
+  .phase-card {
+    position: relative;
+    padding: clamp(2.25rem, 4vw, 3rem);
+    padding-top: clamp(2.75rem, 5vw, 3.5rem);
+
+    background-color: var(--surface2);
+    background-image:
+      linear-gradient(145deg, rgba(20,17,34,0.9) 0%, transparent 70%),
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 28px,
+        rgba(245,208,96,0.022) 28px,
+        rgba(245,208,96,0.022) 29px
+      );
+    border: 1px solid var(--border-mid);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.35);
+  }
+
+  /* Tape strip at top of each card */
+  .phase-card::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-2.5deg);
+    width: 58px;
+    height: 17px;
+    background: rgba(237,228,204,0.14);
+    border-left:  1px solid rgba(237,228,204,0.08);
+    border-right: 1px solid rgba(237,228,204,0.08);
+  }
+
+  /* Per-card scrapbook tilts */
+  .phase-card--1 { rotate: -1.5deg; }
+  .phase-card--2 { rotate:  0.9deg; }
+  .phase-card--3 { rotate: -0.7deg; }
+
+  .phase-num {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    font-family: 'Cinzel', serif;
+    font-size: clamp(3rem, 5vw, 4.5rem);
+    font-weight: 400;
+    color: var(--accent-about);
+    opacity: 0.09;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .phase-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1rem, 1.8vw, 1.35rem);
+    font-weight: 400;
+    letter-spacing: 0.07em;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+  .phase-body {
+    font-family: 'Crimson Pro', serif;
+    font-size: clamp(1.05rem, 1.6vw, 1.15rem);
+    line-height: 1.82;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+  }
+  .phase-tags {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .phase-tags li {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 0.25rem 0.6rem;
+  }
+
+  /* ── Post-its stack ── */
+  .phase-postits {
+    position: relative;
+    height: 210px;
+    align-self: center;
+  }
+
+  .postit {
+    position: absolute;
+    width: clamp(130px, 14vw, 166px);
+    aspect-ratio: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border-mid);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.5), 2px 2px 8px rgba(0,0,0,0.3);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.6rem;
+    text-align: center;
+  }
+
+  /* Tape on each post-it */
+  .postit::after {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%) rotate(1.5deg);
+    width: 30px;
+    height: 11px;
+    background: rgba(237,228,204,0.11);
+    border-left:  1px solid rgba(237,228,204,0.07);
+    border-right: 1px solid rgba(237,228,204,0.07);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .postit-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Right-side stacks (phases 1 & 3): fan left → right, ~7% overlap */
+  .postit--1 { top: 0px;  left: 0px;   rotate: -5deg;  z-index: 3; }
+  .postit--2 { top: 12px; left: 152px; rotate:  3deg;   z-index: 2; }
+  .postit--3 { top: 24px; left: 304px; rotate: -1.5deg; z-index: 1; }
+
+  /* Left-side stack (phase 2): mirror — fan right → left */
+  .phase-postits--left .postit--1 { left: auto; right: 0px;   rotate:  5deg;   z-index: 3; }
+  .phase-postits--left .postit--2 { left: auto; right: 152px; rotate: -3deg;   z-index: 2; }
+  .phase-postits--left .postit--3 { left: auto; right: 304px; rotate:  1.5deg; z-index: 1; }
+
+  /* ════════════════════════════════ CLIENTS ══ */
+  .clients-field {
+    position: relative;
+    min-height: 560px;
+  }
+
+  .client-item {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  /* Darkened work image — sits behind the name */
+  .client-bg {
+    position: absolute;
+    width: 240px;
+    height: 128px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: opacity 0.45s ease;
+  }
+  .client-item:hover .client-bg { opacity: 1; }
+
+  .preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.3);
+  }
+  .preview-ph {
+    width: 100%;
+    height: 100%;
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: brightness(0.45);
+  }
+  .preview-ph code {
+    font-size: 0.55rem;
+    color: var(--text-muted);
+  }
+
+  /* Client name — always on top, centered */
+  .client-name {
+    position: relative;
+    z-index: 2;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    font-size: clamp(0.68rem, 1.3vw, 0.88rem);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
+    text-align: center;
+    transition: color 0.35s ease;
+  }
+  .client-item:hover .client-name { color: var(--accent-about); }
+
+  /* Mobile: stack into a list */
+  @media (max-width: 768px) {
+    .clients-field {
+      position: static;
+      min-height: unset;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 0.5rem 0;
+    }
+    .client-item {
+      position: static;
+    }
+    .client-bg {
+      width: 200px;
+      height: 110px;
+    }
+  }
+
+  /* ════════════════════════════════ CLIENT LIGHTBOX ══ */
+  .client-lb {
+    position: fixed;
+    inset: 0;
+    z-index: 9500;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+  }
+  .client-lb.is-open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .client-lb-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(5,4,9,0.93);
+    cursor: pointer;
+  }
+  .client-lb-close {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.75rem;
+    z-index: 1;
+    background: transparent;
+    border: 1px solid rgba(237,228,204,0.2);
+    color: rgba(237,228,204,0.55);
+    font-size: 0.9rem;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .client-lb-close:hover {
+    color: var(--accent-about);
+    border-color: rgba(237,228,204,0.4);
+  }
+  .client-lb-figure {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    max-width: min(90vw, 900px);
+    max-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .client-lb-figure img,
+  .client-lb-figure video {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    display: block;
+  }
+  .client-lb-caption {
+    position: relative;
+    z-index: 1;
+    margin-top: 1rem;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(237,228,204,0.4);
+  }
+
+  /* ════════════════════════════════ PRESS ══ */
+  .press-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: clamp(16px, 2.5vw, 32px);
+  }
+  .press-card {
+    border: 1px solid var(--border);
+    padding: clamp(24px, 3vw, 40px);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    background: var(--surface);
+    position: relative;
+    transition: border-color 0.25s ease;
+  }
+  .press-card::before {
+    content: '\201C';
+    position: absolute;
+    top: 14px;
+    left: 18px;
+    font-family: 'Crimson Pro', serif;
+    font-size: 3.5rem;
+    color: var(--accent-about);
+    opacity: 0.2;
+    line-height: 1;
+    pointer-events: none;
+  }
+  .press-card:hover { border-color: rgba(237,228,204,0.22); }
+  .press-quote {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: clamp(1.05rem, 1.8vw, 1.2rem);
+    line-height: 1.7;
+    color: var(--text);
+    padding-top: 1rem;
+  }
+  .press-source {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: auto;
+  }
+  .press-outlet {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-about);
+    opacity: 0.65;
+  }
+  .press-sep { color: var(--text-muted); font-size: 0.75rem; }
+  .press-date {
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Shared placeholder styles ── */
+  .ph-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .ph-desc {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  .ph-path {
+    font-size: 0.58rem;
+    color: var(--text-dim);
+    word-break: break-all;
+    display: block;
+  }
+
+  /* ── Mobile: stack process rows ── */
+  @media (max-width: 768px) {
+    .phase-row {
+      grid-template-columns: 1fr;
+    }
+    .phase-row--flip .phase-card-wrap { order: 1; }
+    .phase-row--flip .phase-postits   { order: 2; }
+    .phase-card-wrap--pushed { padding-left: 0; }
+    .phase-card--1,
+    .phase-card--2,
+    .phase-card--3 { rotate: 0deg; }
+    .phase-postits { height: 210px; }
+    .phase-postits--left .postit--1 { left: 0px;   right: auto; }
+    .phase-postits--left .postit--2 { left: 152px; right: auto; }
+    .phase-postits--left .postit--3 { left: 304px; right: auto; }
+  }
+
+  @media (max-width: 700px) {
+    .intro-inner { grid-template-columns: 1fr; }
+    .intro-right { position: static; flex-direction: row; flex-wrap: wrap; }
+    .studio-ph   { flex: 1 1 48%; }
+  }
+</style>
+
+<script>
+  /* ── Scroll-reveal for phase rows ── */
+  const revealEls = document.querySelectorAll<HTMLElement>('[data-reveal]');
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      entries => entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('revealed');
+          io.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.08 }
+    );
+    revealEls.forEach(el => io.observe(el));
+  } else {
+    revealEls.forEach(el => el.classList.add('revealed'));
+  }
+
+  /* ── Client lightbox ── */
+  const lb        = document.getElementById('client-lb')!;
+  const lbFigure  = document.getElementById('client-lb-figure')!;
+  const lbCaption = document.getElementById('client-lb-caption')!;
+  const lbClose   = document.getElementById('client-lb-close')!;
+  const lbBg      = document.getElementById('client-lb-backdrop')!;
+
+  function openLightbox(clientId: string, clientName: string) {
+    const item = document.querySelector<HTMLElement>(`[data-client-id="${clientId}"]`);
+    lbFigure.innerHTML = '';
+
+    const realImg = item?.querySelector<HTMLImageElement>('.preview-img');
+    const realVid = item?.querySelector<HTMLVideoElement>('video');
+
+    if (realVid) {
+      const el = realVid.cloneNode(true) as HTMLVideoElement;
+      el.style.filter = 'none';
+      lbFigure.appendChild(el);
+      el.play();
+    } else if (realImg) {
+      const el = realImg.cloneNode(true) as HTMLImageElement;
+      el.style.filter = 'none';
+      lbFigure.appendChild(el);
+    } else {
+      const ph = document.createElement('div');
+      Object.assign(ph.style, {
+        width: '480px', maxWidth: '85vw',
+        aspectRatio: '16/9',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+        border: '1px dashed rgba(237,228,204,0.18)',
+      });
+      const label = document.createElement('span');
+      label.textContent = clientName;
+      Object.assign(label.style, {
+        fontFamily: "'Cinzel', serif", fontSize: '0.7rem',
+        letterSpacing: '0.18em', textTransform: 'uppercase',
+        color: 'rgba(237,228,204,0.35)',
+      });
+      const path = document.createElement('code');
+      path.textContent = `public/about/clients/work-${clientId}.jpg`;
+      Object.assign(path.style, { fontSize: '0.58rem', color: 'rgba(237,228,204,0.15)' });
+      ph.appendChild(label);
+      ph.appendChild(path);
+      lbFigure.appendChild(ph);
+    }
+
+    lbCaption.textContent = clientName;
+    lb.setAttribute('aria-hidden', 'false');
+    lb.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    lbClose.focus();
+  }
+
+  function closeLightbox() {
+    lb.classList.remove('is-open');
+    lb.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll<HTMLElement>('.client-item').forEach(item => {
+    item.addEventListener('click', () => {
+      openLightbox(item.dataset.clientId!, item.dataset.clientName!);
+    });
+  });
+
+  lbClose.addEventListener('click', closeLightbox);
+  lbBg.addEventListener('click', closeLightbox);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && lb.classList.contains('is-open')) closeLightbox();
+  });
+</script>

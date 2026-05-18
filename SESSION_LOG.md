@@ -189,4 +189,37 @@
 
 ---
 
-## Next session → Stage 4 Creative Review + About page
+## Session 6 — 2026-05-18 (continued)
+
+**Goal:** Stage 4 — About page
+
+### Creative review decisions
+- 4 sections: Who We Are (co-bio + manifesto), How We Work (pre→post-production narrative), Clients & Partners, Press
+- Tone: personal with moments of declarative confidence
+- Layout: long scroll, single column; intro has 2-col layout with sketch portrait side-header
+- No special interactions — typography and text carry the page
+- All imagery: placeholders for now; sketch of Michael + Oshrit + cats as intro side image
+
+### What was done
+
+**About page (`src/pages/about.astro`):**
+- Replaced stub with full 4-section page
+- **Intro:** 2-column layout (text left, sketch placeholder right). Sticky sketch position on desktop. Co-bio paragraph + bone-accented blockquote manifesto with left border.
+- **Process:** 3 numbered phases (01/02/03) with Cinzel numerals in bone accent, vertical connector line between phases, tag pills for each discipline. IntersectionObserver scroll-reveal on phases.
+- **Clients:** auto-fill grid using `repeat(auto-fill, minmax(160px, 1fr))` — 6 placeholder logo slots. Grid collapses neatly to mobile.
+- **Press:** 3 placeholder quote cards with opening curly-quote decoration, outlet/date source footer. `::before` pseudo-element for the decorative opening quote.
+- Section dividers: `<hr class="section-rule">` with `border-top: 1px solid var(--border)`
+- All placeholder divs marked with `<!-- PLACEHOLDER: ... -->` comments for easy swap-in
+
+**ART_NEEDED.md updated:**
+- Added About page section with 3 categories
+- Founders sketch: `public/about/founders-sketch.jpg` (~600×800 portrait)
+- Client logos: `public/about/clients/client-1.svg` through `client-6.svg`
+- Press outlet logos: `public/about/press/logo-1.svg` through `logo-3.svg` (optional)
+- Total asset count: 35 (films) + 10 (about) = 45
+
+### Stage 4 status: COMPLETE ✅
+
+---
+
+## Next session → Stage 5 Creative Review + Shop/Market of Stuff page

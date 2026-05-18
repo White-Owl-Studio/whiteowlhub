@@ -142,13 +142,127 @@ Update `src/data/films.ts` when known:
 
 ---
 
+---
+
+# Art Needed — About Page
+**Generated:** 2026-05-18  
+**Stage:** 4 — About page
+
+---
+
+## How to swap in real art
+
+1. Drop the file at the path shown below.
+2. In `src/pages/about.astro`, find the `<!-- PLACEHOLDER: replace ... -->` comment near that asset.
+3. Follow the instruction in the comment — replace the placeholder `<div>` with an `<img>` tag (or `<svg>` for logos).
+4. Delete the comment once swapped.
+
+---
+
+## I — Founders Sketch (small portrait, left of main title)
+
+`public/about/`
+
+| Asset | Filename | Dimensions | Format | Status | Notes |
+|-------|----------|-----------|--------|--------|-------|
+| Founders sketch — Michael + Oshrit + cats | `founders-sketch.jpg` | ~240 × 320 (3:4 portrait) | JPG or PNG | ⬜ | Small profile-photo size (80×107 display px). Pen sketch, cute and loose. Sits to the left of the "White Owl Studio" title. |
+
+> **Priority: high.** In `about.astro`, find `.sketch-ph` and replace its inner content with:  
+> `<img src="/about/founders-sketch.jpg" alt="Michael and Oshrit with their cats — a pen sketch" class="sketch-img" />`
+
+---
+
+## II — Studio Photos (right column, sticky beside bio)
+
+`public/about/`
+
+Three photos shown in a sticky right column alongside the bio. Varying aspect ratios.
+
+| Asset | Filename | Dimensions | Format | Status | Notes |
+|-------|----------|-----------|--------|--------|-------|
+| Studio photo 1 | `studio-1.jpg` | 1200 × 900 (4:3) | JPG | ⬜ | Workspace, tools, atmosphere — any studio shot |
+| Studio photo 2 | `studio-2.jpg` | 900 × 900 (1:1) | JPG | ⬜ | Square crop — works well as a detail or portrait |
+| Studio photo 3 | `studio-3.jpg` | 1200 × 900 (4:3) | JPG | ⬜ | Can be team at work, film stills pinned up, etc. |
+
+> In `about.astro`, find each `.studio-ph` and replace with `<img src="/about/studio-N.jpg" alt="White Owl Studio — photo N" class="studio-img" />`
+
+---
+
+## III — Process Post-it Images (3 × 3 overlapping visuals)
+
+`public/about/process/`
+
+Each phase has 3 square image slots displayed as overlapping "post-its" beside the phase card.  
+Drop square crops (or close to it). Visuals should represent the work done in each phase.
+
+| Asset | Filename | Dimensions | Format | Status |
+|-------|----------|-----------|--------|--------|
+| Pre-production visual 1 | `pre-prod-1.jpg` | 600 × 600 | JPG or GIF | ⬜ |
+| Pre-production visual 2 | `pre-prod-2.jpg` | 600 × 600 | JPG or GIF | ⬜ |
+| Pre-production visual 3 | `pre-prod-3.jpg` | 600 × 600 | JPG or GIF | ⬜ |
+| Production visual 1 | `prod-1.jpg` | 600 × 600 | JPG or GIF | ⬜ |
+| Production visual 2 | `prod-2.jpg` | 600 × 600 | JPG or GIF | ⬜ |
+| Production visual 3 | `prod-3.jpg` | 600 × 600 | JPG or GIF | ⬜ |
+| Post-production visual 1 | `post-prod-1.jpg` | 600 × 600 | JPG or GIF | ⬜ |
+| Post-production visual 2 | `post-prod-2.jpg` | 600 × 600 | JPG or GIF | ⬜ |
+| Post-production visual 3 | `post-prod-3.jpg` | 600 × 600 | JPG or GIF | ⬜ |
+
+> In `about.astro`, each `.postit` contains a `<!-- PLACEHOLDER -->` comment.  
+> Replace the placeholder content with: `<img src="/about/process/SLUG-N.jpg" alt="Phase visual N" class="postit-img" />`
+
+---
+
+## IV — Client Work Images (hover reveal in the clients field)
+
+`public/about/clients/`
+
+One work image (or short video/GIF) per client. Shown faded on hover over the client name, full in a lightbox on click.
+
+| Asset | Filename | Dimensions | Format | Status | Notes |
+|-------|----------|-----------|--------|--------|-------|
+| Client 1 work sample | `work-1.jpg` | 1920 × 1080 (16:9) | JPG or MP4/GIF | ⬜ | A still or clip from work done for this client |
+| Client 2 work sample | `work-2.jpg` | 1920 × 1080 (16:9) | JPG or MP4/GIF | ⬜ | |
+| Client 3 work sample | `work-3.jpg` | 1920 × 1080 (16:9) | JPG or MP4/GIF | ⬜ | |
+| Client 4 work sample | `work-4.jpg` | 1920 × 1080 (16:9) | JPG or MP4/GIF | ⬜ | |
+| Client 5 work sample | `work-5.jpg` | 1920 × 1080 (16:9) | JPG or MP4/GIF | ⬜ | |
+| Client 6 work sample | `work-6.jpg` | 1920 × 1080 (16:9) | JPG or MP4/GIF | ⬜ | |
+
+> In `about.astro`, find each `.client-preview` div and replace its inner `.preview-ph` with:  
+> `<img src="/about/clients/work-N.jpg" alt="Work for [Client name]" class="preview-img" />`  
+> (Use `<video>` instead if the asset is a video clip — autoplay, loop, muted, playsinline)  
+> Also update the `clients` array in the frontmatter with real client names and optionally adjust `top`/`left` scatter positions.
+
+---
+
+## III — Press Logos (optional)
+
+`public/about/press/`
+
+One logo per press outlet featured. Optional — the quote cards look fine as text-only.
+
+| Asset | Filename | Format | Status |
+|-------|----------|--------|--------|
+| Press outlet 1 | `logo-1.svg` | SVG | ⬜ |
+| Press outlet 2 | `logo-2.svg` | SVG | ⬜ |
+| Press outlet 3 | `logo-3.svg` | SVG | ⬜ |
+
+> Replace press quotes in `about.astro` when real quotes are available.  
+> Each `.press-card` has a `<!-- PLACEHOLDER -->` comment marking the quote text and source.
+
+---
+
 ## Asset Summary
 
 | Category | Total Assets |
 |----------|-------------|
-| Hero banner | 1 |
+| Hero banner (Films) | 1 |
 | Tarot card art (PNG) | 6 |
 | Film posters (JPG) | 6 |
 | Film stills (JPG) | 18 |
-| Biography images (JPG) | 4 |
-| **Total** | **35** |
+| Biography images (JPG) — Films | 4 |
+| Founders sketch (About, small portrait) | 1 |
+| Studio photos (About, right column) | 3 |
+| Process post-it images (About, 3 × 3) | 9 |
+| Client work images/videos (About, hover reveal) | 6 |
+| Press outlet logos (About, optional) | 3 |
+| **Total** | **57** |
