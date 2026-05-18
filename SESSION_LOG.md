@@ -222,4 +222,38 @@
 
 ---
 
-## Next session → Stage 5 Creative Review + Shop/Market of Stuff page
+## Session 7 — 2026-05-18 (continued)
+
+**Goal:** Stage 5 — Market of Stuff / Shop page
+
+### Creative review decisions
+- Visual concept: apothecary codex / magical supply shop — "whimsical but cursed/ghosty"
+- Real categories: prints, merch puppets, digital packs, art books
+- Item names: silly WOS-toned placeholder names (cursed descriptions)
+- No email notification form for now
+- 8 catalog entries, 4 categories × 2 items each
+
+### What was done
+
+**Shop page (`src/pages/shop.astro`):**
+- Replaced stub with full apothecary-codex layout
+- **Header:** Centered title page: eyebrow + decorative teal rule-with-sigil + "The Emporium of Strange Goods" + italic subtitle about the catalog
+- **Catalog grid:** 8 entries in an `auto-fill minmax(260px, 1fr)` grid; gaps ARE the borders (grid background = border color, cells are bg)
+- **Each entry:** 3:4 illustration area (corner bracket pseudo-elements in teal) + body with category label, item name, italic blurb, status badge
+- **Status badge:** Teal pulsing dot (staggered `animation-delay` per entry so they don't all pulse together) + "Not yet conjured" in Cinzel
+- **Hover state:** Subtle teal inset glow (`box-shadow: inset`) + teal border appears via `::before` overlay
+- **SVG sigils:** 4 custom SVG drawings (frame, puppet, spiral, book) rendered in the illustration placeholder — each matches the item's category
+- **Ledger footer:** Diamond ornament SVG + "This market opens when the work is done." + legalese in Crimson Pro italic
+- PLACEHOLDER comments in each entry for when real product images arrive
+
+**Item catalog (all placeholder):**
+- Prints: "The Owl's Wall Haunting", "Six Films, One Poster"
+- Merch Puppets: "The Cloth Companion", "Small Familiar (Assorted)"
+- Digital Packs: "The Ghost Archive Vol. I", "Wallpapers from the Beyond"
+- Art Books: "The Studio Grimoire", "The Bound Descent"
+
+### Stage 5 status: COMPLETE ✅
+
+---
+
+## Next session → Stage 6 Creative Review + Online Experiences page
