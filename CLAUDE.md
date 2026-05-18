@@ -14,7 +14,7 @@ The official White Owl Studio website at **whiteowlhub.com**. An Astro v5 static
 5. Run pre-stage creative review with user before writing any code
 
 ## Current stage
-**Stage 6 — Online Experiences / Online Playthings.** Stages 0–5 complete.
+**Stage 7 — The Coven.** Stages 0–6 complete.
 
 **Rule: always run the pre-stage creative review before writing code for a new stage.**
 
