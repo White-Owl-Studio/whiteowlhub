@@ -70,10 +70,8 @@ const experiences = [
       <div class="orb-reveal" id="orb-reveal" aria-hidden="true">
         <p class="reveal-eyebrow" id="reveal-eyebrow"></p>
         <h2 class="reveal-title"  id="reveal-title"></h2>
-        <p class="reveal-tagline" id="reveal-tagline"></p>
         <div class="reveal-actions">
-          <a  class="btn-enter" id="btn-enter" href="#">Enter</a>
-          <button class="btn-again" id="btn-again" type="button">Press again ↺</button>
+          <a class="btn-enter" id="btn-enter" href="#">Enter</a>
         </div>
       </div>
 
@@ -192,20 +190,9 @@ const experiences = [
     line-height: 1.15;
     text-shadow: 0 0 32px var(--reveal-color, transparent);
   }
-  .reveal-tagline {
-    font-family: 'Crimson Pro', serif;
-    font-style: italic;
-    font-size: clamp(0.9rem, 1.8vw, 1.1rem);
-    color: var(--text-muted);
-    max-width: 360px;
-    line-height: 1.55;
-  }
   .reveal-actions {
+    margin-top: 0.75rem;
     display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    margin-top: 0.6rem;
-    flex-wrap: wrap;
     justify-content: center;
   }
   .btn-enter {
@@ -225,20 +212,6 @@ const experiences = [
     color: var(--bg);
   }
   .btn-enter[aria-hidden='true'] { display: none; }
-  .btn-again {
-    font-family: 'Cinzel', serif;
-    font-size: 0.56rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.4rem;
-    opacity: 0.55;
-    transition: opacity 0.2s, color 0.2s;
-  }
-  .btn-again:hover { opacity: 1; color: var(--text); }
 
   @media (max-width: 480px) {
     .xp-hero { justify-content: flex-start; padding-top: clamp(80px, 15vw, 120px); }
@@ -254,9 +227,7 @@ const experiences = [
   const revPanel = document.getElementById('orb-reveal');
   const revEye   = document.getElementById('reveal-eyebrow');
   const revTitle = document.getElementById('reveal-title');
-  const revTag   = document.getElementById('reveal-tagline');
   const btnEnter = document.getElementById('btn-enter');
-  const btnAgain = document.getElementById('btn-again');
   if (!canvas || !wrap) return;
 
   /* ─── Canvas init ───────────────────────────────────────────────────── */
@@ -476,12 +447,12 @@ const experiences = [
     if (alpha <= 0.01) return;
 
     const floatY = Math.sin(ts * 0.0009) * 2; // ±2 game units, gentle float
-    const s = R / 62; // scale: game units → CSS px
+    const s = R / 85; // smaller scale
 
     ctx.save();
     ctx.globalAlpha = alpha;
-    // Set up game-unit coordinate system centred in the orb
-    ctx.translate(CX, CY - R * 0.05);
+    // Lower-middle of orb
+    ctx.translate(CX, CY + R * 0.28);
     ctx.scale(s, s);
     ctx.translate(0, floatY);
 
@@ -578,7 +549,6 @@ const experiences = [
     revPanel.style.setProperty('--reveal-color', rc);
     revEye.textContent   = exp.eyebrow;
     revTitle.textContent = exp.title;
-    revTag.textContent   = exp.tagline;
 
     if (exp.url) {
       btnEnter.href = exp.url;
@@ -721,7 +691,6 @@ const experiences = [
   wrap.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePress(); }
   });
-  btnAgain.addEventListener('click', e => { e.stopPropagation(); handlePress(); });
   document.addEventListener('astro:before-swap', () => cancelAnimationFrame(rafId));
 })();
 </script>
