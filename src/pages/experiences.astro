@@ -296,7 +296,16 @@ const experiences = [
     dAng: (0.0005 + Math.random() * 0.0009) * (Math.random() > 0.5 ? 1 : -1),
     sz:   0.5 + Math.random() * 1.8,
     op:   0.12 + Math.random() * 0.42,
-    hue:  255 + Math.floor(Math.random() * 60),  // purple–violet band
+    hue:  255 + Math.floor(Math.random() * 60),
+  }));
+
+  /* Zone 1 sediment — matches game's initZoneParticles(1) */
+  const zone1Parts = Array.from({ length: 55 }, () => ({
+    x: CX + (Math.random() - 0.5) * R * 1.9,
+    y: CY - R + Math.random() * (R * 2),
+    spd: 0.08 + Math.random() * 0.28,
+    r:   0.4  + Math.random() * 1.1,
+    a:   0.06 + Math.random() * 0.18,
   }));
 
   function drawNeutralBg(alpha) {
@@ -342,26 +351,53 @@ const experiences = [
   }
 
   function drawExpBg(exp, alpha, ts) {
+    // Always advance Zone 1 sediment regardless of alpha
+    zone1Parts.forEach(p => {
+      p.y -= p.spd; // upward drift (disorienting, matches game)
+      if (p.y < CY - R) { p.y = CY + R * 0.95; p.x = CX + (Math.random()-0.5)*R*1.8; }
+    });
+
     if (alpha <= 0.01) return;
     ctx.save();
-    ctx.globalAlpha = alpha;
 
-    const r = exp.swirlR, g = exp.swirlG, b = exp.swirlB;
-    // Use higher multipliers so the experience atmosphere is actually visible
-    const bg = ctx.createRadialGradient(CX, CY - R*0.1, 0, CX, CY, R);
-    bg.addColorStop(0,   `rgba(${Math.round(r*0.32)},${Math.round(g*0.08)},${Math.round(b*0.08)},1)`);
-    bg.addColorStop(0.55,`rgba(${Math.round(r*0.14)},${Math.round(g*0.04)},${Math.round(b*0.04)},1)`);
-    bg.addColorStop(1,   'rgba(4,3,8,1)');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-
-    // Laila's Descent: Zone 1 cold light from above
     if (exp.id === 'lailas-descent') {
-      const pulse = 0.5 + 0.5 * Math.sin(ts * 0.00042);
-      const shimmer = ctx.createRadialGradient(CX, CY - R*0.7, 0, CX, CY - R*0.42, R*0.6);
-      shimmer.addColorStop(0, `rgba(184,212,240,${0.18 * pulse})`);
-      shimmer.addColorStop(1, 'rgba(184,212,240,0)');
-      ctx.fillStyle = shimmer;
+      /* Zone 1 Still Water — exact palette from game's drawBg_stillWater */
+      ctx.globalAlpha = alpha;
+
+      // Linear gradient: #060c16 → #050a14 → #020408
+      const g = ctx.createLinearGradient(0, CY - R, 0, CY + R);
+      g.addColorStop(0,   '#060c16');
+      g.addColorStop(0.5, '#050a14');
+      g.addColorStop(1,   '#020408');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      // Cold light from above (radial, centred just above the orb top)
+      const ls = 0.24;
+      const lg = ctx.createRadialGradient(CX, CY - R * 0.92, 0, CX, CY - R * 0.85, R * 1.1);
+      lg.addColorStop(0, `rgba(184,212,240,${ls})`);
+      lg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = lg;
+      ctx.fillRect(0, 0, W, H);
+
+      // Sediment (upward-drifting particles)
+      zone1Parts.forEach(p => {
+        ctx.globalAlpha = alpha * p.a;
+        ctx.fillStyle = '#8ab0cc';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+    } else {
+      /* Generic tinted atmosphere for other experiences */
+      ctx.globalAlpha = alpha;
+      const r = exp.swirlR, g = exp.swirlG, b = exp.swirlB;
+      const bg = ctx.createRadialGradient(CX, CY - R*0.1, 0, CX, CY, R);
+      bg.addColorStop(0,    `rgba(${Math.round(r*0.32)},${Math.round(g*0.08)},${Math.round(b*0.08)},1)`);
+      bg.addColorStop(0.55, `rgba(${Math.round(r*0.14)},${Math.round(g*0.04)},${Math.round(b*0.04)},1)`);
+      bg.addColorStop(1,    'rgba(4,3,8,1)');
+      ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
     }
 
@@ -416,121 +452,122 @@ const experiences = [
     });
   }
 
-  /* ─── Catmull-Rom helper — smooth curve that passes THROUGH each point ─ */
-  function crPath(pts) {
-    ctx.moveTo(pts[0][0], pts[0][1]);
-    for (let i = 0; i < pts.length - 1; i++) {
-      const p0 = pts[Math.max(0, i - 1)];
-      const p1 = pts[i];
-      const p2 = pts[i + 1];
-      const p3 = pts[Math.min(pts.length - 1, i + 2)];
+  /* ─── Catmull-Rom — exact copy of game's _crPath ──────────────────── */
+  function crPath(pts, ox, oy) {
+    const n = pts.length, a = 1/6;
+    ctx.moveTo((ox||0)+pts[0][0], (oy||0)+pts[0][1]);
+    for (let i = 0; i < n-1; i++) {
+      const p0=pts[Math.max(0,i-1)], p1=pts[i], p2=pts[i+1], p3=pts[Math.min(n-1,i+2)];
       ctx.bezierCurveTo(
-        p1[0] + (p2[0] - p0[0]) / 6,  p1[1] + (p2[1] - p0[1]) / 6,
-        p2[0] - (p3[0] - p1[0]) / 6,  p2[1] - (p3[1] - p1[1]) / 6,
-        p2[0], p2[1]
+        (ox||0)+p1[0]+a*(p2[0]-p0[0]), (oy||0)+p1[1]+a*(p2[1]-p0[1]),
+        (ox||0)+p2[0]-a*(p3[0]-p1[0]), (oy||0)+p2[1]-a*(p3[1]-p1[1]),
+        (ox||0)+p2[0], (oy||0)+p2[1]
       );
     }
   }
 
-  /* ─── Laila sprite ──────────────────────────────────────────────────── */
+  /* Exact game constants */
+  const _L1 = [[4,-4.3],[17.8,-8.5],[25.5,-19.1],[17.8,-18.1],[6,-24.9],[0,-23.6],
+               [-6,-24.9],[-17.8,-18.1],[-25.5,-19.1],[-17.8,-8.5],[-4,-4.3],[0,4],[4,-4.3]];
+  const _L2 = [[11.8,-10.6],[5,-22],[0,-17.8],[5,-13],[11.8,-10.6]];
+
+  /* ─── Laila sprite — same drawing approach as game's drawPlayer ──── */
   function drawLaila(alpha, ts) {
     if (alpha <= 0.01) return;
-    const float = Math.sin(ts * 0.00085) * (R * 0.022);
-    const ox = CX, oy = CY - R * 0.06 + float;
-    const s  = (R * 0.68) / 83;   // game units → CSS px (larger scale)
+
+    const floatY = Math.sin(ts * 0.0009) * 2; // ±2 game units, gentle float
+    const s = R / 62; // scale: game units → CSS px
 
     ctx.save();
     ctx.globalAlpha = alpha;
+    // Set up game-unit coordinate system centred in the orb
+    ctx.translate(CX, CY - R * 0.05);
+    ctx.scale(s, s);
+    ctx.translate(0, floatY);
 
-    // Red glow
-    const glow = ctx.createRadialGradient(ox, oy, 0, ox, oy, R * 0.48);
-    glow.addColorStop(0, 'rgba(238,34,34,0.10)');
-    glow.addColorStop(1, 'rgba(238,34,34,0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(ox, oy, R * 0.48, 0, Math.PI * 2);
-    ctx.fill();
+    function glow(col, blur) { ctx.shadowColor = col; ctx.shadowBlur = blur * s; }
+    function noGlow() { ctx.shadowBlur = 0; }
 
-    // ── Dress ──
+    // ── L1 HAIR (behind face) ──
+    glow('#ff2222', 8); ctx.fillStyle = '#ee2222';
+    ctx.beginPath(); crPath(_L1); ctx.closePath(); ctx.fill();
+    noGlow();
+    // Left shadow overlay
+    ctx.fillStyle = 'rgba(80,0,0,0.18)';
     ctx.beginPath();
-    ctx.moveTo(ox - 11*s, oy - 6*s);
-    ctx.bezierCurveTo(ox - 20*s, oy + 18*s, ox - 16*s, oy + 44*s, ox - 7*s, oy + 58*s);
-    ctx.lineTo(ox + 7*s, oy + 58*s);
-    ctx.bezierCurveTo(ox + 16*s, oy + 44*s, ox + 20*s, oy + 18*s, ox + 11*s, oy - 6*s);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(252,250,243,0.90)';
-    ctx.fill();
+    ctx.moveTo(0,-23.6);
+    ctx.quadraticCurveTo(-3,-24.9,-6,-24.9);
+    ctx.quadraticCurveTo(-10.7,-18.1,0,-4.3);
+    ctx.closePath(); ctx.fill();
+    // Right highlight
+    ctx.fillStyle = 'rgba(255,100,60,0.10)';
     ctx.beginPath();
-    ctx.moveTo(ox - 2*s, oy - 4*s);
-    ctx.bezierCurveTo(ox - 2*s, oy + 20*s, ox - 1*s, oy + 42*s, ox - 1*s, oy + 58*s);
-    ctx.strokeStyle = 'rgba(200,195,178,0.22)';
-    ctx.lineWidth = 1.5 * s;
-    ctx.stroke();
+    ctx.moveTo(0,-23.6);
+    ctx.quadraticCurveTo(3,-24.9,6,-24.9);
+    ctx.quadraticCurveTo(10.7,-18.1,0,-4.3);
+    ctx.closePath(); ctx.fill();
 
-    // ── Arms ──
-    ctx.lineWidth = 5.5 * s;
-    ctx.lineCap   = 'round';
-    ctx.strokeStyle = 'rgba(248,228,206,0.86)';
-    ctx.beginPath();
-    ctx.moveTo(ox - 11*s, oy + 4*s);
-    ctx.bezierCurveTo(ox - 26*s, oy + 1*s, ox - 38*s, oy - 7*s, ox - 43*s, oy - 4*s);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(ox + 11*s, oy + 4*s);
-    ctx.bezierCurveTo(ox + 26*s, oy + 1*s, ox + 38*s, oy - 7*s, ox + 43*s, oy - 4*s);
-    ctx.stroke();
+    // ── FEET ──
+    ctx.fillStyle = '#f0dcc8';
+    ctx.fillRect(-3.5,18,3,6); ctx.fillRect(0.5,18,3,6);
+    ctx.fillStyle = 'rgba(8,0,0,0.65)';
+    ctx.fillRect(-3.5,18,3,1.5); ctx.fillRect(0.5,18,3,1.5);
 
-    // ── Hair L1 (back layer) — drawn BEFORE head so face covers it ──
-    // Full symmetric path: right side → crown → mirrored left side → neckBot
-    // Catmull-rom so the curve actually passes through every listed waypoint
-    ctx.beginPath();
-    crPath([
-      [ox + 4*s,    oy - 4.3*s],   // neckR
-      [ox + 17.8*s, oy - 8.5*s],   // earR
-      [ox + 25.5*s, oy - 19.1*s],  // wingR — signature right flare
-      [ox + 17.8*s, oy - 18.1*s],  // tipR
-      [ox + 6*s,    oy - 24.9*s],  // topR
-      [ox,          oy - 23.6*s],  // crown (centre)
-      [ox - 6*s,    oy - 24.9*s],  // topL (mirrored)
-      [ox - 17.8*s, oy - 18.1*s],  // tipL
-      [ox - 25.5*s, oy - 19.1*s],  // wingL — signature left flare
-      [ox - 17.8*s, oy - 8.5*s],   // earL
-      [ox - 4*s,    oy - 4.3*s],   // neckL
-      [ox,          oy + 4*s],     // neckBot
-    ]);
-    ctx.closePath();
-    ctx.fillStyle = '#ee2222';
-    ctx.fill();
+    // ── HANDS ──
+    ctx.fillStyle = '#0d0808';
+    ctx.beginPath(); ctx.arc(-11,5.7,3.9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(11, 5.7,3.9,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#f0dcc8';
+    ctx.beginPath(); ctx.arc(-11,7.5,3,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(11, 7.5,3,0,Math.PI*2); ctx.fill();
 
-    // ── Head — drawn AFTER L1 hair so face sits in front ──
+    // ── DRESS (trapezoid — exact game shape) ──
+    glow('#eeeeff', 8); ctx.fillStyle = '#f8f7f4';
     ctx.beginPath();
-    ctx.arc(ox, oy - 18*s, 13*s, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(248,228,208,0.95)';
-    ctx.fill();
-
-    // ── Hair L2 (front bangs) — on top of face ──
-    // rOuter(11.8,-10.6) rTop(5,-22) rInner(0,-17.8) rBot(5,-13)
+    ctx.moveTo(-7,-3); ctx.lineTo(-15,18); ctx.lineTo(15,18); ctx.lineTo(7,-3);
+    ctx.closePath(); ctx.fill();
+    noGlow();
+    ctx.fillStyle = 'rgba(180,175,200,0.22)';
     ctx.beginPath();
-    crPath([
-      [ox + 5*s,    oy - 13*s],    // rBot
-      [ox + 11.8*s, oy - 10.6*s],  // rOuter
-      [ox + 5*s,    oy - 22*s],    // rTop
-      [ox,          oy - 17.8*s],  // rInner
-    ]);
-    ctx.closePath();
-    ctx.fillStyle = '#ee2222';
-    ctx.fill();
+    ctx.moveTo(-7,-3); ctx.lineTo(-15,18); ctx.lineTo(-5,18); ctx.lineTo(-1,-3);
+    ctx.closePath(); ctx.fill();
+    // Sleeves
+    ctx.fillStyle = '#f8f7f4';
+    ctx.beginPath(); ctx.moveTo(-7.5,-0.5); ctx.lineTo(-13,8.5); ctx.lineTo(-10,7.5); ctx.lineTo(-8.5,3); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(7.5,-0.5);  ctx.lineTo(13,8.5);  ctx.lineTo(10,7.5);  ctx.lineTo(8.5,3);  ctx.closePath(); ctx.fill();
 
-    // ── Eyes ──
-    const ey = oy - 19*s, er = 4.5*s;
-    ctx.beginPath(); ctx.arc(ox - 5*s, ey, er, 0, Math.PI*2); ctx.fillStyle = '#33bb44'; ctx.fill();
-    ctx.beginPath(); ctx.arc(ox + 5*s, ey, er, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = 'rgba(8,4,16,0.92)';
-    ctx.beginPath(); ctx.arc(ox - 5*s, ey, 2.7*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(ox + 5*s, ey, 2.7*s, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.88)';
-    ctx.beginPath(); ctx.arc(ox - 3.8*s, ey - 1.5*s, 1.2*s, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(ox + 6.2*s, ey - 1.5*s, 1.2*s, 0, Math.PI*2); ctx.fill();
+    // ── FACE ──
+    glow('#f0dcc8', 10); ctx.fillStyle = '#f0dcc8';
+    ctx.beginPath(); ctx.arc(0,-11,9,0,Math.PI*2); ctx.fill(); noGlow();
+    // Eyes — dark outer, green inner, arc shadow, highlight
+    ctx.fillStyle = '#182418';
+    ctx.beginPath(); ctx.arc(-4,-11,2.8,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 4,-11,2.8,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#44cc44';
+    ctx.beginPath(); ctx.arc(-4,-11,2.0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 4,-11,2.0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(0,40,0,0.28)';
+    ctx.beginPath(); ctx.arc(-4,-10.4,1.8,0.1*Math.PI,0.9*Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc( 4,-10.4,1.8,0.1*Math.PI,0.9*Math.PI); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.beginPath(); ctx.arc(-4.8,-11.8,0.8,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 3.2,-11.8,0.8,0,Math.PI*2); ctx.fill();
+    // Nose
+    ctx.fillStyle = 'rgba(140,90,40,0.35)';
+    ctx.beginPath(); ctx.arc(-1.1,-8,0.9,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc( 1.1,-8,0.9,0,Math.PI*2); ctx.fill();
+
+    // ── L2 BANGS — both sides (exact game: draw normal + X-mirrored) ──
+    glow('#ff2222', 5); ctx.fillStyle = '#ee2222';
+    ctx.beginPath(); crPath(_L2); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); crPath(_L2.map(([x,y])=>[-x,y])); ctx.closePath(); ctx.fill();
+    noGlow();
+
+    // ── STRANDS ──
+    glow('#cc1111', 4); ctx.strokeStyle = '#cc2222'; ctx.lineWidth = 0.7; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(1,-22.2);  ctx.quadraticCurveTo(-5.3,-13, 25.5,-7);  ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-1,-22.2); ctx.quadraticCurveTo( 5.3,-13,-25.5,-7); ctx.stroke();
+    noGlow();
 
     ctx.restore();
   }
