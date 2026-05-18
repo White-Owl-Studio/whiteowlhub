@@ -300,7 +300,6 @@ const experiences = [
   }));
 
   function drawNeutralBg(alpha) {
-    // Always advance positions
     fogWisps.forEach(w => { w.ang += w.dAng; });
     neutralGlitter.forEach(p => { p.ang += p.dAng; });
     if (alpha <= 0.01) return;
@@ -308,34 +307,34 @@ const experiences = [
     ctx.save();
     ctx.globalAlpha = alpha;
 
-    // Dark purple void base
-    const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, R);
-    g.addColorStop(0,   '#1c0a38');
-    g.addColorStop(0.5, '#0e051e');
-    g.addColorStop(1,   '#07030f');
-    ctx.fillStyle = g;
+    // Deep void base
+    const base = ctx.createRadialGradient(CX, CY, 0, CX, CY, R);
+    base.addColorStop(0,   '#1a0830');
+    base.addColorStop(0.6, '#0b031a');
+    base.addColorStop(1,   '#05020c');
+    ctx.fillStyle = base;
     ctx.fillRect(0, 0, W, H);
 
-    // Rotating fog wisps
+    // Smoke plumes — large fillRect-based radial gradients, NOT arcs
+    // This fills the whole canvas with each gradient so edges fade naturally (no visible circles)
     fogWisps.forEach(w => {
-      const wx = CX + Math.cos(w.ang) * w.rad;
-      const wy = CY + Math.sin(w.ang) * w.rad;
-      const wg = ctx.createRadialGradient(wx, wy, 0, wx, wy, w.sz);
-      wg.addColorStop(0, `rgba(130,50,220,${w.op})`);
-      wg.addColorStop(1, 'rgba(80,15,160,0)');
-      ctx.fillStyle = wg;
-      ctx.beginPath();
-      ctx.arc(wx, wy, w.sz, 0, Math.PI * 2);
-      ctx.fill();
+      const wx = CX + Math.cos(w.ang) * w.rad * 0.28;
+      const wy = CY + Math.sin(w.ang) * w.rad * 0.28;
+      const plume = ctx.createRadialGradient(wx, wy, 0, wx, wy, R * 1.15);
+      plume.addColorStop(0,   `rgba(110,28,200,${w.op * 0.9})`);
+      plume.addColorStop(0.4, `rgba(65,8,140,${w.op * 0.5})`);
+      plume.addColorStop(1,   'rgba(15,3,40,0)');
+      ctx.fillStyle = plume;
+      ctx.fillRect(0, 0, W, H);
     });
 
-    // Orbiting glitter
+    // Fine glitter sparkles
     neutralGlitter.forEach(p => {
       const px = CX + Math.cos(p.ang) * p.rad;
       const py = CY + Math.sin(p.ang) * p.rad;
       ctx.beginPath();
       ctx.arc(px, py, p.sz, 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${p.hue},65%,72%,${p.op * alpha})`;
+      ctx.fillStyle = `hsla(${p.hue},70%,78%,${p.op})`;
       ctx.fill();
     });
 
@@ -348,18 +347,19 @@ const experiences = [
     ctx.globalAlpha = alpha;
 
     const r = exp.swirlR, g = exp.swirlG, b = exp.swirlB;
+    // Use higher multipliers so the experience atmosphere is actually visible
     const bg = ctx.createRadialGradient(CX, CY - R*0.1, 0, CX, CY, R);
-    bg.addColorStop(0,   `rgba(${Math.round(r*0.14)},${Math.round(g*0.14)},${Math.round(b*0.14)},1)`);
-    bg.addColorStop(0.6, `rgba(${Math.round(r*0.05)},${Math.round(g*0.05)},${Math.round(b*0.05)},1)`);
+    bg.addColorStop(0,   `rgba(${Math.round(r*0.32)},${Math.round(g*0.08)},${Math.round(b*0.08)},1)`);
+    bg.addColorStop(0.55,`rgba(${Math.round(r*0.14)},${Math.round(g*0.04)},${Math.round(b*0.04)},1)`);
     bg.addColorStop(1,   'rgba(4,3,8,1)');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // Laila's Descent: add Zone 1 cold light from above
+    // Laila's Descent: Zone 1 cold light from above
     if (exp.id === 'lailas-descent') {
       const pulse = 0.5 + 0.5 * Math.sin(ts * 0.00042);
-      const shimmer = ctx.createRadialGradient(CX, CY - R*0.7, 0, CX, CY - R*0.45, R*0.55);
-      shimmer.addColorStop(0, `rgba(184,212,240,${0.09 * pulse})`);
+      const shimmer = ctx.createRadialGradient(CX, CY - R*0.7, 0, CX, CY - R*0.42, R*0.6);
+      shimmer.addColorStop(0, `rgba(184,212,240,${0.18 * pulse})`);
       shimmer.addColorStop(1, 'rgba(184,212,240,0)');
       ctx.fillStyle = shimmer;
       ctx.fillRect(0, 0, W, H);
@@ -437,7 +437,7 @@ const experiences = [
     if (alpha <= 0.01) return;
     const float = Math.sin(ts * 0.00085) * (R * 0.022);
     const ox = CX, oy = CY - R * 0.06 + float;
-    const s  = (R * 0.58) / 83;   // game units → CSS px
+    const s  = (R * 0.68) / 83;   // game units → CSS px (larger scale)
 
     ctx.save();
     ctx.globalAlpha = alpha;
@@ -481,17 +481,21 @@ const experiences = [
     ctx.stroke();
 
     // ── Hair L1 (back layer) — drawn BEFORE head so face covers it ──
-    // Catmull-rom through approved waypoints: curve actually passes through each point
-    // neckR(4,-4.3) earR(17.8,-8.5) wingR(25.5,-19.1) tipR(17.8,-18.1)
-    // topR(6,-24.9) crown(0,-23.6) neckBot(0,+4)
+    // Full symmetric path: right side → crown → mirrored left side → neckBot
+    // Catmull-rom so the curve actually passes through every listed waypoint
     ctx.beginPath();
     crPath([
       [ox + 4*s,    oy - 4.3*s],   // neckR
       [ox + 17.8*s, oy - 8.5*s],   // earR
-      [ox + 25.5*s, oy - 19.1*s],  // wingR — signature flare
+      [ox + 25.5*s, oy - 19.1*s],  // wingR — signature right flare
       [ox + 17.8*s, oy - 18.1*s],  // tipR
       [ox + 6*s,    oy - 24.9*s],  // topR
-      [ox,          oy - 23.6*s],  // crown
+      [ox,          oy - 23.6*s],  // crown (centre)
+      [ox - 6*s,    oy - 24.9*s],  // topL (mirrored)
+      [ox - 17.8*s, oy - 18.1*s],  // tipL
+      [ox - 25.5*s, oy - 19.1*s],  // wingL — signature left flare
+      [ox - 17.8*s, oy - 8.5*s],   // earL
+      [ox - 4*s,    oy - 4.3*s],   // neckL
       [ox,          oy + 4*s],     // neckBot
     ]);
     ctx.closePath();
