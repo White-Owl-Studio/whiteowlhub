@@ -32,7 +32,29 @@
       overflow: hidden;
     }
 
-    #grain { position: fixed; inset: 0; pointer-events: none; z-index: 9999; }
+    /* Background grain — warm gold speckles, 6fps, behind content */
+    #grain-bg {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 1;
+      mix-blend-mode: screen;
+    }
+    /* Top grain — dark micro-dots overlay */
+    #grain-top {
+      position: fixed; inset: 0;
+      pointer-events: none; z-index: 9999;
+      mix-blend-mode: overlay; opacity: 0.55;
+    }
+    /* Top edge blur — matches rest of site */
+    .edge-blur {
+      position: fixed; left: 0; right: 0; height: 72px;
+      pointer-events: none; z-index: 10;
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      top: 0;
+      background: linear-gradient(to bottom, rgba(5,4,9,0.30) 0%, rgba(5,4,9,0.0) 65%);
+      mask-image: linear-gradient(to bottom, black 0%, black 35%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, black 0%, black 35%, transparent 100%);
+    }
 
     .inner { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
 
@@ -134,7 +156,9 @@
 </head>
 
 <body>
-  <canvas id="grain" aria-hidden="true"></canvas>
+  <canvas id="grain-bg"  aria-hidden="true"></canvas>
+  <canvas id="grain-top" aria-hidden="true"></canvas>
+  <div class="edge-blur" aria-hidden="true"></div>
 
   <main class="page">
     <div class="inner">
@@ -222,25 +246,59 @@
   </main>
 
   <script>
-    const canvas = document.getElementById('grain');
-    const ctx    = canvas.getContext('2d');
-    let W = 0, H = 0;
-    function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-    resize();
-    window.addEventListener('resize', resize);
-    function drawGrain() {
-      ctx.clearRect(0, 0, W, H);
-      const n = Math.floor(W * H * 0.00014);
-      for (let i = 0; i < n; i++) {
-        ctx.beginPath();
-        ctx.arc(Math.random()*W, Math.random()*H, 0.4+Math.random()*0.9, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(245,208,96,${0.008+Math.random()*0.022})`;
-        ctx.fill();
-      }
-      setTimeout(drawGrain, 160);
+    const bgCanvas  = document.getElementById('grain-bg');
+    const topCanvas = document.getElementById('grain-top');
+    const bgCtx     = bgCanvas.getContext('2d');
+    const topCtx    = topCanvas.getContext('2d');
+    let w = 0, h = 0;
+
+    function resize() {
+      w = bgCanvas.width  = topCanvas.width  = window.innerWidth;
+      h = bgCanvas.height = topCanvas.height = window.innerHeight;
+      drawTopGrain();
     }
-    drawGrain();
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) drawGrain(); });
+
+    function drawBgGrain() {
+      if (!w || !h) return;
+      bgCtx.clearRect(0, 0, w, h);
+      const count = (w * h * 0.0003) | 0;
+      for (let i = 0; i < count; i++) {
+        const x = Math.random() * w, y = Math.random() * h;
+        const rx = Math.random() * 0.45 + 0.08;
+        const ry = rx * (0.6 + Math.random() * 0.8);
+        const rot = Math.random() * Math.PI;
+        const a = Math.random() * 0.22 + 0.14;
+        const warm = (Math.random() * 25) | 0;
+        bgCtx.beginPath();
+        bgCtx.ellipse(x, y, rx, ry, rot, 0, 6.2832);
+        bgCtx.fillStyle = `rgba(${215+warm},${148+(warm>>1)},${52+(warm>>2)},${a})`;
+        bgCtx.fill();
+      }
+    }
+
+    function drawTopGrain() {
+      if (!w || !h) return;
+      topCtx.clearRect(0, 0, w, h);
+      const count = (w * h * 0.004) | 0;
+      for (let i = 0; i < count; i++) {
+        const x = Math.random() * w, y = Math.random() * h;
+        const rx = Math.random() * 0.3 + 0.06;
+        const ry = rx * (0.5 + Math.random() * 0.9);
+        topCtx.beginPath();
+        topCtx.ellipse(x, y, rx, ry, Math.random()*Math.PI, 0, 6.2832);
+        topCtx.fillStyle = `rgba(10,8,18,${Math.random()*0.035+0.005})`;
+        topCtx.fill();
+      }
+    }
+
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+    let grainTimer = setInterval(drawBgGrain, 1000 / 6);
+    drawBgGrain();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) { clearInterval(grainTimer); }
+      else { grainTimer = setInterval(drawBgGrain, 1000/6); drawBgGrain(); }
+    });
   </script>
 </body>
 </html>
