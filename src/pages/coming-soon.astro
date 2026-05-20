@@ -42,8 +42,19 @@ const socials = [
     </svg>`,
   },
   {
+    label: 'Ko-Fi',
+    href: 'https://ko-fi.com/whiteowlanimation',
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M18 8h1a4 4 0 0 1 0 8h-1"/>
+      <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/>
+      <line x1="6" y1="1" x2="6" y2="4"/>
+      <line x1="10" y1="1" x2="10" y2="4"/>
+      <line x1="14" y1="1" x2="14" y2="4"/>
+    </svg>`,
+  },
+  {
     label: 'Email',
-    href: 'mailto:hello@whiteowlhub.com', // ← update if different
+    href: 'mailto:hello@whiteowlhub.com',
     icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <rect x="2" y="4" width="20" height="16" rx="2"/>
       <path d="M2 7l10 7 10-7"/>
@@ -151,9 +162,11 @@ const socials = [
       width: 18px;
       height: 18px;
       flex-shrink: 0;
-      transition: stroke 0.3s ease;
+      color: #7040b8;
+      stroke: #7040b8;
+      transition: stroke 0.3s ease, color 0.3s ease;
     }
-    .socials a:hover svg { stroke: #f5d060; }
+    .socials a:hover svg { stroke: #f5d060; color: #f5d060; }
 
     /* Subtle vignette */
     .page::after {
