@@ -325,4 +325,52 @@ Key findings applied: film-anchored product copy (LAIKA model), concrete spec li
 
 ---
 
+## Session 9 — 2026-05-20
+
+**Goal:** Coming-soon page, site gate, and The Coven pre-planning
+
+### Coming-soon page (`src/pages/coming-soon.astro`)
+Standalone page (no Base.astro — immune to the gate redirect).
+- WOS logo gif, "WHITE OWL STUDIO" in Cinzel, atmospheric message: *"Breath, something new is growing here."*
+- 7 social tiles in a 4+3 grid (4 row 1, 3 centred row 2): Instagram · YouTube · Facebook · LinkedIn · TikTok · Ko-Fi · Email
+- SVGs inlined directly in template (set:html was not rendering icons — lesson learned)
+- Tile design: 72×72px squares, palette violet (#7040b8) icons, muted labels, violet border hover → gold
+- Full two-layer site grain (grain-bg warm gold 6fps + grain-top dark overlay) — exact copy from Base.astro
+- Top edge blur (72px backdrop-filter:blur(2px) gradient) matching rest of site
+- Purple ambient radial glow (rgba(112,64,184,0.28)) in background — makes logo dark areas readable
+- noindex/nofollow meta
+
+**Social link URLs confirmed:**
+- Instagram: https://www.instagram.com/whiteowlstudio (placeholder — not updated)
+- YouTube: https://www.youtube.com/shorts/pTbSSnQsZ2E (specific Shorts video)
+- Facebook: https://www.facebook.com/whiteowlstudio (placeholder)
+- LinkedIn: https://www.linkedin.com/company/whiteowl-studio
+- TikTok: https://www.tiktok.com/@whiteowl376
+- Ko-Fi: https://ko-fi.com/whiteowlanimation
+- Email: mailto:michaelbjacob@gmail.com
+
+### Site gate (production redirect)
+Two lines in `src/layouts/Base.astro` `<head>` block — only active in production builds (`!import.meta.env.DEV`):
+```astro
+{!import.meta.env.DEV && <style is:inline>html{'{'}visibility:hidden{'}'}</style>}
+{!import.meta.env.DEV && <script is:inline>window.location.replace('/coming-soon');</script>}
+```
+**TO LAUNCH:** remove both lines, commit, push. Cloudflare auto-deploys.
+
+**Redirect loop lesson:** `public/_redirects` with `/* /coming-soon 302` causes infinite loops because the rule also matches `/coming-soon` itself. Cloudflare Pages does NOT auto-detect this loop. Fix: client-side JS redirect in Base.astro (the coming-soon page is standalone and unaffected).
+
+### The Coven — pre-planning (Stage 7)
+Decisions made:
+- Auth: Google OAuth + GitHub OAuth + email/password via Supabase
+- Architecture: client-side Supabase JS SDK, keep `output: 'static'` (no SSR yet)
+- Achievements called: **Sigils**
+- Sigil triggers: content engagement, return visits, hidden discoveries, community actions (+ future: game completion, tarot collecting)
+- Sigil unlocks: new orb experiences, exclusive downloads, profile cosmetics, lore, shop discounts
+- Profiles: **public** — shareable `/coven/profile/[username]` page
+- 9 launch sigils designed (The First Flame, The Wanderer, The Archivist, The Dreamer, The Witness, The Curious, The Persistent, The Patient, The Caller)
+- 3 Coven tiers: Initiate (1–3), Keeper (4–6), Elder (7–9)
+- Build deferred — coming-soon work took priority
+
+---
+
 ## Next session → Stage 7 Creative Review + The Coven
