@@ -1,0 +1,228 @@
+---
+// Standalone page — intentionally no Base.astro (no nav, no footer)
+const socials = [
+  {
+    label: 'Instagram',
+    href: 'https://www.instagram.com/whiteowlstudio', // ← update with real handle
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5"/>
+      <circle cx="12" cy="12" r="4.5"/>
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+    </svg>`,
+  },
+  {
+    label: 'YouTube',
+    href: 'https://www.youtube.com/@whiteowlstudio', // ← update
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2" y="5" width="20" height="14" rx="4"/>
+      <polygon points="10,9 10,15 16,12" fill="currentColor" stroke="none"/>
+    </svg>`,
+  },
+  {
+    label: 'Facebook',
+    href: 'https://www.facebook.com/whiteowlstudio', // ← update
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M15 8h-2a2 2 0 0 0-2 2v2H9v3h2v5h3v-5h2l1-3h-3v-2z"/>
+    </svg>`,
+  },
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/company/white-owl-studio', // ← update
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="3"/>
+      <path d="M7 10v7M7 7v.5M12 17v-4a2 2 0 0 1 4 0v4M12 10v7"/>
+    </svg>`,
+  },
+  {
+    label: 'TikTok',
+    href: 'https://www.tiktok.com/@whiteowlstudio', // ← update
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/>
+    </svg>`,
+  },
+  {
+    label: 'Email',
+    href: 'mailto:hello@whiteowlhub.com', // ← update if different
+    icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2" y="4" width="20" height="16" rx="2"/>
+      <path d="M2 7l10 7 10-7"/>
+    </svg>`,
+  },
+];
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>White Owl Studio</title>
+  <meta name="description" content="Something new is growing here." />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/ui/logo.gif" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Crimson+Pro:ital,wght@0,300;1,300;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      min-height: 100vh;
+      background: #050409;
+      color: #e4dac8;
+      font-family: 'Crimson Pro', Georgia, serif;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(3rem, 8vw, 6rem) clamp(1.5rem, 6vw, 4rem);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Film grain canvas */
+    #grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 1;
+    }
+
+    .logo {
+      width: clamp(56px, 10vw, 80px);
+      height: auto;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .studio-name {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(0.6rem, 1.2vw, 0.75rem);
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: #f5d060;
+      opacity: 0.65;
+      margin-bottom: clamp(3rem, 6vw, 5rem);
+    }
+
+    .message {
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(1.5rem, 4vw, 2.8rem);
+      line-height: 1.45;
+      color: #e4dac8;
+      max-width: 22ch;
+      margin: 0 auto clamp(3rem, 6vw, 5rem);
+    }
+
+    .socials {
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(1.25rem, 3vw, 2.5rem);
+      align-items: center;
+      justify-content: center;
+      list-style: none;
+    }
+
+    .socials a {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-family: 'Cinzel', serif;
+      font-size: clamp(0.55rem, 1vw, 0.65rem);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #806878;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    .socials a:hover { color: #f5d060; }
+
+    .socials a svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      transition: stroke 0.3s ease;
+    }
+    .socials a:hover svg { stroke: #f5d060; }
+
+    /* Subtle vignette */
+    .page::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(5,4,9,0.7) 100%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .inner { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
+  </style>
+</head>
+
+<body>
+  <canvas id="grain" aria-hidden="true"></canvas>
+
+  <main class="page">
+    <div class="inner">
+      <img src="/ui/logo.gif" alt="White Owl Studio" class="logo" />
+      <p class="studio-name">White Owl Studio</p>
+      <p class="message">Breath, something new<br/>is growing here.</p>
+      <ul class="socials">
+        {socials.map(s => (
+          <li>
+            <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}>
+              <span set:html={s.icon} />
+              {s.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </main>
+
+  <script>
+    /* Film grain — same system as site, lightweight version */
+    const canvas = document.getElementById('grain');
+    const ctx    = canvas.getContext('2d');
+    let W = 0, H = 0;
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function drawGrain() {
+      ctx.clearRect(0, 0, W, H);
+      const n = Math.floor(W * H * 0.00014);
+      for (let i = 0; i < n; i++) {
+        const x = Math.random() * W;
+        const y = Math.random() * H;
+        const r = 0.4 + Math.random() * 0.9;
+        const a = 0.008 + Math.random() * 0.022;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(245,208,96,${a})`;
+        ctx.fill();
+      }
+      setTimeout(drawGrain, 160);
+    }
+    drawGrain();
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) drawGrain();
+    });
+  </script>
+</body>
+</html>
