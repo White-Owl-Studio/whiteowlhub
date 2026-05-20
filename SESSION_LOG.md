@@ -373,4 +373,11 @@ Decisions made:
 
 ---
 
-## Next session → Stage 7 Creative Review + The Coven
+### Final social URL updates (end of session)
+- Facebook updated to: https://www.facebook.com/profile.php?id=61590287245120
+- Instagram confirmed working as-is
+- All 7 social links live and correct
+
+---
+
+## Next session → Stage 7 — The Coven (Supabase auth + Sigils + public profiles)
