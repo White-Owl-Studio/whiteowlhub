@@ -1,4 +1,0 @@
-# Redirect all traffic to the coming-soon page until launch.
-# Cloudflare Pages detects the loop on /coming-soon and serves the file directly.
-# To launch: delete this file and redeploy.
-/* /coming-soon 302

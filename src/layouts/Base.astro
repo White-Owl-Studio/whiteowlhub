@@ -22,6 +22,9 @@ const {
     <meta name="description" content={description} />
     <link rel="icon" type="image/gif" href="/ui/logo.gif" />
     <title>{title === 'White Owl Studio' ? title : `${title} — White Owl Studio`}</title>
+    {/* Coming-soon gate: redirect all pages in production. Remove both lines to launch. */}
+    {!import.meta.env.DEV && <style is:inline>html{'{'}visibility:hidden{'}'}</style>}
+    {!import.meta.env.DEV && <script is:inline>window.location.replace('/coming-soon');</script>}
   </head>
   <body>
     <!-- Background grain: sparse, high-contrast, behind all UI -->
