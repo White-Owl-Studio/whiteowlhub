@@ -136,6 +136,16 @@
       transition: color 0.3s ease;
     }
 
+    /* Purple ambient glow — brightens background so logo is readable */
+    .page::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse 70% 55% at 50% 44%, rgba(112,64,184,0.28) 0%, rgba(60,20,120,0.10) 55%, transparent 80%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
     /* Vignette */
     .page::after {
       content: '';
