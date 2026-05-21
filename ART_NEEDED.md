@@ -1,7 +1,19 @@
-# Art Needed — Films Page
-**Generated:** 2026-05-17  
-**Stage:** 2 — Films page  
-**Priority order:** Film II assets first (featured hero), then remaining films, then biography.
+# Art Needed
+**Updated:** 2026-05-21
+
+---
+
+## ⚡ Tier 1 — Needed before launch
+
+| Asset | Path | Dimensions | Notes |
+|-------|------|-----------|-------|
+| OG / social share image | `public/ui/og-default.jpg` | 1200×630 | Used in all social link previews. Studio brand image — dark bg, logo, tagline. |
+| Films hero banner | `public/films/the-one-who-drives-the-truck/hero.jpg` | 1920×1080 | Featured film hero, above the fold on films page |
+| Founders sketch | `public/about/founders-sketch.jpg` | ~600×800 | Michael + Oshrit + cats, pen sketch style |
+
+---
+
+## Films Page
 
 ---
 

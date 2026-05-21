@@ -1,7 +1,865 @@
 ---
 import Base from '../../layouts/Base.astro';
-import StubPage from '../../components/StubPage.astro';
+
+const sigils = [
+  { id: 'first-flame', name: 'The First Flame',  tier: 1, angle:   0 },
+  { id: 'wanderer',    name: 'The Wanderer',      tier: 1, angle:  40 },
+  { id: 'archivist',  name: 'The Archivist',     tier: 1, angle:  80 },
+  { id: 'dreamer',    name: 'The Dreamer',       tier: 2, angle: 120 },
+  { id: 'witness',    name: 'The Witness',       tier: 2, angle: 160 },
+  { id: 'curious',    name: 'The Curious',       tier: 2, angle: 200 },
+  { id: 'persistent', name: 'The Persistent',    tier: 3, angle: 240 },
+  { id: 'patient',    name: 'The Patient',       tier: 3, angle: 280 },
+  { id: 'caller',     name: 'The Caller',        tier: 3, angle: 320 },
+];
+
+function sigilSvg(id: string): string {
+  const d: Record<string, string> = {
+    'first-flame':  `<path d="M12 20 C12 20 5 15 5 9.5 C5 6.5 8 3 12 2 C16 3 19 6.5 19 9.5 C19 15 12 20 12 20Z" stroke-width="1.4" fill="none"/><circle cx="12" cy="10" r="1.5" fill="currentColor"/>`,
+    'wanderer':     `<line x1="12" y1="3" x2="12" y2="21" stroke-width="1.4"/><line x1="3" y1="12" x2="21" y2="12" stroke-width="1.4"/><polygon points="12,3 10,7 14,7" fill="currentColor"/>`,
+    'archivist':    `<rect x="5" y="4" width="14" height="16" rx="1" stroke-width="1.4" fill="none"/><line x1="8" y1="9" x2="16" y2="9" stroke-width="1.2"/><line x1="8" y1="12" x2="16" y2="12" stroke-width="1.2"/><line x1="8" y1="15" x2="13" y2="15" stroke-width="1.2"/>`,
+    'dreamer':      `<path d="M12 4 A8 8 0 0 0 12 20 A5.5 5.5 0 0 1 12 4Z" stroke-width="1.4" fill="none"/>`,
+    'witness':      `<path d="M3 12 C5 7 9 5 12 5 C15 5 19 7 21 12 C19 17 15 19 12 19 C9 19 5 17 3 12Z" stroke-width="1.4" fill="none"/><circle cx="12" cy="12" r="3" stroke-width="1.4" fill="none"/>`,
+    'curious':      `<path d="M12 14 C12 11 15 10 15 7.5 A3.5 3.5 0 0 0 8.5 7.5 C8.5 9 9.5 10 9.5 11" stroke-width="1.4" fill="none" stroke-linecap="round"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/>`,
+    'persistent':   `<path d="M5 12 A7 7 0 1 0 12 5" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M12 5 L9 2 L9 8Z" fill="currentColor"/>`,
+    'patient':      `<line x1="5" y1="4" x2="19" y2="4" stroke-width="1.4"/><line x1="5" y1="20" x2="19" y2="20" stroke-width="1.4"/><path d="M5 4 L19 4 L12 12 L19 20 L5 20 L12 12 Z" stroke-width="1.4" fill="none"/>`,
+    'caller':       `<path d="M8.5 12 A3.5 3.5 0 0 1 15.5 12" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M5.5 12 A6.5 6.5 0 0 1 18.5 12" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M2.5 12 A9.5 9.5 0 0 1 21.5 12" stroke-width="1.4" fill="none" stroke-linecap="round"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/>`,
+  };
+  return d[id] ?? '';
+}
+
+const tierLabels = ['Initiate', 'Keeper', 'Elder'];
 ---
+
 <Base title="The Coven" description="The Coven — members only — White Owl Studio">
-  <StubPage numeral="VI" label="The Coven" accent="var(--accent-coven)" stage={7} />
+
+<div class="coven-wrap" id="coven-wrap" data-view="gate">
+
+  <!-- ══ GATE VIEW ══ -->
+  <section class="coven-gate" id="coven-gate" aria-label="Enter the Coven">
+
+    <div class="ring-stage">
+
+      <!-- Decorative rotating ring -->
+      <svg class="ring-svg" viewBox="0 0 480 480" aria-hidden="true">
+        <circle class="ring-track" cx="240" cy="240" r="188"/>
+        <circle class="ring-inner" cx="240" cy="240" r="168"/>
+        <!-- tick marks at each sigil position -->
+        {sigils.map(s => (
+          <line
+            class="ring-tick"
+            x1={240 + 178 * Math.cos((s.angle - 90) * Math.PI / 180)}
+            y1={240 + 178 * Math.sin((s.angle - 90) * Math.PI / 180)}
+            x2={240 + 198 * Math.cos((s.angle - 90) * Math.PI / 180)}
+            y2={240 + 198 * Math.sin((s.angle - 90) * Math.PI / 180)}
+          />
+        ))}
+      </svg>
+
+      <!-- Sigil nodes positioned on the ring -->
+      {sigils.map((s, i) => (
+        <div
+          class="sigil-node"
+          style={`--a: ${s.angle}deg; --i: ${i};`}
+          data-tier={s.tier}
+          aria-label={s.name}
+          title={s.name}
+        >
+          <div class="sigil-node-inner">
+            <svg viewBox="0 0 24 24" aria-hidden="true" set:html={sigilSvg(s.id)} />
+          </div>
+        </div>
+      ))}
+
+      <!-- Central content -->
+      <div class="ring-centre">
+        <h1 class="coven-title">The Coven</h1>
+        <div class="coven-actions">
+          <button class="btn-join" id="btn-join" type="button">Join the Coven</button>
+          <button class="btn-signin" id="btn-signin" type="button">Sign In</button>
+        </div>
+      </div>
+
+    </div>
+
+
+  </section>
+
+  <!-- ══ AUTH OVERLAY ══ -->
+  <div class="coven-overlay" id="coven-overlay" aria-hidden="true">
+    <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+
+      <button class="auth-close" id="auth-close" type="button" aria-label="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18" stroke-width="1.5"/><line x1="18" y1="6" x2="6" y2="18" stroke-width="1.5"/></svg>
+      </button>
+
+      <div class="auth-tabs" role="tablist">
+        <button class="auth-tab active" data-tab="signin" role="tab" aria-selected="true" type="button">Sign In</button>
+        <button class="auth-tab" data-tab="join" role="tab" aria-selected="false" type="button">Join</button>
+      </div>
+
+      <div class="auth-panel" id="panel-signin">
+        <h2 class="auth-title" id="auth-title">Return to the circle</h2>
+        <form class="auth-form" id="form-signin" novalidate>
+          <label class="auth-label">
+            <span>Email</span>
+            <input type="email" placeholder="your@email.com" autocomplete="email"/>
+          </label>
+          <label class="auth-label">
+            <span>Password</span>
+            <input type="password" placeholder="••••••••" autocomplete="current-password"/>
+          </label>
+          <button class="auth-submit" type="submit">Enter the Coven</button>
+        </form>
+      </div>
+
+      <div class="auth-panel hidden" id="panel-join">
+        <h2 class="auth-title">Enter the circle</h2>
+        <form class="auth-form" id="form-join" novalidate>
+          <label class="auth-label">
+            <span>Username</span>
+            <input type="text" placeholder="choose a name" autocomplete="username"/>
+          </label>
+          <label class="auth-label">
+            <span>Email</span>
+            <input type="email" placeholder="your@email.com" autocomplete="email"/>
+          </label>
+          <label class="auth-label">
+            <span>Password</span>
+            <input type="password" placeholder="••••••••" autocomplete="new-password"/>
+          </label>
+          <button class="auth-submit" type="submit">Join the Coven</button>
+        </form>
+      </div>
+
+      <p class="auth-demo-link">
+        <button type="button" id="btn-demo">Preview the dashboard →</button>
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ══ DASHBOARD VIEW ══ -->
+  <section class="coven-dash" id="coven-dash" aria-label="Member dashboard">
+
+    <div class="dash-inner">
+
+      <!-- Profile card -->
+      <aside class="dash-profile">
+        <div class="profile-avatar">
+          <svg viewBox="0 0 80 80" aria-hidden="true">
+            <circle cx="40" cy="30" r="16" stroke-width="1.5" fill="none" class="av-circle"/>
+            <path d="M10 72 C10 52 70 52 70 72" stroke-width="1.5" fill="none" class="av-circle"/>
+          </svg>
+        </div>
+        <p class="profile-name">WiseOwl</p>
+        <p class="profile-tier" data-tier="1">Initiate</p>
+        <div class="profile-meta">
+          <span>Joined May 2026</span>
+          <span class="profile-sigil-count"><strong>1</strong> / 9 sigils</span>
+        </div>
+        <div class="profile-tier-bar">
+          {tierLabels.map((t, i) => (
+            <div class={`tier-pip ${i === 0 ? 'active' : ''}`}>
+              <span class="tier-dot"/>
+              <span class="tier-name">{t}</span>
+            </div>
+          ))}
+        </div>
+        <button class="btn-signout" id="btn-signout" type="button">Sign Out</button>
+      </aside>
+
+      <!-- Sigil grid -->
+      <div class="dash-sigils">
+        <p class="eyebrow dash-eyebrow">Your Sigils</p>
+        <div class="sigil-grid">
+          {sigils.map((s, i) => (
+            <div class={`sigil-card ${i === 0 ? 'earned' : 'locked'}`} data-tier={s.tier}>
+              <div class="sigil-card-icon">
+                <svg viewBox="0 0 24 24" aria-hidden="true" set:html={sigilSvg(s.id)} />
+              </div>
+              <p class="sigil-card-name">{s.name}</p>
+              <p class="sigil-card-tier">{tierLabels[s.tier - 1]}</p>
+              {i !== 0 && <div class="sigil-lock" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="7" y="11" width="10" height="9" rx="1.5" stroke-width="1.4" fill="none"/><path d="M9 11 V8 A3 3 0 0 1 15 8 V11" stroke-width="1.4" fill="none"/></svg>
+              </div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
 </Base>
+
+<style>
+  /* ── Local tokens ── */
+  .coven-wrap {
+    --cv:       #2a5a3a;
+    --cv-mid:   #3d7a50;
+    --cv-light: #5aaa72;
+    --cv-text:  #88cc98;
+    --cv-glow:  rgba(42, 90, 58, 0.35);
+    --cv-ghost: rgba(42, 90, 58, 0.12);
+    min-height: 100vh;
+  }
+
+  /* ── View toggling ── */
+  .coven-wrap[data-view="gate"]  .coven-dash    { display: none; }
+  .coven-wrap[data-view="dash"]  .coven-gate    { display: none; }
+  .coven-overlay { display: none; }
+  .coven-overlay.open { display: flex; }
+
+  /* ════════════════════════════════════
+     GATE
+  ════════════════════════════════════ */
+  .coven-gate {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--section-py) var(--section-px);
+    background: radial-gradient(ellipse 60% 55% at 50% 48%, rgba(42,90,58,0.18) 0%, transparent 70%);
+    overflow: hidden;
+  }
+
+  /* ── Ring stage ── */
+  .ring-stage {
+    position: relative;
+    width: min(480px, 90vw);
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ring-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    animation: ring-drift 120s linear infinite;
+  }
+  @keyframes ring-drift { to { transform: rotate(360deg); } }
+
+  .ring-track {
+    fill: none;
+    stroke: var(--cv);
+    stroke-width: 0.8;
+    opacity: 0.35;
+    stroke-dasharray: 4 8;
+  }
+  .ring-inner {
+    fill: none;
+    stroke: var(--cv);
+    stroke-width: 0.4;
+    opacity: 0.15;
+  }
+  .ring-tick {
+    stroke: var(--cv-mid);
+    stroke-width: 1;
+    opacity: 0.5;
+  }
+
+  /* ── Sigil nodes on ring ── */
+  .sigil-node {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    transform:
+      translate(-50%, -50%)
+      rotate(var(--a))
+      translateY(calc(-1 * min(188px, 35.25vw)))
+      rotate(calc(-1 * var(--a)));
+    animation: node-pulse 4s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.44s);
+  }
+  @keyframes node-pulse {
+    0%, 100% { opacity: 0.5; }
+    50%       { opacity: 0.9; }
+  }
+
+  .sigil-node-inner {
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--cv-mid);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle, rgba(42,90,58,0.25) 0%, transparent 70%);
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .sigil-node:hover .sigil-node-inner {
+    border-color: var(--cv-light);
+    box-shadow: 0 0 12px var(--cv-glow);
+  }
+
+  .sigil-node svg {
+    width: 18px;
+    height: 18px;
+    color: var(--cv-text);
+    stroke: currentColor;
+  }
+
+  /* ── Ring centre ── */
+  .ring-centre {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.6rem;
+    padding: 0 48px;
+  }
+
+  .coven-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--cv-mid);
+    opacity: 0.7;
+  }
+
+  .coven-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    color: var(--cv-text);
+    text-shadow: 0 0 24px var(--cv-glow);
+    line-height: 1;
+  }
+
+  .coven-sub {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: clamp(0.85rem, 1.8vw, 1rem);
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+    max-width: 22ch;
+  }
+
+  .coven-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    width: 100%;
+  }
+
+  .btn-join {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.65rem 1.5rem;
+    background: var(--cv-ghost);
+    border: 1px solid var(--cv-mid);
+    color: var(--cv-text);
+    cursor: pointer;
+    transition: background 0.25s, box-shadow 0.25s, border-color 0.25s;
+  }
+  .btn-join:hover {
+    background: rgba(42,90,58,0.25);
+    border-color: var(--cv-light);
+    box-shadow: 0 0 16px var(--cv-glow);
+  }
+
+  .btn-signin {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: var(--cv-mid);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .btn-signin:hover { color: var(--cv-text); }
+
+  /* Gate footer */
+  .gate-footer-text {
+    margin-top: 3rem;
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    color: var(--text-dim);
+    text-align: center;
+  }
+
+  /* ════════════════════════════════════
+     AUTH OVERLAY
+  ════════════════════════════════════ */
+  .coven-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(5,4,9,0.88);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: overlay-in 0.3s ease;
+  }
+  @keyframes overlay-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .auth-card {
+    position: relative;
+    background: var(--surface2);
+    border: 1px solid var(--cv);
+    padding: 2.5rem;
+    width: min(400px, 100%);
+    box-shadow: 0 0 48px var(--cv-glow);
+    animation: card-in 0.35s cubic-bezier(0.22, 1.35, 0.36, 1);
+  }
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .auth-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: color 0.2s;
+    padding: 4px;
+    line-height: 0;
+  }
+  .auth-close:hover { color: var(--cv-text); }
+  .auth-close svg { width: 16px; height: 16px; stroke: currentColor; }
+
+  .auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .auth-tab {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.5rem 1.2rem;
+    background: none;
+    border: none;
+    border-bottom: 1px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    margin-bottom: -1px;
+  }
+  .auth-tab.active {
+    color: var(--cv-text);
+    border-bottom-color: var(--cv-mid);
+  }
+  .auth-tab:hover:not(.active) { color: var(--text); }
+
+  .auth-panel.hidden { display: none; }
+
+  .auth-title {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 1.3rem;
+    color: var(--cv-text);
+    margin-bottom: 1.5rem;
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .auth-label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .auth-label span {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .auth-label input {
+    background: var(--surface3);
+    border: 1px solid var(--border-mid);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.95rem;
+    padding: 0.55rem 0.75rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .auth-label input:focus { border-color: var(--cv-mid); }
+  .auth-label input::placeholder { color: var(--text-dim); opacity: 0.6; }
+
+  .auth-submit {
+    font-family: 'Cinzel', serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.75rem;
+    background: var(--cv-ghost);
+    border: 1px solid var(--cv-mid);
+    color: var(--cv-text);
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .auth-submit:hover {
+    background: rgba(42,90,58,0.25);
+    box-shadow: 0 0 12px var(--cv-glow);
+  }
+
+  .auth-demo-link {
+    text-align: center;
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+  .auth-demo-link button {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .auth-demo-link button:hover { color: var(--cv-text); }
+
+  /* ════════════════════════════════════
+     DASHBOARD
+  ════════════════════════════════════ */
+  .coven-dash {
+    min-height: 100vh;
+    padding: var(--section-py) var(--section-px);
+  }
+
+  .dash-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  /* ── Profile card ── */
+  .dash-profile {
+    position: sticky;
+    top: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.8rem;
+    padding: 2rem 1.5rem;
+    border: 1px solid var(--border-mid);
+    background: var(--surface);
+  }
+
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border: 1.5px solid var(--cv-mid);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cv-ghost);
+    overflow: hidden;
+  }
+  .profile-avatar svg { width: 80px; height: 80px; }
+  .av-circle { stroke: var(--cv-mid); }
+
+  .profile-name {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    letter-spacing: 0.08em;
+    color: var(--cv-text);
+    margin-top: 0.4rem;
+  }
+
+  .profile-tier {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.9rem;
+    border: 1px solid var(--cv);
+    color: var(--cv-text);
+    background: var(--cv-ghost);
+  }
+
+  .profile-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-family: 'Crimson Pro', serif;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+  .profile-sigil-count strong { color: var(--cv-text); }
+
+  /* Tier bar */
+  .profile-tier-bar {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    align-items: flex-start;
+  }
+  .tier-pip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+  }
+  .tier-pip.active { opacity: 1; }
+  .tier-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cv-mid);
+    box-shadow: 0 0 6px var(--cv-glow);
+  }
+  .tier-pip:not(.active) .tier-dot { background: var(--text-dim); box-shadow: none; }
+  .tier-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.5rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cv-text);
+    white-space: nowrap;
+  }
+  .tier-pip:not(.active) .tier-name { color: var(--text-muted); }
+
+  .btn-signout {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: color 0.2s;
+  }
+  .btn-signout:hover { color: var(--cv-text); }
+
+  /* ── Sigil grid ── */
+  .dash-eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cv-mid);
+    margin-bottom: 1.5rem;
+  }
+
+  .sigil-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+
+  .sigil-card {
+    position: relative;
+    background: var(--surface);
+    padding: 1.5rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+    transition: background 0.2s;
+    overflow: hidden;
+  }
+  .sigil-card.earned {
+    background: var(--surface);
+  }
+  .sigil-card.earned:hover {
+    background: var(--surface2);
+  }
+  .sigil-card.locked {
+    opacity: 0.45;
+  }
+
+  .sigil-card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid var(--cv);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--cv-ghost);
+    transition: box-shadow 0.2s;
+  }
+  .sigil-card.earned .sigil-card-icon {
+    border-color: var(--cv-light);
+    box-shadow: 0 0 14px var(--cv-glow);
+  }
+  .sigil-card.locked .sigil-card-icon {
+    border-color: var(--border);
+    background: none;
+  }
+
+  .sigil-card-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+  }
+  .sigil-card.earned .sigil-card-icon svg { color: var(--cv-text); }
+  .sigil-card.locked .sigil-card-icon svg { color: var(--text-dim); }
+
+  .sigil-card-name {
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cv-text);
+    line-height: 1.3;
+  }
+  .sigil-card.locked .sigil-card-name { color: var(--text-muted); }
+
+  .sigil-card-tier {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+  .sigil-card.earned .sigil-card-tier { color: var(--cv-mid); }
+
+  /* Lock icon overlay */
+  .sigil-lock {
+    position: absolute;
+    bottom: 6px;
+    right: 8px;
+    opacity: 0.3;
+  }
+  .sigil-lock svg {
+    width: 12px;
+    height: 12px;
+    stroke: var(--text-muted);
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 768px) {
+    .dash-inner {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    .dash-profile {
+      position: static;
+    }
+    .sigil-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .ring-stage {
+      width: min(360px, 85vw);
+    }
+    .sigil-node {
+      transform:
+        translate(-50%, -50%)
+        rotate(var(--a))
+        translateY(calc(-1 * min(141px, 33.3vw)))
+        rotate(calc(-1 * var(--a)));
+    }
+    .coven-actions {
+      gap: 0.5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .sigil-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
+
+<script>
+  const wrap      = document.getElementById('coven-wrap')!;
+  const overlay   = document.getElementById('coven-overlay')!;
+  const btnJoin   = document.getElementById('btn-join')!;
+  const btnSignin = document.getElementById('btn-signin')!;
+  const btnClose  = document.getElementById('auth-close')!;
+  const btnDemo   = document.getElementById('btn-demo')!;
+  const btnSignout = document.getElementById('btn-signout')!;
+  const formSignin = document.getElementById('form-signin')!;
+  const formJoin   = document.getElementById('form-join')!;
+
+  function openOverlay() {
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+  }
+  function closeOverlay() {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+  function enterDash() {
+    closeOverlay();
+    wrap.dataset.view = 'dash';
+  }
+  function exitDash() {
+    wrap.dataset.view = 'gate';
+  }
+
+  btnJoin.addEventListener('click', openOverlay);
+  btnSignin.addEventListener('click', openOverlay);
+  btnClose.addEventListener('click', closeOverlay);
+  btnDemo.addEventListener('click', enterDash);
+  btnSignout.addEventListener('click', exitDash);
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeOverlay();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && overlay.classList.contains('open')) closeOverlay();
+  });
+
+  formSignin.addEventListener('submit', (e) => { e.preventDefault(); enterDash(); });
+  formJoin.addEventListener('submit',   (e) => { e.preventDefault(); enterDash(); });
+
+  // Tab switching
+  document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.auth-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      const target = (tab as HTMLElement).dataset.tab!;
+      document.getElementById('panel-signin')!.classList.toggle('hidden', target !== 'signin');
+      document.getElementById('panel-join')!.classList.toggle('hidden',   target !== 'join');
+    });
+  });
+</script>

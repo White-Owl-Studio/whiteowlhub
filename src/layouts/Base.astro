@@ -6,12 +6,40 @@ import '../styles/global.css';
 interface Props {
   title?: string;
   description?: string;
+  ogImage?: string;
 }
 
 const {
   title = 'White Owl Studio',
   description = 'Tales of courage in broken worlds. Stories made to last.',
+  ogImage = '/ui/og-default.jpg',
 } = Astro.props;
+
+const siteUrl   = 'https://whiteowlhub.com';
+const pageTitle = title === 'White Owl Studio' ? title : `${title} — White Owl Studio`;
+const canonical = new URL(Astro.url.pathname, siteUrl).href;
+const ogImageAbs = new URL(ogImage, siteUrl).href;
+
+const orgSchema = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'White Owl Studio',
+  url: siteUrl,
+  logo: `${siteUrl}/ui/logo.gif`,
+  sameAs: [
+    'https://www.instagram.com/whiteowlstudio',
+    'https://www.youtube.com/shorts/pTbSSnQsZ2E',
+    'https://www.facebook.com/profile.php?id=61590287245120',
+    'https://www.linkedin.com/company/whiteowl-studio',
+    'https://www.tiktok.com/@whiteowl376',
+    'https://ko-fi.com/whiteowlanimation',
+  ],
+  founder: [
+    { '@type': 'Person', name: 'Michael B. Jacob' },
+    { '@type': 'Person', name: 'Oshrit Gedalya' },
+  ],
+  description: 'Animation production house — hand-crafted films about people navigating broken worlds.',
+});
 ---
 
 <!doctype html>
@@ -20,13 +48,36 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta name="theme-color" content="#050409" />
+    <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/gif" href="/ui/logo.gif" />
-    <title>{title === 'White Owl Studio' ? title : `${title} — White Owl Studio`}</title>
+    <title>{pageTitle}</title>
+
+    <!-- Open Graph -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:site_name"   content="White Owl Studio" />
+    <meta property="og:url"         content={canonical} />
+    <meta property="og:title"       content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image"       content={ogImageAbs} />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:title"       content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image"       content={ogImageAbs} />
+
+    <!-- Organization structured data -->
+    <script type="application/ld+json" set:html={orgSchema} />
+
     {/* Coming-soon gate: redirect all pages in production. Remove both lines to launch. */}
     {!import.meta.env.DEV && <style is:inline>html{'{'}visibility:hidden{'}'}</style>}
     {!import.meta.env.DEV && <script is:inline>window.location.replace('/coming-soon');</script>}
   </head>
   <body>
+    <a href="#main-content" class="skip-to-main">Skip to content</a>
     <!-- Background grain: sparse, high-contrast, behind all UI -->
     <canvas id="grain-bg" aria-hidden="true"></canvas>
     <!-- Top grain: near-invisible dark texture above everything -->
@@ -35,7 +86,7 @@ const {
     <div class="edge-blur edge-blur--top" aria-hidden="true"></div>
     <div class="edge-blur edge-blur--bottom" aria-hidden="true"></div>
     <Nav />
-    <main>
+    <main id="main-content">
       <slot />
     </main>
     <Footer />
@@ -43,6 +94,21 @@ const {
 </html>
 
 <style>
+  .skip-to-main {
+    position: absolute;
+    top: -100%;
+    left: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--gold);
+    color: var(--bg);
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    z-index: 10000;
+    transition: top 0.15s;
+  }
+  .skip-to-main:focus { top: 1rem; }
+
   /* Behind all page content — only visible in open background areas */
   #grain-bg {
     position: fixed;
