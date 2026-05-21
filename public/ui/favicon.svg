@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" fill="#050409"/>
+  <!-- Crescent moon -->
+  <path d="M 60 28 A 20 20 0 1 0 60 72 A 15 15 0 0 1 60 28 Z"
+        stroke="#f5d060" stroke-width="2" fill="none"/>
+  <!-- W / owl wing mark -->
+  <path d="M 22 62 L 32 44 L 42 58 L 50 44 L 58 58 L 68 44 L 78 62"
+        stroke="#f5d060" stroke-width="2.5" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
