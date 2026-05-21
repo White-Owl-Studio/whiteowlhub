@@ -237,6 +237,12 @@ import { films, featuredFilm } from '../data/films';
                     <span class="credit-value">{film.credits.cast}</span>
                   </div>
                 )}
+                {film.credits.studio && (
+                  <div class="credit-row">
+                    <span class="credit-label">Co-Production</span>
+                    <span class="credit-value">{film.credits.studio}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

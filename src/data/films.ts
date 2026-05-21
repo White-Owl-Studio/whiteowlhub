@@ -13,6 +13,7 @@ export interface Film {
     director: string;
     producer?: string;
     cast?: string;
+    studio?: string;
   };
   trailer: string | null;
   featured?: boolean;
@@ -44,7 +45,7 @@ export const films: Film[] = [
     runtime: 'TBA',
     logline: '— logline to be written —',
     summary: '— plot summary to be written —',
-    credits: { director: 'Michael B. Jacob' },
+    credits: { director: 'Michael B. Jacob & Oshrit Gedalya' },
     trailer: null,
     featured: true,
   },
@@ -73,7 +74,7 @@ export const films: Film[] = [
     runtime: 'TBA',
     logline: '— logline to be written —',
     summary: '— plot summary to be written —',
-    credits: { director: 'Michael B. Jacob' },
+    credits: { director: 'Michael B. Jacob & Shalev Ben Elya', studio: 'The Hive Studio' },
     trailer: null,
   },
   {
@@ -101,7 +102,7 @@ export const films: Film[] = [
     runtime: 'TBA',
     logline: '— logline to be written —',
     summary: '— plot summary to be written —',
-    credits: { director: 'Michael B. Jacob' },
+    credits: { director: 'Oshrit Gedalya' },
     trailer: null,
   },
 ];
