@@ -49,7 +49,7 @@ Legend: ✅ In place · ⬜ Still needed · 🔗 Hosted externally (R2 / Vimeo)
 | Asset | Filename | Status |
 |-------|----------|--------|
 | Tarot card art | `card.png` | ⬜ |
-| Film poster | `poster.jpg` | ⬜ |
+| Film poster | `poster.png` | ✅ Done |
 | Still 1 | `still-1.png` | ✅ Done |
 | Still 2 | `still-2.jpg` | ✅ Done |
 | Still 3 | `still-3.jpg` | ✅ Done |

@@ -118,6 +118,7 @@ export const films: Film[] = [
     summary: 'Chimeric machines, built from the remnants of human civilization, rise at nightfall and move toward the city they served. Not to destroy — to dissolve back into it. Drawn in charcoal and photographed frame by frame under a DSLR camera, Dawn is a poem about the end of things and the strange grace of return.',
     credits: { director: 'Michael B. Jacob' },
     trailer: null,
+    poster: '/films/dawn/poster.png',
     stills: [
       '/films/dawn/still-1.png',
       '/films/dawn/still-2.jpg',
