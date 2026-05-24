@@ -146,7 +146,7 @@ a:focus-visible {
 /* ── Gold decorative text ── */
 .eyebrow {
   font-family: 'Cinzel', serif;
-  font-size: 0.58rem;
+  font-size: 0.72rem;
   letter-spacing: 0.4em;
   text-transform: uppercase;
   color: var(--gold-dim);
