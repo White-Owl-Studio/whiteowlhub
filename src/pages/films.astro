@@ -84,12 +84,16 @@ const filmsSchema = JSON.stringify({
 
             <!-- Front: tarot card art -->
             <div class="card-face card-front">
-              <!-- PLACEHOLDER: replace with <img src="/films/{film.slug}/card.png" alt="..." /> -->
-              <div class="front-art">
-                <span class="front-numeral">{film.numeral}</span>
-                <div class="front-rule"></div>
-                <span class="front-title">{film.title}</span>
-              </div>
+              {film.card
+                ? <img src={film.card} alt={`${film.title} — tarot card`} class="card-tarot-img" />
+                : (
+                  <div class="front-art">
+                    <span class="front-numeral">{film.numeral}</span>
+                    <div class="front-rule"></div>
+                    <span class="front-title">{film.title}</span>
+                  </div>
+                )
+              }
               {film.featured && (
                 <span class="card-live-badge">
                   <span class="live-dot"></span>In Production
@@ -99,13 +103,17 @@ const filmsSchema = JSON.stringify({
 
             <!-- Back: film poster -->
             <div class="card-face card-back">
-              <!-- PLACEHOLDER: replace with <img src="/films/{film.slug}/poster.jpg" alt="..." /> -->
-              <div class="back-art">
-                <span class="back-numeral">{film.numeral}</span>
-                <div class="back-rule"></div>
-                <span class="back-title">{film.title}</span>
-                <code class="ph-path-sm">poster.jpg</code>
-              </div>
+              {film.poster
+                ? <img src={film.poster} alt={`${film.title} — poster`} class="card-poster-img" />
+                : (
+                  <div class="back-art">
+                    <span class="back-numeral">{film.numeral}</span>
+                    <div class="back-rule"></div>
+                    <span class="back-title">{film.title}</span>
+                    <code class="ph-path-sm">poster.jpg</code>
+                  </div>
+                )
+              }
             </div>
 
           </div>
@@ -823,6 +831,14 @@ const filmsSchema = JSON.stringify({
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  .card-poster-img,
+  .card-tarot-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
 
   .film-card:hover .card-back {

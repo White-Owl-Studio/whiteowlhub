@@ -17,6 +17,7 @@ export interface Film {
     studio?: string;
   };
   trailer: string | null;
+  card?: string;
   poster?: string;
   stills?: string[];
   featured?: boolean;
@@ -37,6 +38,7 @@ export const films: Film[] = [
     summary: 'Trapped in an eternal recurring nightmare, Laila is about to break free of the lake that holds her — but to break free, she must learn to breathe.',
     credits: { director: 'Michael B. Jacob' },
     trailer: null,
+    card: '/films/the-owls-descent/card.jpeg',
   },
   {
     numeral: 'II',
@@ -52,6 +54,7 @@ export const films: Film[] = [
     summary: 'Oshri, a barrel-chested truck driver from Eilat, picks up Noam — seventeen, vegan, and furious — on a stormy night in the Arava. They clash immediately. The cows in the back are listening. When Noam steals the truck and crashes it, and the cows choose to go back and help the man who hauls them, a campfire tale becomes something else: a parable about compassion arriving from the last direction you expected it. Handcrafted stop-motion animation with fabricated puppets, sets, and props.',
     credits: { director: 'Michael B. Jacob & Oshrit Gedalya', producer: 'Liran Koren' },
     trailer: null,
+    card: '/films/the-one-who-drives-the-truck/card.jpeg',
     stills: [
       '/films/the-one-who-drives-the-truck/still-1.png',
       '/films/the-one-who-drives-the-truck/still-2.png',
