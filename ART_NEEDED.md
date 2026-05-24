@@ -236,6 +236,18 @@ For each client project, add a `ClientProject` entry in `src/data/portfolio.ts`:
 
 ---
 
+## Side Effects
+
+Visual micro-interactions that wait on art assets before they can be implemented properly.
+
+| Effect | Trigger | Description | Status | Depends on |
+|--------|---------|-------------|--------|-----------|
+| **Tarot Card Dust** | First hover per card, per page load | ~14 tiny particles (0.8–2px, ~6% opacity) fall slowly from within the tarot card image — like dust shaken from a shelf. Particles drift down the height of the card image, then vanish. Resets on reload. | ⬜ Disabled — code scaffolded in `films.astro` | All 6 tarot cards present (`card.jpeg` per film) |
+
+> **When to enable:** once all 6 tarot cards are in place, un-comment the JS block in `films.astro` (marked `// Tarot card dust (disabled)`). Update the spawn source from `.front-numeral` to `.card-tarot-img` bounds so particles originate from the actual card art.
+
+---
+
 ## Summary
 
 | Category | Done | Still Needed |
@@ -260,3 +272,4 @@ For each client project, add a `ClientProject` entry in `src/data/portfolio.ts`:
 | About — Client work samples | 0 | 6 |
 | About — Press logos | 0 | 3 (optional) |
 | OG image | 0 | 1 |
+| Side Effects — Tarot Card Dust | ⬜ Disabled | Needs all 6 tarot cards |
