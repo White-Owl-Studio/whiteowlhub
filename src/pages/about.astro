@@ -43,13 +43,9 @@ const phases = [
         <div class="intro-header-row">
 
           <div class="sketch-ph">
-            <!-- PLACEHOLDER: replace inner content with:
-                 <img src="/about/founders-sketch.jpg"
-                      alt="Michael and Oshrit with their cats — a pen sketch"
-                      class="sketch-img" />
-            -->
-            <span class="ph-label">Sketch</span>
-            <span class="ph-desc">founders<br/>+ cats</span>
+            <img src="/ui/couple-logo.png"
+                 alt="Michael and Oshrit with their cats"
+                 class="sketch-img" />
           </div>
 
           <div class="intro-title-block">
@@ -248,24 +244,14 @@ const phases = [
   }
 
   .sketch-ph {
-    width: 80px;
+    width: 160px;
     flex-shrink: 0;
-    aspect-ratio: 3/4;
-    border: 1px dashed var(--border-mid);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.35rem;
-    background: var(--surface);
-    padding: 0.5rem;
-    text-align: center;
   }
   .sketch-img {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
     display: block;
+    mix-blend-mode: lighten;
   }
 
   .intro-title-block { flex: 1; }
