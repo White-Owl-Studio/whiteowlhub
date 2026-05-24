@@ -306,13 +306,13 @@ import Base from '../layouts/Base.astro';
      that are always compositor-thread-safe on text.
      The elastic easing gives the watery settling feel. */
   @keyframes promptIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(12px); filter: blur(6px); }
+    to   { opacity: 1; transform: translateY(0);    filter: blur(0px); }
   }
 
   @keyframes promptOut {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(-8px); }
+    from { opacity: 1; transform: translateY(0);    filter: blur(0px); }
+    to   { opacity: 0; transform: translateY(-8px); filter: blur(6px); }
   }
 
   .deck-prompt {
@@ -333,7 +333,7 @@ import Base from '../layouts/Base.astro';
       0 0 60px rgba(224,168,50,0.12);
     /* Promote to own layer before first hover */
     transform: translateY(0);
-    will-change: transform, opacity;
+    will-change: transform, opacity, filter;
   }
 
   .deck-prompt.is-entering {
@@ -499,7 +499,7 @@ import Base from '../layouts/Base.astro';
 
   .numeral {
     font-family: 'Cinzel', serif;
-    font-size: 0.5rem;
+    font-size: 0.55rem;
     letter-spacing: 0.32em;
     color: var(--gold-dim);
     opacity: 0.65;

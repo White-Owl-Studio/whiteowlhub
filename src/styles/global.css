@@ -8,10 +8,10 @@
 
 :root {
   /* ── Backgrounds ── */
-  --bg:        #050409;
-  --surface:   #0b0916;
-  --surface2:  #110e20;
-  --surface3:  #181428;
+  --bg:        #0f0d18;
+  --surface:   #171422;
+  --surface2:  #1d1a2e;
+  --surface3:  #242038;
 
   /* ── Gold (primary brand) ── */
   --gold:      #f5d060;
@@ -21,15 +21,15 @@
 
   /* ── Text ── */
   --text:      #e4dac8;
-  --text-muted: #806878;
-  --text-dim:  #382840;
+  --text-muted: #a07898;
+  --text-dim:  #5a3d60;
   --bone:      #ede4cc;
-  --mist:      #b8aed0;
+  --mist:      #c8bedd;
 
   /* ── Borders (gold-based alpha) ── */
-  --border:        rgba(220,185,100,0.10);
-  --border-mid:    rgba(220,185,100,0.20);
-  --border-bright: rgba(220,185,100,0.50);
+  --border:        rgba(220,185,100,0.15);
+  --border-mid:    rgba(220,185,100,0.28);
+  --border-bright: rgba(220,185,100,0.55);
 
   /* ── Section accents ── */
   --accent-films:       #e02828;   /* Laila red */

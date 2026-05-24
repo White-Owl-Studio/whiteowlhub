@@ -91,6 +91,8 @@ const orgSchema = JSON.stringify({
     <!-- Edge blur: gradient-faded backdrop-filter at top and bottom of viewport -->
     <div class="edge-blur edge-blur--top" aria-hidden="true"></div>
     <div class="edge-blur edge-blur--bottom" aria-hidden="true"></div>
+    <!-- Top-center atmospheric vignette — fixed, sits below grain -->
+    <div class="bg-vignette" aria-hidden="true"></div>
     <Nav />
     <main id="main-content">
       <slot />
@@ -100,6 +102,14 @@ const orgSchema = JSON.stringify({
 </html>
 
 <style>
+  .bg-vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: radial-gradient(ellipse 80% 55% at 50% -5%, rgba(32, 26, 56, 0.8) 0%, transparent 65%);
+  }
+
   .skip-to-main {
     position: absolute;
     top: -100%;
@@ -108,7 +118,7 @@ const orgSchema = JSON.stringify({
     background: var(--gold);
     color: var(--bg);
     font-family: 'Cinzel', serif;
-    font-size: 0.7rem;
+    font-size: 0.77rem;
     letter-spacing: 0.1em;
     z-index: 10000;
     transition: top 0.15s;
