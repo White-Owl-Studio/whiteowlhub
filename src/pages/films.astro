@@ -118,6 +118,8 @@ const filmsSchema = JSON.stringify({
 
           </div>
 
+          <div class="card-smoke" aria-hidden="true"></div>
+
           <div class="card-label">
             <p class="card-title-label">{film.title}</p>
             <p class="card-meta-line">{film.year} · {film.format} · {film.stage}</p>
@@ -309,6 +311,17 @@ const filmsSchema = JSON.stringify({
 </Base>
 
 <script>
+  // ── Card smoke poof (first hover only per page load) ──
+  document.querySelectorAll<HTMLElement>('.film-card').forEach(card => {
+    const smoke = card.querySelector<HTMLElement>('.card-smoke');
+    if (!smoke) return;
+    card.addEventListener('mouseenter', () => {
+      if (card.dataset.smoked) return;
+      card.dataset.smoked = '1';
+      smoke.classList.add('poof');
+    }, { once: true });
+  });
+
   // ── Card rail drag-to-scroll ──────────────────────────
   const rail = document.querySelector<HTMLElement>('.card-rail');
   if (rail) {
@@ -873,6 +886,64 @@ const filmsSchema = JSON.stringify({
     font-size: 0.79rem;
     color: rgba(224, 40, 40, 0.25);
     line-height: 1.45;
+  }
+
+  /* ── Smoke poof (first hover only) ────────────────── */
+  .card-smoke {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+
+  .card-smoke::before,
+  .card-smoke::after {
+    content: '';
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center,
+      rgba(210, 195, 230, 0.72) 0%,
+      rgba(160, 145, 190, 0.38) 38%,
+      transparent 70%
+    );
+    filter: blur(8px);
+    opacity: 0;
+    transform: scale(0.15);
+    will-change: opacity, transform, filter;
+  }
+
+  .card-smoke::after {
+    width: 55%;
+    height: 55%;
+    top: 22%;
+    left: 12%;
+    background: radial-gradient(ellipse at center,
+      rgba(220, 210, 240, 0.55) 0%,
+      rgba(140, 130, 170, 0.25) 45%,
+      transparent 70%
+    );
+  }
+
+  .card-smoke.poof::before {
+    animation: card-poof 0.72s cubic-bezier(0.15, 0, 0.7, 1) forwards;
+  }
+
+  .card-smoke.poof::after {
+    animation: card-poof 0.72s cubic-bezier(0.15, 0, 0.7, 1) 0.07s forwards;
+  }
+
+  @keyframes card-poof {
+    0%   { opacity: 0.75; transform: scale(0.15); filter: blur(5px);  }
+    30%  { opacity: 0.55; transform: scale(0.85); filter: blur(12px); }
+    65%  { opacity: 0.25; transform: scale(1.35); filter: blur(18px); }
+    100% { opacity: 0;    transform: scale(1.75); filter: blur(24px); }
   }
 
   /* Card label below */
