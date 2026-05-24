@@ -120,44 +120,38 @@ const currentPath = Astro.url.pathname;
     color: var(--accent);
   }
 
-  /* ── Portfolio dropdown — full-width horizontal bar ── */
+  /* ── Portfolio dropdown — vertical list ── */
+  .nav-item--has-dropdown {
+    position: relative;
+  }
+
   .nav-dropdown {
-    position: fixed;
-    top: 64px;
-    left: 0;
-    right: 0;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
     list-style: none;
+    min-width: 200px;
 
     display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    flex-wrap: nowrap;
+    flex-direction: column;
 
     background: rgba(10, 8, 20, 0.97);
-    border-bottom: 1px solid rgba(245, 208, 96, 0.1);
+    border: 1px solid rgba(245, 208, 96, 0.1);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
 
-    overflow-x: auto;
-    scrollbar-width: none;
-    /* Fade edges to hint at scrollability */
-    mask-image: linear-gradient(to right, transparent 0, black 52px, black calc(100% - 52px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0, black 52px, black calc(100% - 52px), transparent 100%);
-
     opacity: 0;
     pointer-events: none;
-    transform: translateY(-5px);
     transition: opacity 0.22s ease, transform 0.22s ease;
     z-index: 200;
   }
-
-  .nav-dropdown::-webkit-scrollbar { display: none; }
 
   .nav-dropdown.is-open,
   .nav-item--has-dropdown:focus-within .nav-dropdown {
     opacity: 1;
     pointer-events: all;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
   }
 
   .nav-dropdown-link {
@@ -167,22 +161,19 @@ const currentPath = Astro.url.pathname;
     text-transform: uppercase;
     color: rgba(245, 208, 96, 0.45);
     text-decoration: none;
-    padding: 14px 28px;
-    display: flex;
-    align-items: center;
+    padding: 11px 22px;
+    display: block;
     white-space: nowrap;
-    flex-shrink: 0;
-    border-right: 1px solid rgba(245, 208, 96, 0.07);
+    border-bottom: 1px solid rgba(245, 208, 96, 0.07);
     transition: color 0.2s ease, background 0.2s ease;
   }
 
-  .nav-dropdown > li:first-child .nav-dropdown-link { padding-left: 52px; }
-  .nav-dropdown > li:last-child  .nav-dropdown-link { padding-right: 52px; border-right: none; }
+  .nav-dropdown > li:last-child .nav-dropdown-link { border-bottom: none; }
 
   .nav-dropdown-link:hover,
   .nav-dropdown-link.active {
     color: var(--gold);
-    background: rgba(112, 64, 184, 0.1);
+    background: rgba(112, 64, 184, 0.15);
   }
 
   /* ── Mobile toggle ── */
@@ -286,26 +277,4 @@ const currentPath = Astro.url.pathname;
   ddEl?.addEventListener('mouseenter', openDd);
   ddEl?.addEventListener('mouseleave', closeDd);
 
-  // ── Cursor-edge auto-scroll ──
-  let scrollDir = 0;
-  let rafId: number | null = null;
-
-  const scrollTick = () => {
-    if (scrollDir !== 0 && ddEl) { ddEl.scrollLeft += scrollDir; rafId = requestAnimationFrame(scrollTick); }
-    else { rafId = null; }
-  };
-
-  ddEl?.addEventListener('mousemove', (e) => {
-    const rect  = ddEl.getBoundingClientRect();
-    const x     = e.clientX - rect.left;
-    const zone  = rect.width * 0.15;
-    const prev  = scrollDir;
-    scrollDir   = x < zone ? -4 : x > rect.width - zone ? 4 : 0;
-    if (scrollDir !== 0 && prev === 0 && !rafId) rafId = requestAnimationFrame(scrollTick);
-  });
-
-  ddEl?.addEventListener('mouseleave', () => {
-    scrollDir = 0;
-    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-  });
 </script>
