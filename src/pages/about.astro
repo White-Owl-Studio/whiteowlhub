@@ -2,12 +2,13 @@
 import Base from '../layouts/Base.astro';
 
 const clients = [
-  { id: 1, name: 'Studio Partner',   top:  '8%', left: '38%' },
-  { id: 2, name: 'Client Name Two',  top: '14%', left: '66%' },
-  { id: 3, name: 'Partner Three',    top: '42%', left: '51%' },
-  { id: 4, name: 'Agency Four',      top: '65%', left: '35%' },
-  { id: 5, name: 'Studio Five',      top: '58%', left: '70%' },
-  { id: 6, name: 'Client Six',       top: '82%', left: '54%' },
+  { id: 1, name: 'Liran Kapel',     top:  '5%', left: '22%' },
+  { id: 2, name: 'Superplay',       top: '10%', left: '62%' },
+  { id: 3, name: 'KAKAL',           top: '32%', left: '40%' },
+  { id: 4, name: 'PARTNER',         top: '28%', left: '74%' },
+  { id: 5, name: 'The Hive Studio', top: '58%', left: '26%' },
+  { id: 6, name: 'Pil Animation',   top: '52%', left: '65%' },
+  { id: 7, name: 'Gliding Deer',    top: '80%', left: '48%' },
 ];
 
 const phases = [
@@ -187,33 +188,6 @@ const phases = [
     <p class="client-lb-caption" id="client-lb-caption"></p>
   </div>
 
-  <hr class="section-rule" />
-
-  <!-- ═══════════════════════════════════════════ PRESS ══ -->
-  <section class="about-press">
-    <header class="section-header">
-      <p class="eyebrow">In Print</p>
-      <h2 class="section-title">Press</h2>
-    </header>
-
-    <div class="press-grid">
-      {[
-        '"A studio that understands animation not as a genre but as a language — and uses it accordingly."',
-        '"White Owl Studio is one of the most interesting emerging animation voices working today."',
-        '"Stories that ask something of the viewer — and trust them enough to answer."',
-      ].map(quote => (
-        <article class="press-card">
-          <!-- PLACEHOLDER: replace with real press quote and publication info -->
-          <p class="press-quote">{quote}</p>
-          <footer class="press-source">
-            <span class="press-outlet">Publication Name</span>
-            <span class="press-sep">·</span>
-            <span class="press-date">[Month Year]</span>
-          </footer>
-        </article>
-      ))}
-    </div>
-  </section>
 
 </Base>
 

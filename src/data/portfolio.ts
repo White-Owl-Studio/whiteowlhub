@@ -110,7 +110,7 @@ export const categories: Category[] = [
   {
     slug: 'oshrit',
     title: "Oshrit's Portfolio",
-    description: 'Art direction, illustration, and personal work by Oshrit — co-founder and art director of White Owl Studio.',
+    description: 'Art direction, illustration, and personal work by Oshrit Gedalya — co-founder and art director of White Owl Studio.',
     grid: 'uniform',
     items: [],
   },
