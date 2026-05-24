@@ -37,6 +37,7 @@ const filmsSchema = JSON.stringify({
       <div class="hero-text">
         <span class="hero-numeral">{featuredFilm.numeral}</span>
         <h1 class="hero-title">{featuredFilm.title}</h1>
+        {featuredFilm.subtitle && <p class="hero-subtitle">{featuredFilm.subtitle}</p>}
         <p class="hero-meta">
           <span>{featuredFilm.year}</span>
           <span class="sep">·</span>
@@ -191,7 +192,10 @@ const filmsSchema = JSON.stringify({
         <header class="modal-header">
           <div class="modal-title-group">
             <span class="modal-numeral">{film.numeral}</span>
-            <h2 class="modal-film-title">{film.title}</h2>
+            <div class="modal-title-stack">
+              <h2 class="modal-film-title">{film.title}</h2>
+              {film.subtitle && <p class="modal-film-subtitle">{film.subtitle}</p>}
+            </div>
           </div>
           <button class="modal-close" data-close-modal aria-label="Close">✕</button>
         </header>
@@ -392,6 +396,12 @@ const filmsSchema = JSON.stringify({
     border: 1px solid rgba(245, 208, 96, 0.18);
   }
 
+  .stage-tag--complete {
+    color: rgba(62, 207, 170, 0.7);
+    background: rgba(62, 207, 170, 0.07);
+    border: 1px solid rgba(62, 207, 170, 0.2);
+  }
+
   @keyframes pulse-dot {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.25; }
@@ -499,6 +509,15 @@ const filmsSchema = JSON.stringify({
 
   .hero-title:hover {
     color: var(--red);
+  }
+
+  .hero-subtitle {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: clamp(0.85rem, 1.3vw, 1rem);
+    color: rgba(245, 208, 96, 0.3);
+    letter-spacing: 0.08em;
+    margin-top: -8px;
   }
 
   .hero-meta {
@@ -1052,6 +1071,20 @@ const filmsSchema = JSON.stringify({
 
   .modal-film-title:hover {
     color: var(--red);
+  }
+
+  .modal-title-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .modal-film-subtitle {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 0.85rem;
+    color: rgba(245, 208, 96, 0.35);
+    letter-spacing: 0.04em;
   }
 
   .modal-close {
