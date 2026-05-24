@@ -17,18 +17,25 @@ const phases = [
     body: 'Every film begins in conversation — a feeling, an image, a question that won\'t leave us alone. We develop scripts through voice and iteration, building the world from the ground up: concept art, character design, colour keys, storyboards. We don\'t move forward until the animatic earns every beat. The story has to be solid before a single frame is drawn.',
     tags: ['Development', 'Scripting', 'Visual Development', 'Storyboard', 'Animatic'],
     postitsRight: true,
+    images: [
+      { src: '/about/process-concept-1.png', alt: 'Film concept art — White Owl Studio' },
+      { src: '/about/process-concept-2.png', alt: 'Film concept art — White Owl Studio' },
+      { src: '/about/process-concept-3.png', alt: 'Film concept art — White Owl Studio' },
+    ],
   },
   {
     num: '02', title: 'Production', slug: 'prod',
     body: 'Animation at White Owl is deliberate. Every pose is considered, every transition authored. We work with voice talent, composers, and sound designers as collaborators — not vendors — because the film\'s world needs to be consistent in every layer at once. Production is where the work becomes undeniable.',
     tags: ['Animation', 'Voice Recording', 'Sound Design', 'Music Composition'],
     postitsRight: false,
+    images: [] as { src: string; alt: string }[],
   },
   {
     num: '03', title: 'Post-Production', slug: 'post-prod',
     body: 'Editing, colour, and sound mix are the last acts of authorship. We finish our work to festival and broadcast standards, and we accompany each film through submission, programming, and release. The work doesn\'t end when the export does. We follow our films into the world.',
     tags: ['Editing', 'Colour Grading', 'Sound Mix', 'Delivery', 'Festival Distribution'],
     postitsRight: true,
+    images: [] as { src: string; alt: string }[],
   },
 ];
 ---
@@ -125,14 +132,17 @@ const phases = [
 
           <!-- Post-its (3 overlapping image slots) -->
           <div class={`phase-postits${!phase.postitsRight ? ' phase-postits--left' : ''}`}>
-            {[1, 2, 3].map(n => (
-              <div class={`postit postit--${n}`}>
-                {/* PLACEHOLDER: replace inner content with
-                    <img src={`/about/process/${phase.slug}-${n}.jpg`}
-                         alt={`${phase.title} visual ${n}`}
-                         class="postit-img" />  */}
-                <span class="ph-label">Visual {n}</span>
-                <code class="ph-path">{`process/${phase.slug}-${n}.jpg`}</code>
+            {[0, 1, 2].map(n => (
+              <div class={`postit postit--${n + 1}`}>
+                {phase.images[n]
+                  ? <img src={phase.images[n].src} alt={phase.images[n].alt} class="postit-img" loading="lazy" />
+                  : (
+                    <>
+                      <span class="ph-label">Visual {n + 1}</span>
+                      <code class="ph-path">{`process/${phase.slug}-${n + 1}.jpg`}</code>
+                    </>
+                  )
+                }
               </div>
             ))}
           </div>

@@ -17,6 +17,8 @@ export interface Film {
     studio?: string;
   };
   trailer: string | null;
+  poster?: string;
+  stills?: string[];
   featured?: boolean;
 }
 
@@ -50,6 +52,14 @@ export const films: Film[] = [
     summary: 'Oshri, a barrel-chested truck driver from Eilat, picks up Noam — seventeen, vegan, and furious — on a stormy night in the Arava. They clash immediately. The cows in the back are listening. When Noam steals the truck and crashes it, and the cows choose to go back and help the man who hauls them, a campfire tale becomes something else: a parable about compassion arriving from the last direction you expected it. Handcrafted stop-motion animation with fabricated puppets, sets, and props.',
     credits: { director: 'Michael B. Jacob & Oshrit Gedalya', producer: 'Liran Koren' },
     trailer: null,
+    stills: [
+      '/films/the-one-who-drives-the-truck/still-1.png',
+      '/films/the-one-who-drives-the-truck/still-2.png',
+      '/films/the-one-who-drives-the-truck/still-3.png',
+      '/films/the-one-who-drives-the-truck/still-4.png',
+      '/films/the-one-who-drives-the-truck/still-5.png',
+      '/films/the-one-who-drives-the-truck/still-6.png',
+    ],
     featured: true,
   },
   {
@@ -81,6 +91,15 @@ export const films: Film[] = [
     summary: "Real Israelis, speaking in their own words — about trains from Egypt to Lebanon, forced peace, divine authority, and nuclear fire. Contradictory, naïve, cynical, and sincere, their solutions are placed side by side without a verdict. The film doesn't argue. It listens, until the voices become a single, impossible picture. Mixed-media collage animation built around real recorded voices.",
     credits: { director: 'Michael B. Jacob & Shalev Ben Elya', studio: 'The Hive Studio' },
     trailer: null,
+    poster: '/films/lets-solve-it/poster.png',
+    stills: [
+      '/films/lets-solve-it/still-1.png',
+      '/films/lets-solve-it/still-2.png',
+      '/films/lets-solve-it/still-3.png',
+      '/films/lets-solve-it/still-4.png',
+      '/films/lets-solve-it/still-5.png',
+      '/films/lets-solve-it/still-6.png',
+    ],
   },
   {
     numeral: 'V',
@@ -96,6 +115,11 @@ export const films: Film[] = [
     summary: 'Chimeric machines, built from the remnants of human civilization, rise at nightfall and move toward the city they served. Not to destroy — to dissolve back into it. Drawn in charcoal and photographed frame by frame under a DSLR camera, Dawn is a poem about the end of things and the strange grace of return.',
     credits: { director: 'Michael B. Jacob' },
     trailer: null,
+    stills: [
+      '/films/dawn/still-1.png',
+      '/films/dawn/still-2.jpg',
+      '/films/dawn/still-3.jpg',
+    ],
   },
   {
     numeral: 'VI',

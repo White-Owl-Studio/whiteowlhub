@@ -32,8 +32,12 @@ const filmsSchema = JSON.stringify({
 
   <!-- ═══════════════════════════════════════════ HERO ══ -->
   <section class="film-hero">
-    <div class="hero-inner">
+    <img src="/films/the-one-who-drives-the-truck/hero.jpg"
+         alt="The One Who Drives The Truck — film still"
+         class="hero-bg-img" />
+    <div class="hero-bg-fade" aria-hidden="true"></div>
 
+    <div class="hero-inner">
       <div class="hero-text">
         <span class="hero-numeral">{featuredFilm.numeral}</span>
         <h1 class="hero-title">{featuredFilm.title}</h1>
@@ -54,17 +58,8 @@ const filmsSchema = JSON.stringify({
           </button>
         </div>
       </div>
-
-      <div class="hero-visual">
-        <div class="hero-poster-ph">
-          <!-- PLACEHOLDER: replace with <img src="/films/the-one-who-drives-the-truck/hero.jpg" alt="..." /> -->
-          <span class="ph-numeral">{featuredFilm.numeral}</span>
-          <span class="ph-label">Hero Art</span>
-          <code class="ph-path">hero.jpg</code>
-        </div>
-      </div>
-
     </div>
+
     <div class="hero-scroll-hint" aria-hidden="true">↓</div>
   </section>
 
@@ -225,11 +220,15 @@ const filmsSchema = JSON.stringify({
           <!-- Details row -->
           <div class="modal-details">
             <div class="modal-poster-wrap">
-              <!-- PLACEHOLDER: replace with <img src="/films/{film.slug}/poster.jpg" alt="..." class="modal-poster-img" /> -->
-              <div class="modal-poster-ph">
-                <span class="ph-numeral-sm">{film.numeral}</span>
-                <code class="ph-path-sm">poster.jpg</code>
-              </div>
+              {film.poster
+                ? <img src={film.poster} alt={`${film.title} — poster`} class="modal-poster-img" />
+                : (
+                  <div class="modal-poster-ph">
+                    <span class="ph-numeral-sm">{film.numeral}</span>
+                    <code class="ph-path-sm">poster.jpg</code>
+                  </div>
+                )
+              }
             </div>
 
             <div class="modal-info">
@@ -277,14 +276,22 @@ const filmsSchema = JSON.stringify({
           </div>
 
           <!-- Stills strip -->
-          <div class="stills-strip">
-            {[1, 2, 3].map(n => (
-              <div class="still-ph">
-                <!-- PLACEHOLDER: replace with <img src="/films/{film.slug}/still-{n}.jpg" alt="..." class="still-img" /> -->
-                <code class="ph-path-sm">still-{n}.jpg</code>
-              </div>
-            ))}
-          </div>
+          {film.stills && film.stills.length > 0 && (
+            <div class="stills-strip">
+              {film.stills.map((src, i) => (
+                <img src={src} alt={`${film.title} — still ${i + 1}`} class="still-img" loading="lazy" />
+              ))}
+            </div>
+          )}
+          {(!film.stills || film.stills.length === 0) && (
+            <div class="stills-strip">
+              {[1, 2, 3].map(n => (
+                <div class="still-ph">
+                  <code class="ph-path-sm">still-{n}.jpg</code>
+                </div>
+              ))}
+            </div>
+          )}
 
         </div>
       </div>
@@ -294,6 +301,21 @@ const filmsSchema = JSON.stringify({
 </Base>
 
 <script>
+  // ── Card rail drag-to-scroll ──────────────────────────
+  const rail = document.querySelector<HTMLElement>('.card-rail');
+  if (rail) {
+    let isDown = false, startX = 0, scrollLeft = 0;
+    rail.addEventListener('mousedown', e => {
+      isDown = true; startX = e.pageX - rail.offsetLeft; scrollLeft = rail.scrollLeft;
+    });
+    document.addEventListener('mouseup', () => { isDown = false; });
+    rail.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      e.preventDefault();
+      rail.scrollLeft = scrollLeft - (e.pageX - rail.offsetLeft - startX);
+    });
+  }
+
   // ── Modal system ──────────────────────────────────────
   function openModal(slug: string) {
     const modal = document.getElementById(`modal-${slug}`);
@@ -462,18 +484,63 @@ const filmsSchema = JSON.stringify({
   /* ══════════════════════════════════════════ HERO ═══ */
   .film-hero {
     position: relative;
-    min-height: 100vh;
+    min-height: 88vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     padding: clamp(100px, 12vw, 160px) var(--section-px) clamp(64px, 8vw, 96px);
     z-index: 2;
+    overflow: hidden;
+  }
+
+  .hero-bg-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    z-index: 0;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .hero-bg-fade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background:
+      linear-gradient(to right,
+        rgba(8, 6, 16, 1)    0%,
+        rgba(8, 6, 16, 0.94) 22%,
+        rgba(8, 6, 16, 0.72) 48%,
+        rgba(8, 6, 16, 0.22) 72%,
+        transparent          92%
+      ),
+      linear-gradient(to bottom,
+        rgba(8, 6, 16, 0.6) 0%,
+        transparent 18%,
+        transparent 75%,
+        rgba(8, 6, 16, 0.85) 100%
+      );
+  }
+
+  .film-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.09;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 200px 200px;
+    background-repeat: repeat;
   }
 
   .hero-inner {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: clamp(40px, 6vw, 80px);
+    position: relative;
+    z-index: 3;
+    display: flex;
     align-items: center;
     max-width: 1280px;
     margin: 0 auto;
@@ -484,6 +551,7 @@ const filmsSchema = JSON.stringify({
     display: flex;
     flex-direction: column;
     gap: 20px;
+    max-width: 560px;
   }
 
   .hero-numeral {
@@ -568,19 +636,6 @@ const filmsSchema = JSON.stringify({
     background: rgba(224, 40, 40, 0.06);
   }
 
-  .hero-visual {
-    display: flex;
-    align-items: stretch;
-    justify-content: center;
-  }
-
-  .hero-poster-ph {
-    width: 100%;
-    max-width: 400px;
-    aspect-ratio: 5 / 7;
-    border: 1px solid rgba(245, 208, 96, 0.12);
-  }
-
   .hero-scroll-hint {
     position: absolute;
     bottom: 32px;
@@ -600,7 +655,7 @@ const filmsSchema = JSON.stringify({
 
   /* ════════════════════════════════════ CARD INDEX ═══ */
   .film-index {
-    padding: var(--section-py) 0;
+    padding: clamp(32px, 4vw, 56px) 0 var(--section-py);
     position: relative;
     z-index: 2;
   }
@@ -649,6 +704,13 @@ const filmsSchema = JSON.stringify({
     scroll-padding-inline: var(--section-px);
     scrollbar-width: none;
     -ms-overflow-style: none;
+    cursor: grab;
+    mask-image: linear-gradient(to right, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
+  }
+
+  .card-rail:active {
+    cursor: grabbing;
   }
 
   .card-rail::-webkit-scrollbar {
@@ -1151,11 +1213,10 @@ const filmsSchema = JSON.stringify({
     display: grid;
     grid-template-columns: 200px 1fr;
     gap: 0;
-    border-bottom: 1px solid rgba(245, 208, 96, 0.08);
   }
 
   .modal-poster-wrap {
-    border-right: 1px solid rgba(245, 208, 96, 0.08);
+    /* no divider — let the poster float */
   }
 
   .modal-poster-ph {
@@ -1179,8 +1240,9 @@ const filmsSchema = JSON.stringify({
   .modal-info {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 24px 28px;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 32px 36px;
   }
 
   .modal-meta-strip {
@@ -1201,19 +1263,19 @@ const filmsSchema = JSON.stringify({
 
   .modal-summary {
     font-family: 'Crimson Pro', serif;
-    font-size: 1rem;
-    color: rgba(245, 208, 96, 0.5);
-    line-height: 1.7;
+    font-size: 1.05rem;
+    color: rgba(245, 208, 96, 0.55);
+    line-height: 1.82;
     font-style: italic;
+    padding: 4px 0 8px;
   }
 
   .modal-credits {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     margin-top: auto;
-    padding-top: 16px;
-    border-top: 1px solid rgba(245, 208, 96, 0.08);
+    padding-top: 0;
   }
 
   .credit-row {
@@ -1241,23 +1303,21 @@ const filmsSchema = JSON.stringify({
   /* Stills strip */
   .stills-strip {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    border-top: 1px solid rgba(245, 208, 96, 0.08);
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 3px;
+    padding: 3px;
   }
 
   .still-ph {
     aspect-ratio: 16 / 9;
-    border-right: 1px solid rgba(245, 208, 96, 0.08);
-  }
-
-  .still-ph:last-child {
-    border-right: none;
+    background: #0a0810;
   }
 
   .still-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
   }
 
   /* ══════════════════════════════════ RESPONSIVE ═══ */
