@@ -381,3 +381,70 @@ Decisions made:
 ---
 
 ## Next session → Stage 7 — The Coven (Supabase auth + Sigils + public profiles)
+
+---
+
+## Session 10 — 2026-05-24
+
+**Goal:** Replace all placeholder film copy with real writing; update all project memories.
+
+### Research phase (pre-code)
+
+Read all documents in `ClaudeCodeTest/wos-content/`:
+- `studio-overview.md`, `coven-cosmology.md`, all 6 per-film files (PDFs and subtitles where available)
+- Film II full script (PDF) — read and fully summarised
+- Film IV subtitle file (SRT) — reveals real content: collage of real Israeli voices
+- Film VII (The Poison Machine) identified and logged as early-development future project
+
+**Memory files updated/created:**
+- `project_wos_films.md` (NEW) — full details on all 6+1 films: stories, characters, subtitles, techniques, themes
+- `project_wos_people.md` — corrected Oshrit's employer (Superplay → Gliding Deer), updated Michael's CV
+- `project_wos.md` — corrected fund name (Fata Morgana), fixed film slate to canonical 6+1 order
+- `project_bio_reference.md` — removed unconfirmed ZEBRA festival, corrected "Inverted Tendencies" title
+- `project_wos_style.md` — added real Film II detail (was vague placeholder)
+- `write-for-presentation.md` skill updated with Step 1.5 to read memory files before writing
+
+**Canonical film numbering confirmed (wos-content order):**
+I=Owl's Descent · II=Truck · III=Yaara's Place · IV=Let's Solve It · V=Dawn · VI=Torn Apart
+
+Film VI has no content yet — omitted from copy.
+
+### Copy written and approved (Films I–V)
+
+User reviewed and approved with edits to subtitles and Film I plot summary.
+
+| Film | Subtitle | Format |
+|------|----------|--------|
+| I — The Owl's Descent | A Meditation in Stop Motion | Stop-motion animation |
+| II — The One Who Drives the Truck | A Desert Folk Tale | Stop-motion animation |
+| III — Yaara's Place At Home | A Cautionary Tale | 2D drawn animation |
+| IV — Let's Solve It Once and For All | A Conversation in Black and White | Mixed-media collage animation |
+| V — Dawn | A Poem in Charcoal | Animated charcoal |
+
+**Film I correction:** User provided exact logline/summary: *"Trapped in an eternal recurring nightmare, Laila is about to break free of the lake that holds her — but to break free, she must learn to breathe."* Used verbatim as both logline and summary.
+
+**Film III technique correction:** Was assumed stop-motion (fabric/puppet). Confirmed 2D drawn animation.
+
+### Code changes
+
+**`src/data/films.ts`:**
+- Added `subtitle?: string` to Film interface
+- Filled in `subtitle`, `logline`, `summary`, `format`, `genre` for Films I–V
+- Updated `year`: Film IV → 2025, Film V → 2022
+- Film II `stage` stays "In Production"; IV/V set to "Complete"
+- Film II credits: added `producer: 'Liran Koren'`
+
+**`src/pages/films.astro`:**
+- Hero: subtitle renders below title (`<p class="hero-subtitle">`) — Crimson Pro italic, dim gold
+- Modal header: subtitle renders below film title in a `modal-title-stack` div
+- Added `.stage-tag--complete` CSS — teal tone (distinct from red/gold existing tags)
+- Added `.hero-subtitle` and `.modal-film-subtitle` CSS rules
+
+**Deployed:** commit `23e1e55` pushed to `main`, auto-deployed to Cloudflare Pages.
+
+---
+
+## Next session
+- Review copy live at localhost:4321/films (dev server bypasses coming-soon gate)
+- Continue Launch Runway plan: `~/.claude/plans/refactored-kindling-stonebraker.md`
+- Stage 7: Supabase auth + Coven gate (blocked until bindings provisioned)
