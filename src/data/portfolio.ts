@@ -142,8 +142,8 @@ export const categories: Category[] = [
     description: 'Physical production — puppets, miniatures, and practical sets.',
     grid: 'uniform',
     items: [
-      { src: '/portfolio/puppets-sets/tabletop-wide.mp4',    alt: 'Tabletop stop motion — wide',    type: 'video' },
-      { src: '/portfolio/puppets-sets/tabletop-vertical.mp4',alt: 'Tabletop stop motion — vertical',type: 'video' },
+      { src: 'https://media.whiteowlhub.com/portfolio/puppets-sets/tabletop-wide.mp4',    alt: 'Tabletop stop motion — wide',    type: 'video' },
+      { src: 'https://media.whiteowlhub.com/portfolio/puppets-sets/tabletop-vertical.mp4',alt: 'Tabletop stop motion — vertical',type: 'video' },
     ],
   },
   {
