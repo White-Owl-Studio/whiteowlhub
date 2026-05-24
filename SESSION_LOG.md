@@ -448,3 +448,127 @@ User reviewed and approved with edits to subtitles and Film I plot summary.
 - Review copy live at localhost:4321/films (dev server bypasses coming-soon gate)
 - Continue Launch Runway plan: `~/.claude/plans/refactored-kindling-stonebraker.md`
 - Stage 7: Supabase auth + Coven gate (blocked until bindings provisioned)
+
+---
+
+## Session 11 — 2026-05-24 (continued)
+
+**Goal:** Media hosting infrastructure, portfolio/film art additions, card UI polish.
+
+---
+
+### Cloudflare R2 media hosting
+
+**Setup:**
+- Bucket `wos-media` created by Michael in Cloudflare dashboard
+- Custom domain `media.whiteowlhub.com` attached (Cloudflare DNS auto-configured)
+- Account API token created (account-level, permanent) — used for wrangler auth
+- R2 S3-compatible access key + secret created — used for object uploads
+- Account ID confirmed via API: `f2ea3e1a1872506424e71db26341be6d`
+
+**Upload script (`scripts/upload-r2.mjs`):**
+- Node.js ESM script using `@aws-sdk/client-s3`
+- S3-compatible endpoint: `https://f2ea3e1a1872506424e71db26341be6d.r2.cloudflarestorage.com`
+- Takes `R2_ACCESS_KEY_ID` + `R2_SECRET_ACCESS_KEY` as env vars (never stored in repo)
+- `CacheControl: 'public, max-age=31536000, immutable'` on all uploads
+- Run via: `R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... npm run upload-r2`
+- `npm run upload-r2` script alias added to `package.json`
+
+**Videos migrated to R2:**
+- `tabletop-wide.mp4` (14MB) → `https://media.whiteowlhub.com/portfolio/puppets-sets/tabletop-wide.mp4`
+- `tabletop-vertical.mp4` (14MB) → `https://media.whiteowlhub.com/portfolio/puppets-sets/tabletop-vertical.mp4`
+- Local copies removed from `public/` and git — CDN is now canonical source
+- `portfolio.ts` updated to use CDN URLs
+
+**Three-tier media strategy locked:**
+- Tier 1: GitHub → Cloudflare Pages — static files <20MB (images, small assets)
+- Tier 2: Cloudflare R2 → `media.whiteowlhub.com` — videos and larger assets (zero egress cost)
+- Tier 3: Vimeo Pro — full films, trailers, shorts (embedded player, Grush deferred)
+
+---
+
+### ART_NEEDED.md full rewrite
+
+Rebuilt from scratch with accurate statuses reflecting everything actually in `public/`:
+- All 15 existing film stills, 2 existing posters, 1 hero banner marked ✅
+- Character Design (16), Oshrit's Portfolio (20), Puppets & Sets (R2) marked ✅
+- Founders illustration (couple-logo.png) marked ✅
+- Pre-prod process images (3) marked ✅
+- Empty portfolio categories (Animation, Illustration, Art Direction, Michael's Portfolio, Clients) listed as TBD
+- **New section: Side Effects** — documents visual micro-interactions waiting on art assets
+
+---
+
+### Film card UI — poster and tarot wiring
+
+**Card back → poster:**
+- `film.poster` field already existed in `Film` interface
+- `card-back` face was always showing placeholder — fixed to conditionally render `<img>` when `film.poster` is set
+- `.card-poster-img` CSS added (`object-fit: cover`, full bleed)
+- Let's Solve It (poster already set) now shows real art on flip
+
+**Card front → tarot art:**
+- Added `card?: string` field to `Film` interface
+- `card-front` face updated to conditionally render `<img>` when `film.card` is set
+- `.card-tarot-img` CSS added (same as poster img treatment)
+- Both faces fall back to text placeholder when no art is set
+
+**Art added this session:**
+
+| Film | Asset | Path |
+|------|-------|------|
+| The Owl's Descent | Tarot card | `public/films/the-owls-descent/card.jpeg` |
+| The One Who Drives the Truck | Tarot card | `public/films/the-one-who-drives-the-truck/card.jpeg` |
+| Dawn | Poster | `public/films/dawn/poster.png` |
+
+Source folders:
+- Tarots: `C:\Users\Micha\OneDrive\Desktop\Work\White Owl Studio\Branding\Tarots\`
+- Posters: `C:\Users\Micha\OneDrive\Desktop\Work\White Owl Studio\Branding\Posters\`
+
+---
+
+### Tarot card dust effect (designed, scaffolded, disabled)
+
+**What was built:**
+- 14 tiny particles (0.8–2px) spawn within the tarot card image bounding box on first hover
+- Particles fall slowly downward (2–3.6s), max ~6% opacity — barely visible
+- Slight random horizontal drift (±2.5px)
+- Falls no further than the height of the card image
+- Triggers once per card per page load (tracked via `card.dataset.dusted`)
+- CSS: `@keyframes dust-fall` using CSS custom properties `--fall` and `--drift` for per-particle randomness
+- JS: `getBoundingClientRect()` diff between `.card-tarot-img` and `.card-smoke` to get spawn origin
+
+**Why disabled:**
+- Effect was temporarily spawning from the numeral text, not the tarot image (wrong source element)
+- Needs all 6 tarot cards in place before enabling so the effect feels consistent
+- Code scaffolded and commented in `films.astro`; documented in ART_NEEDED.md › Side Effects
+
+**To enable:** un-comment the JS block in `films.astro` (marked `// Tarot card dust (disabled)`). Spawn source is already `.card-tarot-img`.
+
+---
+
+### Localhost reminder
+
+Production site (`whiteowlhub.com`) is behind a coming-soon/welcome page. Always use `http://localhost:4321` to preview changes. Run `npm run dev` in the whiteowlhub directory.
+
+---
+
+### Commits this session
+
+| Hash | Summary |
+|------|---------|
+| `66e55b9` | Move puppets-sets videos to Cloudflare R2 CDN |
+| `58ab7f7` | Add tarot card art for two films; wire card front and back |
+| `84518f7` | Add Dawn poster; wire to card back and modal |
+| `6fada5f` | Add smoke poof on first card flip (superseded) |
+| `d12592e` | Replace smoke poof with numeral dust-fall effect (superseded) |
+| `fdfdce6` | Disable tarot dust effect; document in ART_NEEDED Side Effects |
+
+---
+
+## Next session
+- Add remaining 4 tarot cards → enable dust effect
+- Fill empty portfolio categories (Animation, Illustration, Art Direction, Michael's Portfolio)
+- About page studio photos (3 still needed)
+- Biography section images (4 still needed)
+- OG/social share image (needed before launch)
