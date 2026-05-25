@@ -568,7 +568,57 @@ Production site (`whiteowlhub.com`) is behind a coming-soon/welcome page. Always
 
 ## Next session
 - Add remaining 4 tarot cards → enable dust effect
-- Fill empty portfolio categories (Animation, Illustration, Art Direction, Michael's Portfolio)
 - About page studio photos (3 still needed)
 - Biography section images (4 still needed)
 - OG/social share image (needed before launch)
+- Upload large videos to R2 (see below)
+
+---
+
+## Session 12 — 2026-05-25
+
+**Goal:** Survey `D:\תיק עבודות` (portfolio folder) and populate empty site categories.
+
+### What was done
+
+**Portfolio folder surveyed (`D:\תיק עבודות`):**
+- Folder structure mapped and all subfolders inspected visually
+- Confirmed 2 client clusters: 3D animated series (same 5 characters across scenes) vs. mobile game client (cartoon style, features + environments)
+- `פריימים מסרטים` stills already matched to existing `public/films/` content — no action needed
+- `קונספט ארט מסרטים/Artboard 1–3.png` confirmed as already in `public/about/process-concept-1/2/3.png`
+
+**Files copied and wired:**
+
+| Category | Files added | Source |
+|----------|------------|--------|
+| Illustration | 9 (circus-night, tightrope, explosion, tent-crowd, marionette-ink, creature-ink, gorilla-sketch, stool-figure, charcoal-figure) | `איורים מיכאל` |
+| Art Direction | 2 (owls-descent-concept, dawn-sphere) | `קונספט ארט מסרטים`, `איורים מיכאל` |
+| Animation | 1 (reaping.mp4, 2.2MB) | `אנימציה 2D` |
+| Clients | 20 (3 projects) | `עיצוב דמויות`, `רקעים`, `בימוי ארט` |
+
+**Client projects created in portfolio.ts:**
+1. `animated-series` — "Animated Series — Character & Environment Design" (3 files: character lineup + cafeteria + backyard environment)
+2. `mobile-game-features` — "Mobile Game — Feature Art Direction" (13 files: pet evolution + heist + pet reskin + treasure hunt)
+3. `mobile-game-environments` — "Mobile Game — Environment Design" (4 files: Arizona, Mardi Gras, Snow Mice, Thanksgiving)
+
+**Editorial grid updated:** Added 5 new items spanning illustration, art-direction, and clients categories. Owl's Descent concept art gets `featured` span.
+
+### Pending R2 uploads (videos too large for GitHub)
+
+| File | Source | Size | Target path on R2 |
+|------|--------|------|-------------------|
+| Animation_Showreel_Michael.mp4 | `שואורילז/` | 188 MB | `portfolio/animation/showreel.mp4` |
+| Reaping (2nd 2D clip) | `אנימציה 2D/WhatsApp Video...` | 37 MB | `portfolio/animation/reaping-2.mp4` |
+| Truck_033_01.mp4 | `אנימציה - סטופ מושן/` | 123 MB | `portfolio/animation/truck-clip.mp4` |
+| Game animations × 4 | `אנימציה - משחקים/` | 10–17 MB each | `portfolio/animation/` |
+| Donnie Darko Sitcom (edit) | `עריכה/` | 177 MB | `portfolio/post-production/donnie-darko-edit.mp4` |
+| Grush_new_export.mov | `אנימציה - סטופ מושן/` | 2.2 GB | Vimeo only |
+
+Run: `R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... npm run upload-r2`
+
+### Still not placed (needs curation decision)
+
+- `עיצוב דמויות/` remaining files (DnD characters, sprite sheets, nightshade) — personal/commission character designs. Decide: add to character-design scroll or michael category?
+- `Oshrit/` folder (104 files, well-organized) — substantially more than current oshrit portfolio. Worth a dedicated pass to expand Oshrit's category.
+- `גרפיקה ועיצוב/` (Shablulim Film festival posters, Let's Solve poster) — graphic design/event work. Could add to clients or skip.
+- `שואורילז/Animation_Showreel_Michael.mp4` — should be the HERO of the animation category once on R2.
