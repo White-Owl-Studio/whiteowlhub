@@ -32,7 +32,7 @@ const filmsSchema = JSON.stringify({
 
   <!-- ═══════════════════════════════════════════ HERO ══ -->
   <section class="film-hero">
-    <img src="/films/the-one-who-drives-the-truck/hero.jpg"
+    <img src="/films/the-one-who-drives-the-truck/hero.webp"
          alt="The One Who Drives The Truck — film still"
          class="hero-bg-img" />
     <div class="hero-bg-fade" aria-hidden="true"></div>
@@ -71,7 +71,7 @@ const filmsSchema = JSON.stringify({
       <p class="section-sub">Hover to reveal · Click to enter</p>
     </header>
 
-    <div class="card-rail">
+    <div class="card-rail drag-rail" data-drag-rail>
       {films.map(film => (
         <div
           class={`film-card${film.featured ? ' film-card--featured' : ''}`}
@@ -289,7 +289,7 @@ const filmsSchema = JSON.stringify({
           {film.stills && film.stills.length > 0 && (
             <div class="stills-strip">
               {film.stills.map((src, i) => (
-                <img src={src} alt={`${film.title} — still ${i + 1}`} class="still-img" loading="lazy" />
+                <img src={src} alt={`${film.title} — still ${i + 1}`} class="still-img" data-zoom loading="lazy" />
               ))}
             </div>
           )}
@@ -314,21 +314,6 @@ const filmsSchema = JSON.stringify({
   // ── Tarot card dust (disabled — see ART_NEEDED.md › Side Effects) ──
   // Effect: on first hover, dust particles fall from the tarot card image.
   // Waiting until all tarot cards have real artwork before implementing.
-
-  // ── Card rail drag-to-scroll ──────────────────────────
-  const rail = document.querySelector<HTMLElement>('.card-rail');
-  if (rail) {
-    let isDown = false, startX = 0, scrollLeft = 0;
-    rail.addEventListener('mousedown', e => {
-      isDown = true; startX = e.pageX - rail.offsetLeft; scrollLeft = rail.scrollLeft;
-    });
-    document.addEventListener('mouseup', () => { isDown = false; });
-    rail.addEventListener('mousemove', e => {
-      if (!isDown) return;
-      e.preventDefault();
-      rail.scrollLeft = scrollLeft - (e.pageX - rail.offsetLeft - startX);
-    });
-  }
 
   // ── Modal system ──────────────────────────────────────
   function openModal(slug: string) {
@@ -711,24 +696,9 @@ const filmsSchema = JSON.stringify({
   }
 
   .card-rail {
-    display: flex;
     gap: clamp(16px, 2.5vw, 28px);
-    overflow-x: auto;
     padding: 24px var(--section-px) 48px;
     scroll-padding-inline: var(--section-px);
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    cursor: grab;
-    mask-image: linear-gradient(to right, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
-  }
-
-  .card-rail:active {
-    cursor: grabbing;
-  }
-
-  .card-rail::-webkit-scrollbar {
-    display: none;
   }
 
   /* ── Flip card ─────────────────────────────────────── */

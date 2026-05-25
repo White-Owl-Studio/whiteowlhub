@@ -1,7 +1,6 @@
 ---
 import Base from '../../layouts/Base.astro';
-import Lightbox from '../../components/Lightbox.astro';
-import { categories, editorialItems } from '../../data/portfolio';
+import { categories, rotationPool } from '../../data/portfolio';
 ---
 
 <Base title="Our Work" description="Animation, illustration, character design, puppets and more — the portfolio of White Owl Studio founders Michael B. Jacob and Oshrit Gedalya.">
@@ -17,22 +16,24 @@ import { categories, editorialItems } from '../../data/portfolio';
 
   <!-- ══════════════════════════════════ EDITORIAL GRID ══ -->
   <section class="editorial-section">
-    <div class="editorial-grid">
-      {editorialItems.map((item, i) => (
+    <div class="editorial-grid" id="editorial-grid">
+      {rotationPool.map(item => (
         <div
-          class={`grid-item grid-item--${item.span}`}
-          data-lightbox-index={i}
-          data-lightbox-trigger
+          class="grid-item"
+          data-src={item.src}
+          data-alt={item.alt}
+          data-type={item.type}
+          data-category-slug={item.categorySlug}
           role="button"
           tabindex="0"
           aria-label={`View ${item.alt}`}
         >
           {item.type === 'video'
-            ? <video src={item.src} autoplay loop muted playsinline class="grid-media" />
-            : <img src={item.src} alt={item.alt} loading="lazy" class="grid-media" />
+            ? <video src={item.src} autoplay loop muted playsinline class="grid-media" data-zoom data-zoom-type="video" />
+            : <img src={item.src} alt={item.alt} loading="lazy" class="grid-media" data-zoom />
           }
           <div class="grid-overlay">
-            <a href={`/portfolio/${item.categorySlug}`} class="grid-category-link" data-category-link>
+            <a href={`/portfolio/${item.categorySlug}`} class="grid-category-link">
               {categories.find(c => c.slug === item.categorySlug)?.title}
             </a>
           </div>
@@ -60,13 +61,81 @@ import { categories, editorialItems } from '../../data/portfolio';
     </nav>
   </section>
 
-  <Lightbox items={editorialItems} />
 
 </Base>
 
 <script>
-  // Stop category links from triggering the lightbox on their parent
-  document.querySelectorAll('[data-category-link]').forEach(el => {
+  // ── Span rhythm ───────────────────────────────────────
+  const SPAN_CYCLE = ['normal', 'normal', 'wide', 'normal', 'tall', 'normal', 'normal', 'wide', 'normal', 'normal', 'normal', 'tall'];
+  function spanAt(i: number): string {
+    if (i === 0) return 'featured';
+    return SPAN_CYCLE[(i - 1) % SPAN_CYCLE.length];
+  }
+
+  function fisherYates(arr: HTMLElement[]): HTMLElement[] {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  const ANIM = new Set(['video', 'gif']);
+  const VISIBLE_SLOTS = 8; // approx items above the fold
+
+  const grid = document.getElementById('editorial-grid');
+  if (grid) {
+    const items = [...grid.children] as HTMLElement[];
+
+    // ── Color variety: round-robin interleave by category ──
+    // Groups items by categorySlug, shuffles each group, then
+    // pulls one from each category in turn so adjacent tiles
+    // come from different categories (different color palettes).
+    const groups = new Map<string, HTMLElement[]>();
+    for (const el of items) {
+      const c = el.dataset.categorySlug ?? '';
+      if (!groups.has(c)) groups.set(c, []);
+      groups.get(c)!.push(el);
+    }
+    groups.forEach(g => fisherYates(g));
+
+    const queues = [...groups.values()];
+    const ordered: HTMLElement[] = [];
+    while (queues.some(q => q.length)) {
+      for (const q of queues) {
+        if (q.length) ordered.push(q.shift()!);
+      }
+    }
+
+    // ── Animated guarantee: ensure ≥1 animated item in first visible rows ──
+    const hasAnim = ordered.slice(0, VISIBLE_SLOTS).some(el => ANIM.has(el.dataset.type ?? ''));
+    if (!hasAnim) {
+      const idx = ordered.findIndex((el, i) => i >= VISIBLE_SLOTS && ANIM.has(el.dataset.type ?? ''));
+      if (idx !== -1) {
+        const [el] = ordered.splice(idx, 1);
+        ordered.splice(3, 0, el); // slot 3: after featured hero + two normal tiles
+      }
+    }
+
+    // ── Render: assign spans and priority loading ──
+    ordered.forEach((el, i) => {
+      el.className = `grid-item grid-item--${spanAt(i)}`;
+      // First visible rows load eagerly; the rest lazy-load
+      const media = el.querySelector<HTMLImageElement | HTMLVideoElement>('img, video');
+      if (media) {
+        if (i < VISIBLE_SLOTS) {
+          media.setAttribute('loading', 'eager');
+          if (i === 0) media.setAttribute('fetchpriority', 'high');
+        }
+      }
+      grid.appendChild(el);
+    });
+
+    grid.classList.add('ready');
+  }
+
+  // Stop category link clicks from bubbling to [data-zoom] media
+  document.querySelectorAll('.grid-category-link').forEach(el => {
     el.addEventListener('click', e => e.stopPropagation());
   });
 </script>
@@ -116,6 +185,12 @@ import { categories, editorialItems } from '../../data/portfolio';
     grid-template-columns: repeat(4, 1fr);
     grid-auto-rows: 220px;
     gap: 6px;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+  }
+
+  .editorial-grid.ready {
+    opacity: 1;
   }
 
   .grid-item {
@@ -150,6 +225,7 @@ import { categories, editorialItems } from '../../data/portfolio';
     display: flex;
     align-items: flex-end;
     padding: 14px 16px;
+    pointer-events: none; /* let clicks pass through to [data-zoom] media below */
   }
 
   .grid-item:hover .grid-overlay {
@@ -164,6 +240,7 @@ import { categories, editorialItems } from '../../data/portfolio';
     color: var(--gold);
     text-decoration: none;
     transition: color 0.2s ease;
+    pointer-events: auto; /* re-enable for the link itself */
   }
 
   .grid-category-link:hover {
@@ -267,112 +344,6 @@ import { categories, editorialItems } from '../../data/portfolio';
   .category-card:hover .cat-arrow {
     color: var(--accent-portfolio);
     transform: translateX(4px);
-  }
-
-  /* ══════════════════════════════════════ LIGHTBOX ══ */
-  .lightbox {
-    position: fixed;
-    inset: 0;
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-
-  .lightbox.is-open {
-    opacity: 1;
-    pointer-events: all;
-  }
-
-  .lightbox-backdrop {
-    position: absolute;
-    inset: 0;
-    background: rgba(5, 4, 9, 0.95);
-    cursor: pointer;
-  }
-
-  .lightbox-media-wrap {
-    position: relative;
-    z-index: 1;
-    max-width: 90vw;
-    max-height: 90vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  :global(.lightbox-media) {
-    max-width: 90vw;
-    max-height: 90vh;
-    object-fit: contain;
-    display: block;
-  }
-
-  .lightbox-close {
-    position: absolute;
-    top: 24px;
-    right: 28px;
-    z-index: 2;
-    background: transparent;
-    border: 1px solid rgba(245, 208, 96, 0.2);
-    color: rgba(245, 208, 96, 0.6);
-    font-size: 0.9rem;
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: color 0.2s, border-color 0.2s;
-  }
-
-  .lightbox-close:hover {
-    color: var(--accent-portfolio);
-    border-color: var(--violet-faint);
-  }
-
-  .lightbox-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
-    background: transparent;
-    border: 1px solid rgba(245, 208, 96, 0.15);
-    color: rgba(245, 208, 96, 0.5);
-    font-size: 1.8rem;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border-radius: 2px;
-    transition: color 0.2s, border-color 0.2s;
-    line-height: 1;
-  }
-
-  .lightbox-nav:hover {
-    color: var(--accent-portfolio);
-    border-color: var(--violet-faint);
-  }
-
-  .lightbox-prev { left: 24px; }
-  .lightbox-next { right: 24px; }
-
-  .lightbox-counter {
-    position: absolute;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2;
-    font-family: 'Cinzel', serif;
-    font-size: 0.66rem;
-    letter-spacing: 0.2em;
-    color: rgba(245, 208, 96, 0.3);
   }
 
   /* ══════════════════════════════════════ RESPONSIVE ══ */

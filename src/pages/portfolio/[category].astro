@@ -105,22 +105,43 @@ const hasProjects = category.grid === 'project' && (category.projects?.length ??
                   </span>
                 </div>
                 {project.items.length > 0 && (
-                  <div class="project-thumbs">
-                    {project.items.slice(0, 4).map((item, i) => (
-                      <div
-                        class="grid-thumb"
-                        data-lightbox-index={i}
-                        data-lightbox-trigger={project.slug}
-                        role="button"
-                        tabindex="0"
-                      >
-                        {item.type === 'video'
-                          ? <video src={item.src} autoplay loop muted playsinline class="thumb-media" />
-                          : <img src={item.src} alt={item.alt} loading="lazy" class="thumb-media" />
-                        }
-                      </div>
-                    ))}
-                  </div>
+                  project.items.length > 4 ? (
+                    <div class="project-rail drag-rail" data-drag-rail>
+                      {project.items.map((item, i) => (
+                        <div
+                          class="rail-thumb"
+                          data-lightbox-index={i}
+                          data-lightbox-trigger={project.slug}
+                          role="button"
+                          tabindex="0"
+                          aria-label={item.alt}
+                        >
+                          {item.type === 'video'
+                            ? <video src={item.src} autoplay loop muted playsinline class="thumb-media" />
+                            : <img src={item.src} alt={item.alt} loading="lazy" class="thumb-media" />
+                          }
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div class="project-thumbs">
+                      {project.items.map((item, i) => (
+                        <div
+                          class="grid-thumb"
+                          data-lightbox-index={i}
+                          data-lightbox-trigger={project.slug}
+                          role="button"
+                          tabindex="0"
+                          aria-label={item.alt}
+                        >
+                          {item.type === 'video'
+                            ? <video src={item.src} autoplay loop muted playsinline class="thumb-media" />
+                            : <img src={item.src} alt={item.alt} loading="lazy" class="thumb-media" />
+                          }
+                        </div>
+                      ))}
+                    </div>
+                  )
                 )}
               </div>
             ))}
@@ -292,6 +313,33 @@ const hasProjects = category.grid === 'project' && (category.projects?.length ??
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 4px;
+  }
+
+  /* Rail — for projects with >4 items */
+  .project-rail {
+    gap: 6px;
+    padding: 8px 0 20px;
+  }
+
+  .rail-thumb {
+    flex: 0 0 auto;
+    width: clamp(180px, 24vw, 280px);
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    cursor: zoom-in;
+    background: #0d0a14;
+  }
+
+  .rail-thumb .thumb-media {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .rail-thumb:hover .thumb-media {
+    transform: scale(1.05);
   }
 
   /* Empty state */

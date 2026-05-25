@@ -98,6 +98,13 @@ const orgSchema = JSON.stringify({
       <slot />
     </main>
     <Footer />
+
+    <!-- Global single-image zoom lightbox — triggered by [data-zoom] on any page -->
+    <div id="zoom-lb" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Full screen view">
+      <div id="zoom-lb-bg"></div>
+      <button id="zoom-lb-close" aria-label="Close">✕</button>
+      <div id="zoom-lb-content"></div>
+    </div>
   </body>
 </html>
 
@@ -258,5 +265,74 @@ const orgSchema = JSON.stringify({
       grainTimer = setInterval(drawBgGrain, 1000 / 6);
       drawBgGrain();
     }
+  });
+
+  // ── Global zoom lightbox — any [data-zoom] image or video ──
+  const zoomLb      = document.getElementById('zoom-lb')!;
+  const zoomContent = document.getElementById('zoom-lb-content')!;
+  const zoomClose   = document.getElementById('zoom-lb-close')!;
+  const zoomBg      = document.getElementById('zoom-lb-bg')!;
+
+  function openZoom(src: string, alt: string, isVideo: boolean) {
+    zoomContent.innerHTML = '';
+    let el: HTMLImageElement | HTMLVideoElement;
+    if (isVideo) {
+      el = document.createElement('video');
+      (el as HTMLVideoElement).autoplay = true;
+      (el as HTMLVideoElement).loop = true;
+      (el as HTMLVideoElement).muted = true;
+      (el as HTMLVideoElement).playsInline = true;
+      (el as HTMLVideoElement).controls = true;
+    } else {
+      el = document.createElement('img');
+      (el as HTMLImageElement).alt = alt;
+    }
+    el.src = src;
+    el.className = 'zoom-media';
+    zoomContent.appendChild(el);
+    zoomLb.setAttribute('aria-hidden', 'false');
+    zoomLb.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    zoomClose.focus();
+  }
+
+  function closeZoom() {
+    zoomLb.setAttribute('aria-hidden', 'true');
+    zoomLb.classList.remove('is-open');
+    zoomContent.innerHTML = '';
+    // Restore scroll only if no film modal is open beneath us
+    if (!document.querySelector('.film-modal.is-open')) {
+      document.body.style.overflow = '';
+    }
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-zoom]').forEach(el => {
+    el.addEventListener('click', e => {
+      e.stopPropagation();
+      const src     = (el as HTMLImageElement).src ?? (el as HTMLVideoElement).src ?? '';
+      const alt     = (el as HTMLImageElement).alt ?? '';
+      const isVideo = el.tagName === 'VIDEO' || el.dataset.zoomType === 'video';
+      openZoom(src, alt, isVideo);
+    });
+  });
+
+  zoomBg.addEventListener('click', closeZoom);
+  zoomClose.addEventListener('click', closeZoom);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && zoomLb.classList.contains('is-open')) closeZoom();
+  });
+
+  // ── Drag-to-scroll — any [data-drag-rail] element on any page ──
+  document.querySelectorAll<HTMLElement>('[data-drag-rail]').forEach(rail => {
+    let isDown = false, startX = 0, scrollLeft = 0;
+    rail.addEventListener('mousedown', e => {
+      isDown = true; startX = e.pageX - rail.offsetLeft; scrollLeft = rail.scrollLeft;
+    });
+    document.addEventListener('mouseup', () => { isDown = false; });
+    rail.addEventListener('mousemove', e => {
+      if (!isDown) return;
+      e.preventDefault();
+      rail.scrollLeft = scrollLeft - (e.pageX - rail.offsetLeft - startX);
+    });
   });
 </script>

@@ -6,7 +6,10 @@ export interface PortfolioItem {
   src: string;
   alt: string;
   type: MediaType;
+  rotation?: boolean; // include in the editorial grid rotation on /portfolio
 }
+
+export type RotationItem = PortfolioItem & { categorySlug: string };
 
 export interface ClientProject {
   slug: string;
@@ -36,22 +39,22 @@ export interface EditorialItem {
 
 // ── Character Design — 16 real assets ────────────────────
 const characterDesignItems: PortfolioItem[] = [
-  { src: '/portfolio/character-design/page-0.png',  alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-1.png',  alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-2.png',  alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-3.gif',  alt: 'Character design animation — White Owl Studio', type: 'gif' },
-  { src: '/portfolio/character-design/page-4.png',  alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-5.png',  alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-6.png',  alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-7.gif',  alt: 'Character design animation — White Owl Studio', type: 'gif' },
-  { src: '/portfolio/character-design/page-8.mp4',  alt: 'Character design animation — White Owl Studio', type: 'video' },
-  { src: '/portfolio/character-design/page-9.png',  alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-10.png', alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-11.png', alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-12.png', alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-13.png', alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-14.png', alt: 'Character design — White Owl Studio', type: 'image' },
-  { src: '/portfolio/character-design/page-15.png', alt: 'Character design — White Owl Studio', type: 'image' },
+  { src: '/portfolio/character-design/page-0.webp',  alt: 'Character design — White Owl Studio', type: 'image' },
+  { src: '/portfolio/character-design/page-1.webp',  alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-2.webp',  alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-3.gif',  alt: 'Character design animation — White Owl Studio', type: 'gif',   rotation: true },
+  { src: '/portfolio/character-design/page-4.webp',  alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-5.webp',  alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-6.webp',  alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-7.gif',  alt: 'Character design animation — White Owl Studio', type: 'gif',   rotation: true },
+  { src: '/portfolio/character-design/page-8.mp4',  alt: 'Character design animation — White Owl Studio', type: 'video', rotation: true },
+  { src: '/portfolio/character-design/page-9.webp',  alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-10.webp', alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-11.webp', alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-12.webp', alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-13.webp', alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-14.webp', alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
+  { src: '/portfolio/character-design/page-15.webp', alt: 'Character design — White Owl Studio', type: 'image',  rotation: true },
 ];
 
 // ── Animation ────────────────────────────────────────────
@@ -64,21 +67,21 @@ const animationItems: PortfolioItem[] = [
 
 // ── Illustration ──────────────────────────────────────────
 const illustrationItems: PortfolioItem[] = [
-  { src: '/portfolio/illustration/circus-night.png',    alt: 'Night circus — illustration by Michael B. Jacob', type: 'image' },
-  { src: '/portfolio/illustration/tightrope.png',       alt: 'Tightrope — illustration by Michael B. Jacob',    type: 'image' },
-  { src: '/portfolio/illustration/explosion.png',       alt: 'Explosion — illustration by Michael B. Jacob',    type: 'image' },
-  { src: '/portfolio/illustration/tent-crowd.png',      alt: 'Tent crowd — illustration by Michael B. Jacob',   type: 'image' },
-  { src: '/portfolio/illustration/marionette-ink.png',  alt: 'Marionette — ink drawing by Michael B. Jacob',    type: 'image' },
-  { src: '/portfolio/illustration/creature-ink.png',    alt: 'Creature — ink drawing by Michael B. Jacob',      type: 'image' },
-  { src: '/portfolio/illustration/gorilla-sketch.jpg',  alt: 'Gorilla — ink sketch by Michael B. Jacob',        type: 'image' },
-  { src: '/portfolio/illustration/stool-figure.png',    alt: 'Figure with stool — ink drawing by Michael B. Jacob', type: 'image' },
-  { src: '/portfolio/illustration/charcoal-figure.jpg', alt: 'Figure study — charcoal by Michael B. Jacob',     type: 'image' },
+  { src: '/portfolio/illustration/circus-night.webp',    alt: 'Night circus — illustration by Michael B. Jacob', type: 'image', rotation: true },
+  { src: '/portfolio/illustration/tightrope.webp',       alt: 'Tightrope — illustration by Michael B. Jacob',    type: 'image', rotation: true },
+  { src: '/portfolio/illustration/explosion.webp',       alt: 'Explosion — illustration by Michael B. Jacob',    type: 'image', rotation: true },
+  { src: '/portfolio/illustration/tent-crowd.webp',      alt: 'Tent crowd — illustration by Michael B. Jacob',   type: 'image', rotation: true },
+  { src: '/portfolio/illustration/marionette-ink.webp',  alt: 'Marionette — ink drawing by Michael B. Jacob',    type: 'image', rotation: true },
+  { src: '/portfolio/illustration/creature-ink.webp',    alt: 'Creature — ink drawing by Michael B. Jacob',      type: 'image', rotation: true },
+  { src: '/portfolio/illustration/gorilla-sketch.webp',  alt: 'Gorilla — ink sketch by Michael B. Jacob',        type: 'image', rotation: true },
+  { src: '/portfolio/illustration/stool-figure.webp',    alt: 'Figure with stool — ink drawing by Michael B. Jacob', type: 'image', rotation: true },
+  { src: '/portfolio/illustration/charcoal-figure.webp', alt: 'Figure study — charcoal by Michael B. Jacob',     type: 'image', rotation: true },
 ];
 
 // ── Art Direction ─────────────────────────────────────────
 const artDirectionItems: PortfolioItem[] = [
-  { src: '/portfolio/art-direction/owls-descent-concept.jpg', alt: "The Owl's Descent — concept art, Laila in the lake", type: 'image' },
-  { src: '/portfolio/art-direction/dawn-sphere.png',          alt: 'Dawn — visual development frame',                    type: 'image' },
+  { src: '/portfolio/art-direction/owls-descent-concept.webp', alt: "The Owl's Descent — concept art, Laila in the lake", type: 'image', rotation: true },
+  { src: '/portfolio/art-direction/dawn-sphere.webp',          alt: 'Dawn — visual development frame',                    type: 'image', rotation: true },
 ];
 
 // ── Categories ────────────────────────────────────────────
@@ -122,42 +125,42 @@ export const categories: Category[] = [
       {
         slug: 'animated-series',
         name: 'Animated Series — Character & Environment Design',
-        cover: '/portfolio/clients/3d-backyard.png',
+        cover: '/portfolio/clients/3d-backyard.webp',
         items: [
-          { src: '/portfolio/clients/3d-characters.png', alt: 'Character lineup — animated series',        type: 'image' },
-          { src: '/portfolio/clients/3d-cafeteria.png',  alt: 'Cafeteria environment — animated series',   type: 'image' },
-          { src: '/portfolio/clients/3d-backyard.png',   alt: 'Backyard environment — animated series',    type: 'image' },
+          { src: '/portfolio/clients/3d-characters.webp', alt: 'Character lineup — animated series',        type: 'image' },
+          { src: '/portfolio/clients/3d-cafeteria.webp',  alt: 'Cafeteria environment — animated series',   type: 'image' },
+          { src: '/portfolio/clients/3d-backyard.webp',   alt: 'Backyard environment — animated series',    type: 'image' },
         ],
       },
       {
         slug: 'mobile-game-features',
         name: 'Mobile Game — Feature Art Direction',
-        cover: '/portfolio/clients/pet-evolution.png',
+        cover: '/portfolio/clients/pet-evolution.webp',
         items: [
-          { src: '/portfolio/clients/pet-evolution.png',  alt: 'Pet evolution chart — mobile game',           type: 'image' },
-          { src: '/portfolio/clients/heist-01.png',       alt: 'Heist feature concept — mobile game',         type: 'image' },
-          { src: '/portfolio/clients/heist-02.png',       alt: 'Heist feature concept — mobile game',         type: 'image' },
-          { src: '/portfolio/clients/heist-03.png',       alt: 'Heist feature screenshot — mobile game',      type: 'image' },
-          { src: '/portfolio/clients/heist-04.png',       alt: 'Heist feature screenshot — mobile game',      type: 'image' },
-          { src: '/portfolio/clients/pet-reskin-01.png',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
-          { src: '/portfolio/clients/pet-reskin-02.png',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
-          { src: '/portfolio/clients/pet-reskin-03.png',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
-          { src: '/portfolio/clients/pet-reskin-04.png',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
-          { src: '/portfolio/clients/pet-reskin-05.png',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
-          { src: '/portfolio/clients/pet-reskin-06.png',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
-          { src: '/portfolio/clients/treasure-01.png',    alt: 'Treasure hunt feature — mobile game',         type: 'image' },
-          { src: '/portfolio/clients/treasure-02.png',    alt: 'Treasure hunt feature — mobile game',         type: 'image' },
+          { src: '/portfolio/clients/pet-evolution.webp',  alt: 'Pet evolution chart — mobile game',           type: 'image' },
+          { src: '/portfolio/clients/heist-01.webp',       alt: 'Heist feature concept — mobile game',         type: 'image' },
+          { src: '/portfolio/clients/heist-02.webp',       alt: 'Heist feature concept — mobile game',         type: 'image' },
+          { src: '/portfolio/clients/heist-03.webp',       alt: 'Heist feature screenshot — mobile game',      type: 'image' },
+          { src: '/portfolio/clients/heist-04.webp',       alt: 'Heist feature screenshot — mobile game',      type: 'image' },
+          { src: '/portfolio/clients/pet-reskin-01.webp',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
+          { src: '/portfolio/clients/pet-reskin-02.webp',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
+          { src: '/portfolio/clients/pet-reskin-03.webp',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
+          { src: '/portfolio/clients/pet-reskin-04.webp',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
+          { src: '/portfolio/clients/pet-reskin-05.webp',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
+          { src: '/portfolio/clients/pet-reskin-06.webp',  alt: 'Pet reskin feature — mobile game',            type: 'image' },
+          { src: '/portfolio/clients/treasure-01.webp',    alt: 'Treasure hunt feature — mobile game',         type: 'image' },
+          { src: '/portfolio/clients/treasure-02.webp',    alt: 'Treasure hunt feature — mobile game',         type: 'image' },
         ],
       },
       {
         slug: 'mobile-game-environments',
         name: 'Mobile Game — Environment Design',
-        cover: '/portfolio/clients/env-mardi-gras.jpg',
+        cover: '/portfolio/clients/env-mardi-gras.webp',
         items: [
-          { src: '/portfolio/clients/env-arizona.png',      alt: 'Arizona desert environment — mobile game',  type: 'image' },
-          { src: '/portfolio/clients/env-mardi-gras.jpg',   alt: 'Mardi Gras scene — mobile game',            type: 'image' },
-          { src: '/portfolio/clients/env-snow-mice.jpg',    alt: 'Snow Mice village — mobile game',           type: 'image' },
-          { src: '/portfolio/clients/env-thanksgiving.jpg', alt: 'Thanksgiving scene — mobile game',          type: 'image' },
+          { src: '/portfolio/clients/env-arizona.webp',      alt: 'Arizona desert environment — mobile game',  type: 'image' },
+          { src: '/portfolio/clients/env-mardi-gras.webp',   alt: 'Mardi Gras scene — mobile game',            type: 'image' },
+          { src: '/portfolio/clients/env-snow-mice.webp',    alt: 'Snow Mice village — mobile game',           type: 'image' },
+          { src: '/portfolio/clients/env-thanksgiving.webp', alt: 'Thanksgiving scene — mobile game',          type: 'image' },
         ],
       },
     ],
@@ -176,26 +179,26 @@ export const categories: Category[] = [
     grid: 'uniform',
     layout: 'scroll',
     items: [
-      { src: '/portfolio/oshrit/concept-grandmanutty.png', alt: 'Character concept — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/concept-01.png',           alt: 'Concept art — Oshrit Gedalya',       type: 'image' },
-      { src: '/portfolio/oshrit/concept-02.png',           alt: 'Concept art — Oshrit Gedalya',       type: 'image' },
-      { src: '/portfolio/oshrit/sketch-01.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-02.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-03.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-04.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-05.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-06.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-07.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-08.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-09.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-10.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-11.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-12.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-13.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-14.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-15.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-16.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
-      { src: '/portfolio/oshrit/sketch-17.png',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/concept-grandmanutty.webp', alt: 'Character concept — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/concept-01.webp',           alt: 'Concept art — Oshrit Gedalya',       type: 'image' },
+      { src: '/portfolio/oshrit/concept-02.webp',           alt: 'Concept art — Oshrit Gedalya',       type: 'image' },
+      { src: '/portfolio/oshrit/sketch-01.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-02.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-03.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-04.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-05.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-06.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-07.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-08.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-09.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-10.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-11.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-12.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-13.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-14.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-15.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-16.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
+      { src: '/portfolio/oshrit/sketch-17.webp',  alt: 'Sketch — Oshrit Gedalya', type: 'image' },
     ],
   },
   {
@@ -204,8 +207,8 @@ export const categories: Category[] = [
     description: 'Physical production — puppets, miniatures, and practical sets.',
     grid: 'uniform',
     items: [
-      { src: 'https://media.whiteowlhub.com/portfolio/puppets-sets/tabletop-wide.mp4',    alt: 'Tabletop stop motion — wide',    type: 'video' },
-      { src: 'https://media.whiteowlhub.com/portfolio/puppets-sets/tabletop-vertical.mp4',alt: 'Tabletop stop motion — vertical',type: 'video' },
+      { src: 'https://media.whiteowlhub.com/portfolio/puppets-sets/tabletop-wide.mp4',    alt: 'Tabletop stop motion — wide',    type: 'video', rotation: true },
+      { src: 'https://media.whiteowlhub.com/portfolio/puppets-sets/tabletop-vertical.mp4',alt: 'Tabletop stop motion — vertical',type: 'video', rotation: true },
     ],
   },
   {
@@ -222,24 +225,32 @@ export const categories: Category[] = [
 // labelled placeholders. Swap in items from other categories as
 // content grows — mark span to control the layout rhythm.
 export const editorialItems: EditorialItem[] = [
-  { kind: 'media', src: '/portfolio/character-design/page-0.png', type: 'image', alt: 'Character design', span: 'featured',  categorySlug: 'character-design' },
+  { kind: 'media', src: '/portfolio/character-design/page-0.webp', type: 'image', alt: 'Character design', span: 'featured',  categorySlug: 'character-design' },
   { kind: 'media', src: '/portfolio/character-design/page-3.gif',  type: 'gif',   alt: 'Character animation', span: 'normal',   categorySlug: 'character-design' },
-  { kind: 'media', src: '/portfolio/character-design/page-1.png',  type: 'image', alt: 'Character design', span: 'normal',   categorySlug: 'character-design' },
-  { kind: 'media', src: '/portfolio/character-design/page-4.png',  type: 'image', alt: 'Character design', span: 'wide',     categorySlug: 'character-design' },
+  { kind: 'media', src: '/portfolio/character-design/page-1.webp',  type: 'image', alt: 'Character design', span: 'normal',   categorySlug: 'character-design' },
+  { kind: 'media', src: '/portfolio/character-design/page-4.webp',  type: 'image', alt: 'Character design', span: 'wide',     categorySlug: 'character-design' },
   { kind: 'media', src: '/portfolio/character-design/page-7.gif',  type: 'gif',   alt: 'Character animation', span: 'normal',   categorySlug: 'character-design' },
-  { kind: 'media', src: '/portfolio/character-design/page-2.png',  type: 'image', alt: 'Character design', span: 'normal',   categorySlug: 'character-design' },
-  { kind: 'media', src: '/portfolio/character-design/page-5.png',  type: 'image', alt: 'Character design', span: 'tall',     categorySlug: 'character-design' },
-  { kind: 'media', src: '/portfolio/character-design/page-6.png',  type: 'image', alt: 'Character design', span: 'normal',   categorySlug: 'character-design' },
-  { kind: 'media', src: '/portfolio/character-design/page-9.png',  type: 'image', alt: 'Character design', span: 'wide',     categorySlug: 'character-design' },
-  { kind: 'media', src: '/portfolio/character-design/page-10.png', type: 'image', alt: 'Character design', span: 'normal',   categorySlug: 'character-design' },
-  { kind: 'media', src: '/portfolio/character-design/page-11.png', type: 'image', alt: 'Character design', span: 'normal',   categorySlug: 'character-design' },
-  { kind: 'media', src: '/portfolio/art-direction/owls-descent-concept.jpg', type: 'image', alt: "The Owl's Descent — concept art", span: 'featured',  categorySlug: 'art-direction' },
-  { kind: 'media', src: '/portfolio/illustration/circus-night.png',          type: 'image', alt: 'Night circus — illustration',    span: 'wide',     categorySlug: 'illustration' },
-  { kind: 'media', src: '/portfolio/illustration/marionette-ink.png',        type: 'image', alt: 'Marionette — ink',               span: 'normal',   categorySlug: 'illustration' },
-  { kind: 'media', src: '/portfolio/clients/3d-backyard.png',                type: 'image', alt: 'Animated series — environment',  span: 'wide',     categorySlug: 'clients' },
-  { kind: 'media', src: '/portfolio/illustration/tightrope.png',             type: 'image', alt: 'Tightrope — illustration',       span: 'normal',   categorySlug: 'illustration' },
+  { kind: 'media', src: '/portfolio/character-design/page-2.webp',  type: 'image', alt: 'Character design', span: 'normal',   categorySlug: 'character-design' },
+  { kind: 'media', src: '/portfolio/character-design/page-5.webp',  type: 'image', alt: 'Character design', span: 'tall',     categorySlug: 'character-design' },
+  { kind: 'media', src: '/portfolio/character-design/page-6.webp',  type: 'image', alt: 'Character design', span: 'normal',   categorySlug: 'character-design' },
+  { kind: 'media', src: '/portfolio/character-design/page-9.webp',  type: 'image', alt: 'Character design', span: 'wide',     categorySlug: 'character-design' },
+  { kind: 'media', src: '/portfolio/character-design/page-10.webp', type: 'image', alt: 'Character design', span: 'normal',   categorySlug: 'character-design' },
+  { kind: 'media', src: '/portfolio/character-design/page-11.webp', type: 'image', alt: 'Character design', span: 'normal',   categorySlug: 'character-design' },
+  { kind: 'media', src: '/portfolio/art-direction/owls-descent-concept.webp', type: 'image', alt: "The Owl's Descent — concept art", span: 'featured',  categorySlug: 'art-direction' },
+  { kind: 'media', src: '/portfolio/illustration/circus-night.webp',          type: 'image', alt: 'Night circus — illustration',    span: 'wide',     categorySlug: 'illustration' },
+  { kind: 'media', src: '/portfolio/illustration/marionette-ink.webp',        type: 'image', alt: 'Marionette — ink',               span: 'normal',   categorySlug: 'illustration' },
+  { kind: 'media', src: '/portfolio/clients/3d-backyard.webp',                type: 'image', alt: 'Animated series — environment',  span: 'wide',     categorySlug: 'clients' },
+  { kind: 'media', src: '/portfolio/illustration/tightrope.webp',             type: 'image', alt: 'Tightrope — illustration',       span: 'normal',   categorySlug: 'illustration' },
 ];
 
 export function getCategoryBySlug(slug: string): Category | undefined {
   return categories.find(c => c.slug === slug);
 }
+
+// All items tagged rotation:true, with their category slug attached.
+// Displayed in a shuffled mosaic on /portfolio. Tag new items with rotation:true to add them.
+export const rotationPool: RotationItem[] = categories.flatMap(cat =>
+  cat.items
+    .filter(item => item.rotation)
+    .map(item => ({ ...item, categorySlug: cat.slug }))
+);

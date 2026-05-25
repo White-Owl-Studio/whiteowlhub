@@ -151,3 +151,69 @@ a:focus-visible {
   text-transform: uppercase;
   color: var(--gold-dim);
 }
+
+/* ── Drag-to-scroll rail (shared across all pages) ────────
+   JS behaviour lives in Base.astro [data-drag-rail].
+   Each page adds its own gap / padding on top.           */
+.drag-rail {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+  mask-image: linear-gradient(to right, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 40px, black calc(100% - 40px), transparent 100%);
+}
+
+.drag-rail:active  { cursor: grabbing; }
+.drag-rail::-webkit-scrollbar { display: none; }
+
+/* ── Global zoom lightbox (single-image, any page) ────────
+   Trigger: add data-zoom to any <img> or <video> element.
+   HTML + JS live in Base.astro.                           */
+[data-zoom] { cursor: zoom-in; }
+
+#zoom-lb {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+#zoom-lb.is-open { opacity: 1; pointer-events: all; }
+
+#zoom-lb-bg {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 4, 9, 0.96);
+  cursor: pointer;
+}
+#zoom-lb-close {
+  position: absolute;
+  top: 24px; right: 28px;
+  z-index: 1;
+  background: transparent;
+  border: 1px solid rgba(245, 208, 96, 0.2);
+  color: rgba(245, 208, 96, 0.6);
+  font-size: 0.9rem;
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+#zoom-lb-close:hover { color: var(--gold); border-color: rgba(245, 208, 96, 0.4); }
+
+#zoom-lb-content {
+  position: relative; z-index: 1;
+  max-width: 90vw; max-height: 90vh;
+  display: flex; align-items: center; justify-content: center;
+}
+.zoom-media {
+  max-width: 90vw; max-height: 90vh;
+  object-fit: contain; display: block;
+}

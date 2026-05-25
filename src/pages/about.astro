@@ -18,9 +18,9 @@ const phases = [
     tags: ['Development', 'Scripting', 'Visual Development', 'Storyboard', 'Animatic'],
     postitsRight: true,
     images: [
-      { src: '/about/process-concept-1.png', alt: 'Film concept art — White Owl Studio' },
-      { src: '/about/process-concept-2.png', alt: 'Film concept art — White Owl Studio' },
-      { src: '/about/process-concept-3.png', alt: 'Film concept art — White Owl Studio' },
+      { src: '/about/process-concept-1.webp', alt: 'Film concept art — White Owl Studio' },
+      { src: '/about/process-concept-2.webp', alt: 'Film concept art — White Owl Studio' },
+      { src: '/about/process-concept-3.webp', alt: 'Film concept art — White Owl Studio' },
     ],
   },
   {
@@ -50,7 +50,7 @@ const phases = [
         <div class="intro-header-row">
 
           <div class="sketch-ph">
-            <img src="/ui/couple-logo.png"
+            <img src="/ui/couple-logo.webp"
                  alt="Michael and Oshrit with their cats"
                  class="sketch-img" />
           </div>
@@ -92,7 +92,7 @@ const phases = [
           { n: 3, ratio: '4/3' },
         ].map(({ n, ratio }) => (
           <div class="studio-ph" style={`aspect-ratio: ${ratio}`}>
-            <!-- PLACEHOLDER: replace with <img src={`/about/studio-${n}.jpg`} alt={`White Owl Studio — photo ${n}`} class="studio-img" /> -->
+            <!-- PLACEHOLDER: replace with <img src={`/about/studio-${n}.jpg`} alt={`White Owl Studio — photo ${n}`} class="studio-img" data-zoom /> -->
             <span class="ph-label">Studio Photo {n}</span>
             <code class="ph-path">{`public/about/studio-${n}.jpg`}</code>
           </div>
@@ -135,7 +135,7 @@ const phases = [
             {[0, 1, 2].map(n => (
               <div class={`postit postit--${n + 1}`}>
                 {phase.images[n]
-                  ? <img src={phase.images[n].src} alt={phase.images[n].alt} class="postit-img" loading="lazy" />
+                  ? <img src={phase.images[n].src} alt={phase.images[n].alt} class="postit-img" data-zoom loading="lazy" />
                   : (
                     <>
                       <span class="ph-label">Visual {n + 1}</span>

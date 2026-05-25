@@ -10,7 +10,9 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "upload-r2": "node scripts/upload-r2.mjs"
+    "upload-r2": "node scripts/upload-r2.mjs",
+    "convert-webp": "node scripts/convert-webp.mjs",
+    "update-webp-paths": "node scripts/update-webp-paths.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.9",
@@ -21,6 +23,7 @@
     "typescript": "^6.0.3"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.1053.0"
+    "@aws-sdk/client-s3": "^3.1053.0",
+    "sharp": "^0.34.5"
   }
 }
