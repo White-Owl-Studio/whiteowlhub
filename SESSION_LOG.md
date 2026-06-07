@@ -751,3 +751,22 @@ When orb is pressed on a playable game:
 - Remaining 4 tarot cards → enable dust effect
 - R2 video uploads (showreel 188MB, truck clip 123MB, etc.)
 - Pending curation decisions: DnD characters, Oshrit's full folder, graphic design work
+
+---
+
+## Session 14 — 2026-06-07
+
+**Goal:** Close out Session 13's pending commit; export site font files.
+
+### What was done
+
+- Committed and pushed Session 13's uncommitted experiences-system refactor + "Drive That Truck, Noam!" (commit `ac55dc2`) — was sitting unpushed since 2026-05-26
+- Audited site fonts: **Cinzel** (UI/headings, all weights 400–700) and **Crimson Pro** (body/atmospheric text, incl. italics) are the two active typefaces. **Cormorant Garamond** is `@import`-ed in `global.css` but has zero `font-family` references anywhere — dead import
+- Exported the exact `.ttf` weights/styles each font requests to `C:\Users\Micha\Desktop\Work\White Owl Studio\Branding\Fonts\` (Cinzel ×4, Crimson Pro ×5, Cormorant Garamond ×2) for Michael's reference/design use
+
+### Open follow-up
+- Cormorant Garamond import in `global.css` line 1 could be removed to trim load time — offered, not yet actioned
+
+### Next session
+- Same as above (UI/design review, tarot cards, R2 uploads, curation decisions)
+- Optional: strip unused Cormorant Garamond `@import`
