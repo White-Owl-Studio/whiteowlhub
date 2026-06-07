@@ -1,0 +1,1338 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Drive That Truck, Noam!</title>
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    background: #05040c;
+    color: #f0e4a8;
+    font-family: 'Courier New', monospace;
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    display: grid;
+    place-items: center;
+    min-height: 100vh;
+  }
+  canvas {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #14132a;
+    max-width: 100vw;
+    max-height: 100vh;
+    box-shadow: 0 0 80px rgba(120,80,200,0.18);
+  }
+  .hint {
+    position: fixed;
+    bottom: 10px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(240,228,168,0.4);
+    pointer-events: none;
+    letter-spacing: 0.1em;
+  }
+</style>
+</head>
+<body>
+<canvas id="game" width="1080" height="540"></canvas>
+<div class="hint">SPACE / &uarr; jump &middot; &darr; duck &middot; &larr; &rarr; nudge</div>
+<script>
+(function(){
+'use strict';
+
+// ---------- Display ----------
+const SCALE = 3;
+const W = 360, H = 180;
+const canvas = document.getElementById('game');
+canvas.width = W*SCALE; canvas.height = H*SCALE;
+const ctx = canvas.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+ctx.scale(SCALE, SCALE);
+
+// ---------- Palette (pulled from Oshrit's concept frame + character refs) ----------
+const C = {
+  // Sky — single deep purple, very gentle banding
+  skyTop:    '#1f1640',
+  skyMid:    '#241a48',
+  skyLow:    '#2a2052',
+  // Stars / moon — soft cool white
+  star:      '#f0ece4',
+  starDim:   '#a8a0b4',
+  moon:      '#dad4c8',
+  moonShade: '#9d96a8',       // inner shadow band on the crescent
+  // Mountains — three rounded layers
+  mtnBack:   '#5a4080',
+  mtnMid:    '#3e2a6a',
+  mtnFront:  '#2a1854',
+  // Ground / road
+  ground:    '#0c081e',
+  groundLip: '#221a3a',
+  dash:      '#8a7aa0',
+  // Rain — light lavender
+  rain:      'rgba(180,160,220,0.45)',
+  // Truck — light lavender-grey (NOT black)
+  truckBody: '#8a86a4',
+  truckHi:   '#a8a4c0',
+  truckShade:'#5a566a',
+  truckEdge: '#1a1828',       // black silhouette/outline + cage bars
+  cageBar:   '#0a0814',
+  cageVoid:  '#1c1a2e',
+  chimney:   '#3a2418',
+  smoke:     '#7a6a90',
+  smokeHi:   '#9c8cb0',
+  headlight: '#f5d8a0',
+  // Cow eyes
+  cowWhite:  '#e8e0d4',
+  cowPupil:  '#0a0814',
+  cowEyeDim: '#3a3450',
+  cowEye:    '#f0e060',
+  // Noam (peach sock-puppet, orange flame tuft)
+  noamSkin:  '#eab68a',
+  noamShade: '#b88068',
+  noamHair:  '#e07840',
+  noamHairSh:'#a04820',
+  noamTongue:'#e05858',
+  noamMouth: '#7a2018',
+  // Oshri (brown skin, white tank, brown shorts)
+  oshriSkin:  '#7b3a22',
+  oshriShade: '#4a2818',
+  oshriHair:  '#2a1810',
+  oshriShirt: '#e8e0d4',
+  oshriShirtSh:'#a89890',
+  oshriPants: '#3a2418',
+  oshriMouth: '#7a2018',
+  oshriTongue:'#921818',
+  // Eye whites + pupils (shared)
+  eyeWhite:  '#f8f4e8',
+  eyePupil:  '#0a0612',
+  // Misc accents
+  pee:       '#f5d860',
+  text:      '#f0d860',
+  textDim:   'rgba(168,154,180,0.85)',
+  exhaust:   'rgba(160,150,190,0.40)',
+  dust:      'rgba(170,150,180,0.38)',
+  flash:     'rgba(248,224,180,1)',
+};
+
+// ---------- Constants ----------
+const GROUND_Y = H - 28;
+const TRUCK_W = 60;
+const TRUCK_H = 28;
+// Truck slightly left of center so there's more open road ahead
+const TRUCK_X = 140;
+const NUDGE_RANGE = 26;        // ± horizontal play room
+const NUDGE_SPEED = 1.4;       // px/frame when arrow held
+const JUMP_VY = -4.8;          // initial jump impulse
+const GRAVITY = 0.24;          // softer gravity → ~40 frames of airtime
+const DUCK_PAD = 8;            // how much the truck squats when ducking
+// Rim-light colors per obstacle — single 1px right-side rim, color matches the object.
+// Style ref: film stills 5 + 6 (strong directional colored rim on puppets).
+const RIM = {
+  sign: '#ffd060',  // amber yellow — warm sign face
+  rock: '#8090ff',  // cool blue-purple — cold stone
+  oil:  '#40d0e0',  // cyan — oil sheen
+  tree: '#60e860',  // bright green — foliage
+};
+
+// ---------- Game state ----------
+const STATE = {START:0, PLAY:1, OVER_SEQ:2, OVER:3};
+let state = STATE.START;
+
+const game = {
+  t: 0,
+  dist: 0,
+  speed: 0.7,
+  cows: 5,
+  scroll: 0,
+  scrollMid: 0,
+  scrollFar: 0,
+  scrollStars: 0,
+  best: parseInt(localStorage.getItem('dtt_best')||'0', 10),
+  newBest: false,
+  flashT: 0,
+};
+
+const truck = {
+  x: TRUCK_X,
+  vx: 0,
+  yOff: 0,
+  vy: 0,
+  ducking: false,
+  shake: 0,
+  introX: -TRUCK_W - 8,
+  introDone: false,
+};
+
+const oshri = {
+  x: 4,
+  baseX: 4,
+  runFrame: 0,
+  drift: 0,
+};
+
+let obstacles = [];
+let dust = [];
+let spawnTimer = 300;    // very sparse first obstacle
+
+const over = {
+  t: 0,
+  truckStopped: false,
+  noamSlumped: false,
+  oshriOnCab: false,
+  peeStart: 0,
+  cardSlide: 0,
+};
+
+// ---------- Mountains (FIXED rolling silhouettes, 3 layers, gentle parallax) ----------
+// Each layer pre-computes a height-per-column array (cosine arches that overlap), then we just
+// scroll the read offset. Rounded, NOT sharp triangles — matches Oshrit's concept frame.
+function buildRollingRange(totalW, baseH, jitter, minW, maxW, seed){
+  const arr = new Array(totalW).fill(0);
+  let s = seed;
+  const rng = () => { s = (s*1664525 + 1013904223) >>> 0; return (s>>>0) / 4294967296; };
+  let x = 0;
+  while (x < totalW){
+    const w = minW + Math.floor(rng() * (maxW - minW));
+    const h = baseH + Math.floor(rng() * jitter);
+    for (let i = 0; i < w; i++){
+      const t = i / w;
+      const v = Math.floor(Math.sin(t * Math.PI) * h);
+      const col = ((x + i) % totalW + totalW) % totalW;
+      if (v > arr[col]) arr[col] = v;
+    }
+    x += Math.floor(w * 0.55);   // 45% overlap
+  }
+  return arr;
+}
+const mtnBack  = buildRollingRange(420, 36, 22, 70, 130, 17);
+const mtnMid   = buildRollingRange(460, 26, 16, 60, 110, 91);
+const mtnFront = buildRollingRange(500, 14, 10, 50, 95, 43);
+
+// ---------- Stars — strict grid of dots + plus signs (child's drawing texture) ----------
+const STAR_DX = 14;     // horizontal cell width
+const STAR_DY = 11;     // vertical cell height
+const STAR_ROWS = 7;    // rows down from top
+const STAR_Y0 = 9;      // top row y
+
+// ---------- Input ----------
+const keys = {};
+addEventListener('keydown', e=>{
+  if (['Space','ArrowUp','ArrowDown','KeyR','Enter'].includes(e.code)) e.preventDefault();
+  keys[e.code] = true;
+  if (state === STATE.START && (e.code==='Space' || e.code==='Enter')) startGame();
+  else if (state === STATE.OVER && (e.code==='Space' || e.code==='Enter' || e.code==='KeyR')) startGame();
+  else if (state === STATE.PLAY) {
+    if (e.code==='Space' || e.code==='ArrowUp') doJump();
+  }
+});
+addEventListener('keyup', e=>{ keys[e.code]=false; });
+canvas.addEventListener('click', ()=>{
+  if (state===STATE.START || state===STATE.OVER) startGame();
+  else if (state===STATE.PLAY) doJump();
+});
+
+function doJump(){
+  if (truck.yOff === 0 && !truck.ducking){
+    truck.vy = JUMP_VY;
+    audio.jump();
+  }
+}
+
+// ---------- Audio ----------
+const audio = (()=>{
+  let actx=null, eng=null, engG=null;
+  function ensure(){ if (!actx) actx = new (window.AudioContext||window.webkitAudioContext)(); }
+  function blip(freq, dur, type, vol){
+    ensure();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || 'square'; o.frequency.value = freq;
+    g.gain.value = vol||0.06;
+    o.connect(g); g.connect(actx.destination);
+    o.start();
+    o.frequency.exponentialRampToValueAtTime(Math.max(20, freq*0.5), actx.currentTime + dur);
+    g.gain.linearRampToValueAtTime(0, actx.currentTime + dur);
+    o.stop(actx.currentTime + dur);
+  }
+  function jump(){
+    blip(520, 0.10, 'square', 0.05);
+    setTimeout(()=>blip(740, 0.06, 'square', 0.04), 50);
+  }
+  function hit(){
+    blip(160, 0.20, 'sawtooth', 0.10);
+    setTimeout(()=>{
+      ensure();
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type='sawtooth';
+      o.frequency.setValueAtTime(240, actx.currentTime);
+      o.frequency.linearRampToValueAtTime(120, actx.currentTime+0.65);
+      g.gain.setValueAtTime(0.09, actx.currentTime);
+      g.gain.linearRampToValueAtTime(0, actx.currentTime+0.7);
+      o.connect(g); g.connect(actx.destination);
+      o.start(); o.stop(actx.currentTime+0.7);
+    }, 60);
+  }
+  function gameOver(){
+    [440, 370, 294, 220, 165].forEach((f,i)=>{
+      setTimeout(()=>blip(f, 0.24, 'triangle', 0.07), i*150);
+    });
+  }
+  function fanfare(){
+    [392, 494, 587, 784].forEach((f,i)=>{
+      setTimeout(()=>blip(f, 0.14, 'square', 0.06), i*100);
+    });
+  }
+  function honk(){
+    blip(180, 0.18, 'sawtooth', 0.07);
+    setTimeout(()=>blip(220, 0.18, 'sawtooth', 0.07), 100);
+  }
+  function pee(){
+    ensure();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type='triangle';
+    o.frequency.setValueAtTime(900, actx.currentTime);
+    o.frequency.linearRampToValueAtTime(600, actx.currentTime+0.9);
+    g.gain.setValueAtTime(0.04, actx.currentTime);
+    g.gain.linearRampToValueAtTime(0, actx.currentTime+0.95);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime+0.95);
+  }
+  function engineStart(){
+    ensure();
+    if (eng) return;
+    eng = actx.createOscillator();
+    engG = actx.createGain();
+    eng.type = 'sawtooth';
+    eng.frequency.value = 60;
+    engG.gain.value = 0.018;
+    eng.connect(engG); engG.connect(actx.destination);
+    eng.start();
+  }
+  function engineStop(){
+    if (!eng) return;
+    engG.gain.linearRampToValueAtTime(0, actx.currentTime+0.4);
+    const o = eng;
+    setTimeout(()=>{ try{ o.stop(); }catch(_){} }, 500);
+    eng = null;
+  }
+  function engineSpeed(s){
+    if (!eng) return;
+    eng.frequency.value = 45 + s*26;
+  }
+  return {jump, hit, gameOver, fanfare, honk, pee, engineStart, engineStop, engineSpeed};
+})();
+
+// ---------- Lifecycle ----------
+function startGame(){
+  state = STATE.PLAY;
+  game.t = 0; game.dist = 0; game.speed = 0.7; game.cows = 5;
+  game.newBest = false; game.flashT = 0;
+  truck.x = TRUCK_X;
+  truck.vx = 0;
+  truck.yOff = 0; truck.vy = 0;
+  truck.ducking = false; truck.shake = 0;
+  truck.introDone = true;
+  oshri.x = oshri.baseX;
+  oshri.drift = 0;
+  obstacles = []; dust = [];
+  spawnTimer = 300;       // very sparse first obstacle
+  over.t = 0;
+  over.truckStopped = false;
+  over.noamSlumped = false;
+  over.oshriOnCab = false;
+  over.peeStart = 0;
+  over.cardSlide = 0;
+  audio.engineStart();
+}
+
+function loseCow(){
+  if (game.cows <= 0) return;
+  game.cows--;
+  truck.shake = 12;
+  game.flashT = 6;
+  audio.hit();
+  if (game.cows === 1) audio.honk();
+  if (game.cows === 0){
+    state = STATE.OVER_SEQ;
+    over.t = 0;
+  }
+}
+
+// ---------- Update ----------
+function update(){
+  game.t++;
+  if (game.flashT > 0) game.flashT--;
+
+  if (state === STATE.START){
+    if (truck.introX < TRUCK_X){
+      truck.introX += 1.0;
+      game.scroll += 1.2;
+      game.scrollMid += 0.7;
+      game.scrollFar += 0.18;
+      game.scrollStars += 0.05;
+    } else {
+      truck.introX = TRUCK_X;
+    }
+  } else if (state === STATE.PLAY){
+    // Slow speed ramp — much more gradual than before
+    let s;
+    if (game.dist < 500)      s = 0.7;
+    else if (game.dist < 1500) s = 0.7 + (game.dist - 500) / 1000 * 0.3;  // -> 1.0
+    else if (game.dist < 3000) s = 1.0 + (game.dist - 1500) / 1500 * 0.3; // -> 1.3
+    else                       s = Math.min(1.6, 1.3 + (game.dist - 3000) / 4000 * 0.3);
+    game.speed = s;
+    audio.engineSpeed(game.speed);
+
+    // vertical physics
+    truck.vy += GRAVITY;
+    truck.yOff += truck.vy;
+    if (truck.yOff >= 0){
+      if (truck.vy > 2.3){
+        for (let i=0;i<3;i++) dust.push({x: truck.x + 6 + Math.random()*48, y: GROUND_Y-2, t: 0, max: 18});
+      }
+      truck.yOff = 0; truck.vy = 0;
+    }
+    truck.ducking = !!keys['ArrowDown'] && truck.yOff === 0;
+    if (truck.shake > 0) truck.shake--;
+
+    // lateral nudge (LEFT / RIGHT arrows)
+    const dir = (keys['ArrowLeft'] ? -1 : 0) + (keys['ArrowRight'] ? 1 : 0);
+    const targetVx = dir * NUDGE_SPEED;
+    truck.vx += (targetVx - truck.vx) * 0.22;     // ease toward target
+    truck.x += truck.vx;
+    const minX = TRUCK_X - NUDGE_RANGE;
+    const maxX = TRUCK_X + NUDGE_RANGE;
+    if (truck.x < minX){ truck.x = minX; truck.vx = 0; }
+    if (truck.x > maxX){ truck.x = maxX; truck.vx = 0; }
+
+    // scroll — gentle parallax
+    scrollWorld();
+    game.dist += game.speed * 0.5;
+
+    // Oshri drift
+    oshri.drift = (5 - game.cows) / 5;
+    oshri.x = oshri.baseX + oshri.drift * (TRUCK_X - 26 - oshri.baseX);
+    oshri.runFrame = Math.floor(game.t/5) % 2;
+
+    // Trailing dust — gentler
+    if (game.t % 7 === 0) dust.push({x: truck.x + 4, y: GROUND_Y-2, t: 0, max: 28});
+    for (const d of dust) d.t++;
+    dust = dust.filter(d=>d.t < d.max);
+
+    // Obstacle spawning — distance-tiered rhythm
+    spawnTimer--;
+    if (spawnTimer <= 0){
+      spawnObstacle();
+      spawnTimer = nextSpawnInterval();
+    }
+    for (const o of obstacles) o.x -= game.speed*1.8;
+    obstacles = obstacles.filter(o=>o.x + o.w > -10);
+
+    // Collision (tight box — generous on the cab front and cage back)
+    const duckPad = truck.ducking ? DUCK_PAD : 0;
+    const tx = truck.x + 6;
+    const ty = GROUND_Y - TRUCK_H + duckPad + truck.yOff;
+    const tw = TRUCK_W - 12;
+    const th = TRUCK_H - duckPad;
+    for (const o of obstacles){
+      if (o.hit) continue;
+      if (tx < o.x + o.w && tx + tw > o.x && ty < o.y + o.h && ty + th > o.y){
+        o.hit = true;
+        loseCow();
+      }
+    }
+
+    if (game.dist > game.best){
+      if (!game.newBest && game.best > 0) audio.fanfare();
+      game.best = Math.floor(game.dist);
+      game.newBest = true;
+      localStorage.setItem('dtt_best', String(game.best));
+    }
+  } else if (state === STATE.OVER_SEQ){
+    over.t++;
+    if (!over.truckStopped){
+      game.speed *= 0.94;
+      if (game.speed < 0.04){
+        over.truckStopped = true;
+        audio.engineStop();
+        audio.gameOver();
+        for (let i=0;i<6;i++) dust.push({x: truck.x + Math.random()*TRUCK_W, y: GROUND_Y-2, t:0, max:40});
+      }
+    }
+    scrollWorld();
+    if (over.t % 10 === 0 && over.t < 60){
+      dust.push({x: truck.x + 50, y: GROUND_Y - TRUCK_H - 8, t:0, max:34});
+    }
+    for (const d of dust) d.t++;
+    dust = dust.filter(d=>d.t < d.max);
+
+    if (over.t > 50) over.noamSlumped = true;
+    if (over.t < 120){
+      const target = truck.x - 14;
+      oshri.x += (target - oshri.x) * 0.05;
+      oshri.runFrame = Math.floor(over.t/3) % 2;
+    } else if (!over.oshriOnCab){
+      over.oshriOnCab = true;
+      over.peeStart = over.t + 14;
+    } else if (over.t === over.peeStart){
+      audio.pee();
+    }
+    if (over.t > 180) over.cardSlide = Math.min(1, (over.t-180)/40);
+    if (over.t > 270) state = STATE.OVER;
+  }
+}
+
+function scrollWorld(){
+  game.scroll      += game.speed * 1.8;
+  game.scrollMid   += game.speed * 0.45;
+  game.scrollFar   += game.speed * 0.12;
+  game.scrollStars += game.speed * 0.04;
+}
+
+// Distance-tiered rhythm. Returns frames until next spawn.
+// Spawn-interval-in-frames = arrival-gap-at-truck-in-frames (constant regardless of speed),
+// so the rhythm window the player feels matches these numbers directly.
+function nextSpawnInterval(){
+  const d = game.dist;
+  let lo, hi;
+  if (d < 300)        { lo = 280; hi = 340; }   // learn controls
+  else if (d < 900)   { lo = 210; hi = 270; }   // comfortable
+  else if (d < 2000)  { lo = 150; hi = 200; }   // mid rhythm
+  else if (d < 3800)  { lo = 110; hi = 150; }   // tight
+  else if (d < 6500)  { lo = 80;  hi = 115; }   // rhythm-or-die
+  else                { lo = 60;  hi = 90;  }   // punishing
+  return lo + Math.floor(Math.random()*(hi-lo));
+}
+
+function spawnObstacle(){
+  // Mix of jump (sign/rock/oil) and duck (tree) obstacles.
+  // Trees rarer at high speed — switching from jump-rhythm to duck mid-flight is unfair.
+  let kinds;
+  if (game.dist < 1500)      kinds = ['sign','rock','rock','oil','tree','tree','rock','sign'];
+  else if (game.dist < 3000) kinds = ['sign','rock','rock','oil','tree','sign','rock','tree'];
+  else                       kinds = ['sign','rock','rock','oil','tree','sign','rock','rock'];
+  const kind = kinds[Math.floor(Math.random()*kinds.length)];
+  const o = {x: W+10, kind, hit:false};
+  if (kind === 'sign'){ o.w=7;  o.h=16; o.y=GROUND_Y-16; }
+  else if (kind === 'rock'){ o.w=10; o.h=7;  o.y=GROUND_Y-7;  }
+  else if (kind === 'oil'){  o.w=18; o.h=3;  o.y=GROUND_Y-3;  }
+  else if (kind === 'tree'){
+    // Big triangular bush — branches expand diagonally up and out then flatten horizontally at top.
+    // Collision = canopy bounding box only. Trunk is purely visual.
+    o.w = 30; o.h = 22;
+    o.y = GROUND_Y - 48;            // canopy top
+    o.trunkTopY = GROUND_Y - 26;    // top of trunk = bottom of canopy
+  }
+  obstacles.push(o);
+}
+
+// ---------- Drawing ----------
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  drawSky();
+  drawStars();
+  drawMoon();
+  drawMountainsBack();
+  drawMountainsMid();
+  drawMountainsFront();
+  drawRain();
+  drawDust();
+  drawGround();
+  drawObstacles();
+  if (!over.oshriOnCab) drawOshri(oshri.x, GROUND_Y - 33);
+  drawTruck();
+  if (over.oshriOnCab) drawOshriOnCab();
+  drawHUD();
+  if (game.flashT > 0){
+    ctx.fillStyle = 'rgba(248,224,180,' + (game.flashT/12*0.55) + ')';
+    ctx.fillRect(0,0,W,H);
+  }
+  if (state===STATE.START) drawStartScreen();
+  if (state===STATE.OVER_SEQ || state===STATE.OVER) drawOverlay();
+}
+
+function drawSky(){
+  ctx.fillStyle = C.skyTop; ctx.fillRect(0, 0, W, 64);
+  ctx.fillStyle = C.skyMid; ctx.fillRect(0, 64, W, 50);
+  ctx.fillStyle = C.skyLow; ctx.fillRect(0, 114, W, GROUND_Y - 114);
+}
+
+function drawPlus(x, y, big){
+  const r = big ? 2 : 1;
+  ctx.fillRect(x-r, y, r*2+1, 1);
+  ctx.fillRect(x, y-r, 1, r*2+1);
+}
+
+function drawStars(){
+  ctx.fillStyle = C.star;
+  const offsetX = ((game.scrollStars * 0.4) % STAR_DX + STAR_DX) % STAR_DX;
+  const cols = Math.ceil(W / STAR_DX) + 2;
+  for (let row = 0; row < STAR_ROWS; row++){
+    const y = STAR_Y0 + row * STAR_DY;
+    for (let col = -1; col < cols; col++){
+      const x = Math.floor(col * STAR_DX - offsetX);
+      if (x < -4 || x > W + 4) continue;
+      // deterministic pattern across the grid
+      const k = ((col + row * 3) % 6 + 6) % 6;
+      if (k === 0)       drawPlus(x, y, true);    // big +
+      else if (k === 1)  drawPlus(x, y, false);   // small +
+      else if (k === 2)  ctx.fillRect(x, y, 1, 1);// dot
+      else if (k === 3)  drawPlus(x, y, false);   // small +
+      else if (k === 4)  ctx.fillRect(x, y, 1, 1);// dot
+      else               ctx.fillRect(x, y, 1, 1);// dot
+    }
+  }
+}
+
+// Crescent moon with a subtle inner shadow band (matches Oshrit's concept).
+function drawMoon(){
+  const cx = 282, cy = 28, R = 12;
+  const r2 = R*R, ri2 = (R-1)*(R-1), ro2 = (R+1)*(R+1);
+  const ox = 5, oy = -1;
+  for (let py = -R-1; py <= R+1; py++){
+    for (let px = -R-1; px <= R+1; px++){
+      if (px*px + py*py > r2) continue;
+      const dx = px-ox, dy = py-oy, d2 = dx*dx+dy*dy;
+      if (d2 <= ri2) continue;
+      if (d2 <= ro2){
+        ctx.fillStyle = C.moonShade;
+      } else {
+        if ((px*px+py*py) >= ri2 && (px*7+py*13)%7 === 0) continue;
+        ctx.fillStyle = C.moon;
+      }
+      ctx.fillRect(cx+px, cy+py, 1, 1);
+    }
+  }
+}
+
+// Stateful rain drops — each falls smoothly per frame, drawn as a crisp
+// 3-pixel diagonal staircase. Stable per-drop speed keeps it from smearing.
+let rainDrops = null;
+function initRain(){
+  rainDrops = [];
+  for (let i=0; i<24; i++){
+    rainDrops.push({
+      x: Math.random() * (W + 20) - 10,
+      y: Math.random() * (GROUND_Y - 4),
+      vy: 1.4 + Math.random() * 0.8,      // 1.4-2.2 px/frame
+    });
+  }
+}
+function drawRain(){
+  if (!rainDrops) initRain();
+  if (state === STATE.OVER) return;
+  ctx.fillStyle = C.rain;
+  for (const d of rainDrops){
+    d.x += 0.35;            // gentle diagonal drift
+    d.y += d.vy;
+    if (d.y > GROUND_Y - 4){
+      d.y = -3;
+      d.x = Math.random() * (W + 20) - 10;
+    }
+    const px = Math.floor(d.x), py = Math.floor(d.y);
+    ctx.fillRect(px,   py,   1, 1);
+    ctx.fillRect(px+1, py+1, 1, 1);
+    ctx.fillRect(px+2, py+2, 1, 1);
+  }
+}
+
+function drawRollingRange(heights, scroll, color, baseY){
+  const totalW = heights.length;
+  const off = ((scroll) % totalW + totalW) % totalW;
+  ctx.fillStyle = color;
+  for (let col = 0; col < W; col++){
+    const sampleIdx = ((col + Math.floor(off)) % totalW + totalW) % totalW;
+    const h = heights[sampleIdx];
+    if (h > 0) ctx.fillRect(col, baseY - h, 1, h);
+  }
+}
+
+function drawMountainsBack(){
+  drawRollingRange(mtnBack,  game.scrollFar * 0.45, C.mtnBack,  GROUND_Y - 4);
+}
+function drawMountainsMid(){
+  drawRollingRange(mtnMid,   game.scrollMid * 0.55, C.mtnMid,   GROUND_Y - 1);
+}
+function drawMountainsFront(){
+  drawRollingRange(mtnFront, game.scrollMid * 0.85, C.mtnFront, GROUND_Y + 1);
+}
+
+function drawGround(){
+  ctx.fillStyle = C.ground;
+  ctx.fillRect(0, GROUND_Y, W, H-GROUND_Y);
+  ctx.fillStyle = C.groundLip;
+  ctx.fillRect(0, GROUND_Y, W, 1);
+  ctx.fillStyle = C.dash;
+  const dy = GROUND_Y + 14;
+  const dxoff = ((-game.scroll) % 24 + 24) % 24;
+  for (let x = -24+dxoff; x < W; x += 24){
+    ctx.fillRect(x, dy, 10, 2);
+  }
+}
+
+function drawDust(){
+  for (const d of dust){
+    const a = 1 - (d.t/d.max);
+    const r = 1 + d.t*0.1;
+    ctx.fillStyle = 'rgba(200,170,140,' + (a*0.35) + ')';
+    ctx.fillRect(Math.floor(d.x - r), Math.floor(d.y - d.t*0.2), Math.ceil(r*2), 2);
+  }
+}
+
+// Half-width of tree canopy at row — wide flat horizontal top, tapers to point at trunk.
+function treeCanopyHalf(row, h, w){
+  const r = row / (h - 1);
+  let f;
+  if (r < 0.45) f = 1.0;                          // flat top section
+  else          f = 1.0 - (r - 0.45) / 0.55;      // taper to trunk
+  return Math.floor(f * w / 2);
+}
+
+// Single-pixel line — for the tree's diagonal branch structure
+function drawTreeBranch(x1, y1, x2, y2){
+  const dx = x2 - x1, dy = y2 - y1;
+  const steps = Math.max(Math.abs(dx), Math.abs(dy));
+  for (let s = 0; s <= steps; s++){
+    const t = s / steps;
+    ctx.fillRect(Math.floor(x1 + dx * t), Math.floor(y1 + dy * t), 1, 1);
+  }
+}
+
+function drawObstacles(){
+  for (const o of obstacles){
+    const rimColor = RIM[o.kind];
+    const cx = o.kind === 'tree' ? Math.floor(o.x + o.w/2) : 0;
+
+    // ---------- BODY ----------
+    if (o.kind === 'sign'){
+      ctx.fillStyle = '#2a1a14';
+      ctx.fillRect(o.x+3, o.y+7, 2, o.h-7);
+      ctx.fillStyle = '#d8a040';
+      ctx.fillRect(o.x, o.y, 7, 7);
+      ctx.fillStyle = '#0a0612';
+      ctx.fillRect(o.x+2, o.y+2, 3, 3);
+      ctx.fillStyle = '#d8a040';
+      ctx.fillRect(o.x+3, o.y+3, 1, 1);
+    } else if (o.kind === 'rock'){
+      ctx.fillStyle = '#1a1428';
+      ctx.fillRect(o.x, o.y+2, 10, 5);
+      ctx.fillRect(o.x+1, o.y+1, 8, 1);
+      ctx.fillRect(o.x+3, o.y, 4, 1);
+      ctx.fillStyle = '#3a2c50';
+      ctx.fillRect(o.x+2, o.y+2, 2, 1);
+      ctx.fillRect(o.x+6, o.y+4, 2, 1);
+    } else if (o.kind === 'oil'){
+      ctx.fillStyle = '#000005';
+      ctx.fillRect(o.x, o.y+1, 18, 2);
+      ctx.fillRect(o.x+2, o.y, 14, 1);
+      ctx.fillStyle = '#3a2c50';
+      ctx.fillRect(o.x+6, o.y+1, 2, 1);
+      ctx.fillRect(o.x+12, o.y+2, 1, 1);
+    } else if (o.kind === 'tree'){
+      const baseX = cx;
+      const baseY = o.y + o.h - 1;     // bottom of canopy (where trunk meets)
+      const topY  = o.y;               // top of canopy
+      const wHalf = Math.floor(o.w/2);
+
+      // ----- 1. TRUNK (no collision) -----
+      ctx.fillStyle = '#2a1a08';
+      ctx.fillRect(cx-1, o.trunkTopY, 3, GROUND_Y - o.trunkTopY);
+      ctx.fillStyle = '#140c04';
+      ctx.fillRect(cx-1, o.trunkTopY, 1, GROUND_Y - o.trunkTopY);   // left shadow
+
+      // ----- 2. CANOPY SILHOUETTE (dark green) -----
+      ctx.fillStyle = '#0e2008';
+      for (let row = 0; row < o.h; row++){
+        const half = treeCanopyHalf(row, o.h, o.w);
+        if (half >= 0) ctx.fillRect(cx - half, o.y + row, half*2 + 1, 1);
+      }
+
+      // ----- 3. BRANCH STRUCTURE (mid-green lines visible inside canopy) -----
+      // 5 branches springing from the trunk base — diagonal up-and-out, then bending
+      // to near-horizontal as they reach the flat top of the canopy. Mid-green so they
+      // read as lighter forms ON TOP of the dark-green silhouette.
+      ctx.fillStyle = '#1d3a14';
+      // far-left: diagonal then horizontal
+      drawTreeBranch(baseX, baseY, baseX - wHalf + 4, topY + 6);
+      drawTreeBranch(baseX - wHalf + 4, topY + 6, baseX - wHalf + 1, topY + 3);
+      // mid-left
+      drawTreeBranch(baseX, baseY, baseX - Math.floor(wHalf*0.5), topY + 3);
+      drawTreeBranch(baseX - Math.floor(wHalf*0.5), topY + 3, baseX - Math.floor(wHalf*0.5) - 2, topY + 1);
+      // center
+      drawTreeBranch(baseX, baseY, baseX, topY + 1);
+      // mid-right
+      drawTreeBranch(baseX, baseY, baseX + Math.floor(wHalf*0.5), topY + 3);
+      drawTreeBranch(baseX + Math.floor(wHalf*0.5), topY + 3, baseX + Math.floor(wHalf*0.5) + 2, topY + 1);
+      // far-right
+      drawTreeBranch(baseX, baseY, baseX + wHalf - 4, topY + 6);
+      drawTreeBranch(baseX + wHalf - 4, topY + 6, baseX + wHalf - 1, topY + 3);
+
+      // ----- 4. LEAF CLUSTERS (brighter dabs at branch tips + scattered on top) -----
+      ctx.fillStyle = '#2a5a1c';
+      // tip dabs
+      ctx.fillRect(cx - wHalf + 1, topY + 2, 2, 1);
+      ctx.fillRect(cx + wHalf - 3, topY + 2, 2, 1);
+      ctx.fillRect(cx - 1, topY,    2, 1);
+      ctx.fillRect(cx - Math.floor(wHalf*0.5) - 2, topY,     2, 1);
+      ctx.fillRect(cx + Math.floor(wHalf*0.5),     topY,     2, 1);
+      // a few scattered leaf flecks along the upper canopy
+      ctx.fillRect(cx - 6, topY + 4, 1, 1);
+      ctx.fillRect(cx + 4, topY + 5, 1, 1);
+      ctx.fillRect(cx - 2, topY + 8, 1, 1);
+    }
+
+    // ---------- RIGHT-SIDE 1-PX RIM LIGHT (matches object color) ----------
+    if (rimColor){
+      ctx.fillStyle = rimColor;
+      if (o.kind === 'sign'){
+        ctx.fillRect(o.x+7, o.y, 1, 7);            // sign face right edge
+        ctx.fillRect(o.x+5, o.y+7, 1, o.h-7);      // post right edge
+      } else if (o.kind === 'rock'){
+        ctx.fillRect(o.x+10, o.y+2, 1, 5);         // right side
+        ctx.fillRect(o.x+9, o.y+1, 1, 1);          // upper-right step
+        ctx.fillRect(o.x+7, o.y, 1, 1);            // crown
+      } else if (o.kind === 'oil'){
+        ctx.fillRect(o.x+18, o.y+1, 1, 2);
+        ctx.fillRect(o.x+16, o.y, 1, 1);
+      } else if (o.kind === 'tree'){
+        // Canopy rim — follows the right silhouette curve
+        for (let row = 0; row < o.h; row++){
+          const half = treeCanopyHalf(row, o.h, o.w);
+          if (half >= 0) ctx.fillRect(cx + half, o.y + row, 1, 1);
+        }
+        // Trunk rim — right side of trunk
+        ctx.fillRect(cx+1, o.trunkTopY, 1, GROUND_Y - o.trunkTopY);
+      }
+    }
+  }
+}
+
+// ---------- Truck — lavender body with caged-cow flatbed (Oshrit's design) ----------
+function drawTruck(){
+  const useX = (state === STATE.START && !truck.introDone) ? truck.introX : truck.x;
+  const sx = (truck.shake>0) ? ((Math.random()*4)|0)-2 : 0;
+  const sy = (truck.shake>0) ? ((Math.random()*3)|0)-1 : 0;
+  const x = Math.floor(useX + sx);
+  const duck = truck.ducking ? DUCK_PAD : 0;
+  const y = GROUND_Y - TRUCK_H + sy + Math.floor(truck.yOff) + duck;
+
+  // ----- CHIMNEY (top of cage, left side) -----
+  ctx.fillStyle = C.chimney;
+  ctx.fillRect(x+9, y-7, 3, 8);
+  ctx.fillStyle = C.truckEdge;
+  ctx.fillRect(x+8, y-8, 5, 1);   // chimney top lip
+  // Smoke puffs above
+  if (state !== STATE.OVER) drawSmokePuffs(x+11, y-9);
+
+  // ----- BODY: lavender silhouette base -----
+  ctx.fillStyle = C.truckBody;
+  // flatbed body
+  ctx.fillRect(x+1,  y+2, 36, 21);
+  // cab body
+  ctx.fillRect(x+37, y+8, 21, 15);
+  // hood lower-front
+  ctx.fillRect(x+50, y+13, 8, 10);
+
+  // body highlights (top edge lighter)
+  ctx.fillStyle = C.truckHi;
+  ctx.fillRect(x+2, y+2, 34, 1);
+  ctx.fillRect(x+38, y+9, 11, 1);
+
+  // body shadow (lower band)
+  ctx.fillStyle = C.truckShade;
+  ctx.fillRect(x+1,  y+20, 36, 3);
+  ctx.fillRect(x+37, y+20, 21, 3);
+
+  // ----- CAGE INTERIOR (dark void with cow eyes) -----
+  ctx.fillStyle = C.cageVoid;
+  ctx.fillRect(x+3, y+5, 32, 16);
+
+  // ----- CAGE BARS (vertical + criss-cross diagonals like the ref) -----
+  ctx.fillStyle = C.cageBar;
+  // vertical bars
+  for (let i=0;i<6;i++) ctx.fillRect(x+4 + i*6, y+5, 1, 16);
+  // top + bottom rails
+  ctx.fillRect(x+3, y+5,  32, 1);
+  ctx.fillRect(x+3, y+20, 32, 1);
+  // diagonal cross-hatch (a few sparse strokes to suggest cage weave)
+  for (let i=0;i<5;i++){
+    const dx = i*6;
+    ctx.fillRect(x+4+dx,   y+7,  1, 1);
+    ctx.fillRect(x+5+dx,   y+8,  1, 1);
+    ctx.fillRect(x+6+dx,   y+9,  1, 1);
+    ctx.fillRect(x+9+dx,   y+13, 1, 1);
+    ctx.fillRect(x+8+dx,   y+14, 1, 1);
+    ctx.fillRect(x+7+dx,   y+15, 1, 1);
+  }
+
+  // ----- COW EYES inside the cage (white eyeballs + pupils) -----
+  // 5 eye pairs, arranged in 2 staggered rows
+  const cowSlots = [
+    {x: 5,  y: 8 },
+    {x: 14, y: 8 },
+    {x: 23, y: 8 },
+    {x: 9,  y: 15},
+    {x: 19, y: 15},
+  ];
+  for (let i=0;i<5;i++){
+    const s = cowSlots[i];
+    const ex = x + s.x, ey = y + s.y;
+    if (i < game.cows){
+      ctx.fillStyle = C.cowWhite;
+      ctx.fillRect(ex,   ey,   2, 2);
+      ctx.fillRect(ex+3, ey,   2, 2);
+      ctx.fillStyle = C.cowPupil;
+      // pupil offset for the "looking" effect (slight per-eye variation)
+      const dx = (i % 2);
+      ctx.fillRect(ex+dx,   ey+1, 1, 1);
+      ctx.fillRect(ex+3+dx, ey+1, 1, 1);
+    } else {
+      ctx.fillStyle = C.cowEyeDim;
+      ctx.fillRect(ex, ey, 5, 2);
+    }
+  }
+
+  // ----- CAB DETAILS -----
+  // Hood transition (diagonal from cab top down to hood top)
+  ctx.fillStyle = C.truckBody;
+  ctx.fillRect(x+48, y+9,  1, 1);
+  ctx.fillRect(x+49, y+10, 1, 1);
+  ctx.fillRect(x+49, y+11, 1, 1);
+  ctx.fillRect(x+49, y+12, 1, 1);
+  // Window (dark)
+  ctx.fillStyle = C.cageVoid;
+  ctx.fillRect(x+39, y+10, 9, 6);
+  // Window frame
+  ctx.fillStyle = C.truckEdge;
+  ctx.fillRect(x+39, y+9,  9, 1);
+  ctx.fillRect(x+39, y+16, 10, 1);
+  // Cab outline (subtle)
+  ctx.fillStyle = C.truckShade;
+  ctx.fillRect(x+37, y+8, 1, 15);  // back edge of cab
+
+  // ----- HEADLIGHT (front of cab) -----
+  ctx.fillStyle = C.headlight;
+  ctx.fillRect(x+56, y+18, 2, 2);
+  if (state === STATE.PLAY){
+    ctx.fillStyle = 'rgba(245,216,160,0.18)';
+    ctx.fillRect(x+58, y+18, 4, 1);
+    ctx.fillRect(x+58, y+19, 7, 2);
+  }
+
+  // ----- BUMPER & CHASSIS UNDERLINE -----
+  ctx.fillStyle = C.truckEdge;
+  ctx.fillRect(x,    y+23, 58, 1);   // chassis line
+  // wheel arches (dark shadow above each wheel)
+  ctx.fillRect(x+5,  y+22, 8, 2);
+  ctx.fillRect(x+19, y+22, 8, 2);
+  ctx.fillRect(x+44, y+22, 9, 2);
+
+  // ----- NOAM IN THE CAB (visible through/over the window) -----
+  if (!over.noamSlumped){
+    drawNoamHead(x+40, y + 4);
+  } else {
+    drawNoamSlumped(x+40, y + 11);
+  }
+
+  // ----- WHEELS -----
+  drawWheel(x+9,  GROUND_Y-2);
+  drawWheel(x+23, GROUND_Y-2);
+  drawWheel(x+49, GROUND_Y-2);
+}
+
+function drawSmokePuffs(originX, originY){
+  // 3 puffs drifting up-left with a slow loop
+  const t = game.t;
+  const drift1 = ((t / 14) | 0) % 3;
+  const drift2 = ((t / 10) | 0) % 4;
+  const drift3 = ((t / 8)  | 0) % 5;
+  // puff close to chimney
+  ctx.fillStyle = C.smoke;
+  ctx.fillRect(originX-2, originY-1, 5, 2);
+  ctx.fillRect(originX-1, originY-2, 3, 1);
+  ctx.fillStyle = C.smokeHi;
+  ctx.fillRect(originX-1, originY-1, 1, 1);
+  // mid puff
+  ctx.fillStyle = C.smoke;
+  ctx.fillRect(originX-4-drift1, originY-4, 6, 2);
+  ctx.fillRect(originX-3-drift1, originY-5, 4, 1);
+  ctx.fillStyle = C.smokeHi;
+  ctx.fillRect(originX-3-drift1, originY-4, 1, 1);
+  // far puff
+  ctx.fillStyle = C.smoke;
+  ctx.fillRect(originX-7-drift2, originY-7, 7, 2);
+  ctx.fillRect(originX-6-drift2, originY-8, 5, 1);
+  ctx.fillStyle = C.smokeHi;
+  ctx.fillRect(originX-6-drift2, originY-7, 1, 1);
+  // wisp
+  ctx.fillStyle = C.smoke;
+  ctx.fillRect(originX-10-drift3, originY-9, 5, 1);
+}
+
+function drawWheel(cx, cy){
+  // tire — chunky black
+  ctx.fillStyle = C.cageBar;
+  ctx.fillRect(cx-3, cy-3, 7, 6);
+  ctx.fillRect(cx-4, cy-2, 1, 4);
+  ctx.fillRect(cx+4, cy-2, 1, 4);
+  ctx.fillRect(cx-2, cy-4, 5, 1);
+  ctx.fillRect(cx-2, cy+3, 5, 1);
+  // hub mark — rotates with travel
+  ctx.fillStyle = C.truckShade;
+  const phase = Math.floor(game.scroll/3) % 4;
+  if (phase===0) ctx.fillRect(cx, cy-1, 2, 2);
+  else if (phase===1) ctx.fillRect(cx-1, cy, 4, 1);
+  else if (phase===2) ctx.fillRect(cx, cy-2, 1, 4);
+  else { ctx.fillRect(cx-1, cy-1, 1, 1); ctx.fillRect(cx+1, cy+1, 1, 1); }
+}
+
+// ---------- Noam — peach sock puppet, 3-pronged flame tuft, googly eyes ----------
+// Sprite: 10w × 13h, anchored at (x, y) = top-left of hair tuft
+function drawNoamHead(x, y){
+  // 3-PRONGED ORANGE FLAME TUFT
+  ctx.fillStyle = C.noamHair;
+  ctx.fillRect(x+2, y,   1, 1);     // left prong tip
+  ctx.fillRect(x+4, y-1, 1, 1);     // center prong tip (highest)
+  ctx.fillRect(x+4, y,   1, 1);
+  ctx.fillRect(x+6, y,   1, 1);     // right prong tip
+  ctx.fillRect(x+1, y+1, 8, 2);     // tuft base
+  // Hair shadow underneath (warmer/darker line)
+  ctx.fillStyle = C.noamHairSh;
+  ctx.fillRect(x+1, y+3, 8, 1);
+
+  // SKIN (peach round face)
+  ctx.fillStyle = C.noamSkin;
+  ctx.fillRect(x+1, y+4, 8, 8);
+  ctx.fillRect(x,   y+5, 1, 6);
+  ctx.fillRect(x+9, y+5, 1, 6);
+  ctx.fillRect(x+2, y+12, 6, 1);    // chin curl
+
+  // Skin shadow (right side + under)
+  ctx.fillStyle = C.noamShade;
+  ctx.fillRect(x+8, y+5, 1, 7);
+  ctx.fillRect(x+2, y+11, 6, 1);
+
+  // GOOGLY EYES — large whites with offset pupils
+  ctx.fillStyle = C.eyeWhite;
+  ctx.fillRect(x+1, y+5, 3, 3);
+  ctx.fillRect(x+6, y+5, 3, 3);
+  // Pupils — drift down/inward during the panic states
+  ctx.fillStyle = C.eyePupil;
+  const panic = (state === STATE.OVER_SEQ || state === STATE.OVER);
+  const pyOff = panic ? 2 : 1;
+  ctx.fillRect(x+2, y+5+pyOff, 1, 1);
+  ctx.fillRect(x+7, y+5+pyOff, 1, 1);
+  // Eye corner outlines (the googly rim)
+  ctx.fillRect(x+1, y+5, 1, 1); ctx.fillRect(x+3, y+5, 1, 1);
+  ctx.fillRect(x+1, y+7, 1, 1); ctx.fillRect(x+3, y+7, 1, 1);
+  ctx.fillRect(x+6, y+5, 1, 1); ctx.fillRect(x+8, y+5, 1, 1);
+  ctx.fillRect(x+6, y+7, 1, 1); ctx.fillRect(x+8, y+7, 1, 1);
+
+  // OPEN PANIC MOUTH (red O with tongue)
+  ctx.fillStyle = C.noamMouth;
+  ctx.fillRect(x+3, y+9, 4, 3);
+  ctx.fillStyle = C.noamTongue;
+  ctx.fillRect(x+4, y+10, 2, 1);
+}
+
+function drawNoamSlumped(x, y){
+  // Slumped over the wheel — only hair tuft and forehead visible
+  ctx.fillStyle = C.noamHair;
+  ctx.fillRect(x+1, y-3, 8, 2);
+  ctx.fillRect(x+2, y-4, 1, 1);
+  ctx.fillRect(x+4, y-5, 1, 1);
+  ctx.fillRect(x+6, y-4, 1, 1);
+  ctx.fillStyle = C.noamHairSh;
+  ctx.fillRect(x+1, y-1, 8, 1);
+  ctx.fillStyle = C.noamSkin;
+  ctx.fillRect(x+2, y, 6, 1);
+}
+
+// ---------- Oshri — brown sock puppet, mustache, googly eyes ----------
+function drawOshri(x, y){
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(Math.floor(x), GROUND_Y-1, 14, 2);
+  drawOshriBody(Math.floor(x), Math.floor(y), oshri.runFrame, true);
+}
+
+function drawOshriOnCab(){
+  const tx = Math.floor(truck.x);
+  const ty = GROUND_Y - TRUCK_H + Math.floor(truck.yOff);
+  // Oshri perched on cab roof — boots sit on the cab top (ty+8), body extends upward.
+  // New sprite is 34 tall, so the top-of-hair anchor is ty + 8 - 34 = ty - 26.
+  const ox = tx + 32;
+  const oy = ty - 26;
+  drawOshriBody(ox, oy, 0, false);
+
+  // PEE arc — drops from Oshri's lower tunic down into the cab onto slumped Noam
+  if (over.t >= over.peeStart){
+    const pt = over.t - over.peeStart;
+    if (pt < 130){
+      ctx.fillStyle = C.pee;
+      const startX = ox + 6;          // groin level
+      const startY = oy + 26;
+      const endX = tx + 42;           // Noam's slumped head in the window
+      const endY = ty + 14;
+      for (let s=0; s<18; s++){
+        const tt = s/18;
+        const px = startX + (endX-startX)*tt - tt*tt*0.6;
+        const py = startY + (endY-startY)*tt + Math.sin(tt*Math.PI)*2;
+        if ((s + Math.floor(pt/2)) % 3 !== 0){
+          ctx.fillRect(Math.floor(px), Math.floor(py), 1, 1);
+        }
+      }
+      // splash on Noam
+      ctx.fillStyle = 'rgba(240,224,96,0.75)';
+      ctx.fillRect(endX-2, endY, 6, 1);
+      ctx.fillRect(endX-3, endY+1, 8, 1);
+      if (pt > 10){
+        ctx.fillStyle = C.pee;
+        ctx.fillRect(endX-4, endY-1, 1, 1);
+        ctx.fillRect(endX+5, endY-1, 1, 1);
+      }
+    }
+  }
+}
+
+function drawOshriBody(x, y, runFrame, running){
+  // 22w x 34h. Layout matches reference: flat-top mohawk, wide head, beak at eye
+  // level, red throat at chin, fists at chest, white undershirt, thick legs.
+  const armBob = running ? (runFrame === 0 ? -1 : 1) : 0;
+
+  // BACK (LEFT) FIST -- drawn first so head/shirt render on top
+  ctx.fillStyle = C.oshriSkin;
+  ctx.fillRect(x-2, y+13+armBob, 7, 7);
+  ctx.fillStyle = C.oshriShade;
+  ctx.fillRect(x-2, y+15+armBob, 7, 1);
+  ctx.fillRect(x-2, y+17+armBob, 5, 1);
+  ctx.fillRect(x+3, y+14+armBob, 1, 1);
+
+  // HAIR -- flat-top mohawk
+  ctx.fillStyle = C.oshriHair;
+  ctx.fillRect(x+8,  y,   3, 1);
+  ctx.fillRect(x+7,  y+1, 5, 2);
+  ctx.fillRect(x+6,  y+3, 6, 1);
+
+  // HEAD -- wide heavy face (rows 4-13)
+  ctx.fillStyle = C.oshriSkin;
+  ctx.fillRect(x+3,  y+4,  9, 1);
+  ctx.fillRect(x+2,  y+5, 11, 6);
+  ctx.fillRect(x+3,  y+11, 9, 1);
+  ctx.fillRect(x+4,  y+12, 7, 1);
+  ctx.fillRect(x+5,  y+13, 5, 1);
+  ctx.fillStyle = C.oshriShade;
+  ctx.fillRect(x+2,  y+5,  1, 8);
+
+  // BEAK -- duck-bill at eye level (rows 7-10)
+  ctx.fillStyle = C.oshriSkin;
+  ctx.fillRect(x+13, y+7,  3, 1);
+  ctx.fillRect(x+13, y+8,  4, 1);
+  ctx.fillRect(x+13, y+9,  4, 1);
+  ctx.fillRect(x+13, y+10, 3, 1);
+  ctx.fillStyle = C.oshriShade;
+  ctx.fillRect(x+16, y+8,  1, 2);
+  ctx.fillRect(x+15, y+10, 1, 1);
+
+  // BROWS -- heavy dark V pressing down over both eyes
+  ctx.fillStyle = C.oshriHair;
+  ctx.fillRect(x+3,  y+4, 4, 2);
+  ctx.fillRect(x+9,  y+4, 4, 2);
+  ctx.fillRect(x+5,  y+6, 2, 1);
+  ctx.fillRect(x+9,  y+6, 2, 1);
+
+  // EYES -- two 3x3 white squares with pupils
+  ctx.fillStyle = C.eyeWhite;
+  ctx.fillRect(x+4,  y+5, 3, 3);
+  ctx.fillRect(x+9,  y+5, 3, 3);
+  ctx.fillStyle = C.eyePupil;
+  ctx.fillRect(x+5,  y+6, 1, 1);
+  ctx.fillRect(x+10, y+6, 1, 1);
+
+  // RED OPEN THROAT -- chin/jaw level (rows 11-13)
+  ctx.fillStyle = C.oshriTongue;
+  ctx.fillRect(x+5,  y+11, 6, 3);
+  ctx.fillStyle = C.oshriMouth;
+  ctx.fillRect(x+6,  y+12, 4, 1);
+
+  // NECK (rows 14-15)
+  ctx.fillStyle = C.oshriSkin;
+  ctx.fillRect(x+6,  y+14, 6, 2);
+
+  // WHITE UNDERSHIRT (rows 16-22)
+  ctx.fillStyle = C.oshriShirt;
+  ctx.fillRect(x+2,  y+16, 14, 2);
+  ctx.fillRect(x+3,  y+18, 12, 3);
+  ctx.fillRect(x+4,  y+21,  9, 2);
+  ctx.fillStyle = C.oshriSkin;
+  ctx.fillRect(x+7,  y+16, 4, 1);
+  ctx.fillRect(x+8,  y+17, 2, 1);
+  ctx.fillStyle = C.oshriShirtSh;
+  ctx.fillRect(x+14, y+18, 2, 5);
+
+  // FRONT (RIGHT) FIST -- drawn after shirt so it appears on top
+  ctx.fillStyle = C.oshriSkin;
+  ctx.fillRect(x+14, y+13-armBob, 7, 7);
+  ctx.fillStyle = C.oshriShade;
+  ctx.fillRect(x+14, y+15-armBob, 7, 1);
+  ctx.fillRect(x+14, y+17-armBob, 5, 1);
+  ctx.fillRect(x+19, y+14-armBob, 1, 1);
+
+  // SHORTS (rows 23-24)
+  ctx.fillStyle = C.oshriPants;
+  ctx.fillRect(x+4,  y+23, 10, 2);
+
+  // LEGS (rows 25-27)
+  ctx.fillStyle = C.oshriSkin;
+  if (running){
+    if (runFrame === 0){
+      ctx.fillRect(x+3,  y+25, 4, 3);
+      ctx.fillRect(x+10, y+25, 4, 3);
+      ctx.fillRect(x+11, y+27, 3, 1);
+    } else {
+      ctx.fillRect(x+10, y+25, 4, 3);
+      ctx.fillRect(x+3,  y+25, 4, 3);
+      ctx.fillRect(x+3,  y+27, 3, 1);
+    }
+  } else {
+    ctx.fillRect(x+3,  y+25, 4, 3);
+    ctx.fillRect(x+10, y+25, 4, 3);
+  }
+  ctx.fillStyle = C.oshriShade;
+  ctx.fillRect(x+5,  y+25, 1, 3);
+  ctx.fillRect(x+12, y+25, 1, 3);
+
+  // BOOTS (rows 28-33)
+  ctx.fillStyle = C.oshriHair;
+  if (running){
+    if (runFrame === 0){
+      ctx.fillRect(x+2,  y+28, 6, 6);
+      ctx.fillRect(x+9,  y+27, 6, 6);
+    } else {
+      ctx.fillRect(x+9,  y+28, 6, 6);
+      ctx.fillRect(x+2,  y+27, 6, 6);
+    }
+  } else {
+    ctx.fillRect(x+2,  y+28, 6, 6);
+    ctx.fillRect(x+9,  y+28, 6, 6);
+  }
+  ctx.fillStyle = C.oshriPants;
+  if (running){
+    if (runFrame === 0){
+      ctx.fillRect(x+2,  y+28, 6, 1);
+      ctx.fillRect(x+9,  y+27, 6, 1);
+    } else {
+      ctx.fillRect(x+9,  y+28, 6, 1);
+      ctx.fillRect(x+2,  y+27, 6, 1);
+    }
+  } else {
+    ctx.fillRect(x+2,  y+28, 6, 1);
+    ctx.fillRect(x+9,  y+28, 6, 1);
+  }
+}
+
+
+// ---------- HUD ----------
+function drawHUD(){
+  if (state===STATE.START) return;
+  ctx.fillStyle = C.text;
+  ctx.font = 'bold 8px "Courier New", monospace';
+  const km = (game.dist/1000).toFixed(2);
+  ctx.textAlign = 'right';
+  ctx.fillText(km + ' km', W-4, 10);
+  if (game.best > 0){
+    ctx.fillStyle = C.textDim;
+    ctx.font = '7px "Courier New", monospace';
+    ctx.fillText('best ' + (game.best/1000).toFixed(2), W-4, 18);
+  }
+  ctx.textAlign = 'left';
+  // cow eye row
+  for (let i=0;i<5;i++){
+    const ex = 4 + i*9;
+    const ey = 6;
+    ctx.fillStyle = C.cowEyeDim;
+    ctx.fillRect(ex, ey, 6, 4);
+    if (i<game.cows){
+      ctx.fillStyle = C.cowEye;
+      ctx.fillRect(ex+1, ey+1, 1, 2);
+      ctx.fillRect(ex+4, ey+1, 1, 2);
+    }
+  }
+}
+
+function drawStartScreen(){
+  ctx.fillStyle = 'rgba(5,4,12,0.6)';
+  ctx.fillRect(0, 30, W, 80);
+  ctx.fillStyle = C.text;
+  ctx.font = 'bold 14px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('DRIVE THAT TRUCK, NOAM!', W/2, 56);
+  ctx.font = 'italic 8px "Courier New", monospace';
+  ctx.fillStyle = C.textDim;
+  ctx.fillText('He meant well. The cows are less sure.', W/2, 72);
+  if (game.t % 60 < 40){
+    ctx.fillStyle = C.text;
+    ctx.font = 'bold 8px "Courier New", monospace';
+    ctx.fillText('[ PRESS SPACE ]', W/2, 92);
+  }
+  if (game.best > 0){
+    ctx.fillStyle = C.textDim;
+    ctx.font = '7px "Courier New", monospace';
+    ctx.fillText('best run: ' + (game.best/1000).toFixed(2) + ' km', W/2, 104);
+  }
+  ctx.textAlign = 'left';
+}
+
+function drawOverlay(){
+  if (state===STATE.OVER_SEQ && over.t > 80){
+    ctx.fillStyle = 'rgba(5,4,12,' + Math.min(0.5,(over.t-80)/180) + ')';
+    ctx.fillRect(0,0,W,H);
+  }
+  if (over.cardSlide > 0 || state===STATE.OVER){
+    const slide = state===STATE.OVER ? 1 : over.cardSlide;
+    const yTop = H/2 - 26 + (1-slide)*60;
+    ctx.fillStyle = 'rgba(5,4,12,0.85)';
+    ctx.fillRect(0, yTop-4, W, 64);
+    ctx.fillStyle = '#3a1c10';
+    ctx.fillRect(0, yTop-4, W, 1);
+    ctx.fillRect(0, yTop+59, W, 1);
+    ctx.fillStyle = C.text;
+    ctx.font = 'bold 12px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('DRIVE THAT TRUCK, NOAM!', W/2, yTop+12);
+    ctx.font = 'italic 8px "Courier New", monospace';
+    ctx.fillStyle = C.textDim;
+    ctx.fillText('...you didn’t.', W/2, yTop+26);
+    ctx.font = 'bold 8px "Courier New", monospace';
+    ctx.fillStyle = C.text;
+    ctx.fillText((game.dist/1000).toFixed(2) + ' km', W/2, yTop+38);
+    if (state===STATE.OVER){
+      if (game.t % 60 < 40){
+        ctx.fillStyle = C.text;
+        ctx.font = '8px "Courier New", monospace';
+        ctx.fillText('[ SPACE ] to try again', W/2, yTop+54);
+      }
+      if (game.newBest){
+        ctx.fillStyle = C.cowEye;
+        ctx.font = 'bold 7px "Courier New", monospace';
+        ctx.fillText('NEW BEST!', W/2, yTop+50);
+      }
+    }
+    ctx.textAlign = 'left';
+  }
+}
+
+function loop(){
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>

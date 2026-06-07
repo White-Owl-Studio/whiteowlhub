@@ -1,13 +1,29 @@
 ---
 import Base from '../../layouts/Base.astro';
+import { experiences } from '../../data/experiences';
+
+export function getStaticPaths() {
+  return experiences
+    .filter(exp => exp.status === 'demo')
+    .map(exp => ({
+      params: { game: exp.id },
+      props: { exp },
+    }));
+}
+
+const { exp } = Astro.props;
+const { swirlR: r, swirlG: g, swirlB: b } = exp;
 ---
 
 <Base
-  title="Laila's Descent"
-  description="A horror shooter by White Owl Studio. She came looking for the exit. There isn't one."
+  title={exp.title}
+  description={`${exp.tagline} An interactive experience by White Owl Studio.`}
 >
 
-  <div class="game-shell">
+  <div
+    class="game-shell"
+    style={`--ar: ${r}; --ag: ${g}; --ab: ${b};`}
+  >
 
     <nav class="game-nav">
       <a href="/experiences" class="nav-exit" aria-label="Exit game and return to experiences">
@@ -17,15 +33,15 @@ import Base from '../../layouts/Base.astro';
         </svg>
         Exit
       </a>
-      <span class="nav-title">Laila's Descent</span>
+      <span class="nav-title">{exp.title}</span>
       <span class="nav-tag">White Owl Studio</span>
     </nav>
 
     <div class="game-frame-wrap">
       <iframe
-        src="/games/lailas-descent.html"
+        src={`/games/${exp.id}.html`}
         class="game-frame"
-        title="Laila's Descent — a horror shooter"
+        title={`${exp.title} — ${exp.eyebrow}`}
         allow="autoplay"
         loading="eager"
       ></iframe>
@@ -51,7 +67,7 @@ import Base from '../../layouts/Base.astro';
     z-index: 100;
   }
 
-  /* Minimal top bar */
+  /* Minimal top bar — accent color comes from the experience's swirl RGB */
   .game-nav {
     height: 40px;
     flex-shrink: 0;
@@ -59,7 +75,7 @@ import Base from '../../layouts/Base.astro';
     align-items: center;
     padding: 0 1rem;
     gap: 1rem;
-    border-bottom: 1px solid rgba(238,34,34,0.12);
+    border-bottom: 1px solid rgb(var(--ar) var(--ag) var(--ab) / 0.12);
     background: rgba(5,4,9,0.95);
     z-index: 10;
   }
@@ -72,23 +88,23 @@ import Base from '../../layouts/Base.astro';
     font-size: 0.64rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(238,34,34,0.55);
+    color: rgb(var(--ar) var(--ag) var(--ab) / 0.55);
     text-decoration: none;
-    border: 1px solid rgba(238,34,34,0.2);
+    border: 1px solid rgb(var(--ar) var(--ag) var(--ab) / 0.2);
     padding: 0.3rem 0.75rem;
     transition: color 0.2s, border-color 0.2s;
     flex-shrink: 0;
   }
   .nav-exit:hover {
-    color: #ee2222;
-    border-color: rgba(238,34,34,0.5);
+    color: rgb(var(--ar) var(--ag) var(--ab));
+    border-color: rgb(var(--ar) var(--ag) var(--ab) / 0.5);
   }
 
   .nav-title {
     font-family: 'Cinzel', serif;
     font-size: 0.72rem;
     letter-spacing: 0.15em;
-    color: rgba(238,34,34,0.7);
+    color: rgb(var(--ar) var(--ag) var(--ab) / 0.7);
     flex: 1;
     text-align: center;
   }

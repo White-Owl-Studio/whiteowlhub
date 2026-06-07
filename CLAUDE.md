@@ -45,6 +45,14 @@ Full token system in `src/styles/global.css`. Key values:
 - Use `curl` with `$GITHUB_PERSONAL_ACCESS_TOKEN` from `~/.claude/settings.json`
 - **Important:** `output: 'static'` must remain until Stage 7. The Cloudflare SSR adapter (v12+) requires KV/Images bindings not yet provisioned.
 
+## Session close protocol — MANDATORY
+Before committing at the end of any session where new images were added to `public/`:
+1. `npm run convert-webp` — converts all new PNG/JPG/JPEG to WebP siblings (~90% smaller)
+2. `npm run update-webp-paths` — rewrites image paths in source files to `.webp`
+3. Commit the `.webp` files together with the updated source paths
+
+**Do not skip this.** Run it even if unsure whether images were added — both scripts are idempotent and safe to re-run. Remind the user if they try to end the session without running it.
+
 ## File structure
 ```
 src/

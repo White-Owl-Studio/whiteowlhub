@@ -622,3 +622,132 @@ Run: `R2_ACCESS_KEY_ID=... R2_SECRET_ACCESS_KEY=... npm run upload-r2`
 - `Oshrit/` folder (104 files, well-organized) — substantially more than current oshrit portfolio. Worth a dedicated pass to expand Oshrit's category.
 - `גרפיקה ועיצוב/` (Shablulim Film festival posters, Let's Solve poster) — graphic design/event work. Could add to clients or skip.
 - `שואורילז/Animation_Showreel_Michael.mp4` — should be the HERO of the animation category once on R2.
+
+---
+
+## Session 13 — 2026-05-26
+
+**Goal:** Add "Drive That Truck, Noam!" to the Online Playthings page; overhaul the experiences system; polish the orb UX.
+
+---
+
+### Experiences system refactor
+
+The old system had a hardcoded `src/pages/experiences/lailas-descent.astro` file. Adding any new game required copy-pasting the whole host page.
+
+**New data-driven architecture:**
+
+| File | Role |
+|------|------|
+| `src/data/experiences.ts` | Single source of truth — all experience entries |
+| `src/pages/experiences/[game].astro` | One dynamic host page for all games |
+| `src/pages/experiences.astro` | Imports data, derives `url` from `status === 'demo'` |
+| `public/games/[id].html` | Standalone game files, fully sandboxed |
+
+**`Experience` interface fields:** `id`, `title`, `tagline`, `eyebrow`, `status` (`'demo'|'conjuring'|'unknown'`), `weight`, `swirlR/G/B`, `hasCharacter`
+
+**Game host page theming:** Nav bar accent color comes from `--ar`, `--ag`, `--ab` CSS vars (injected from swirl RGB). Modern `rgb(var(--ar) var(--ag) var(--ab) / 0.12)` syntax used throughout.
+
+**Adding any future game = 2 steps:**
+1. Drop `game.html` in `public/games/`
+2. Add one entry in `src/data/experiences.ts` with `status: 'demo'`
+
+---
+
+### Drive That Truck, Noam! — added
+
+- Source: `ClaudeCodeTest/truck-game/game.html`
+- Copied to: `public/games/drive-that-truck.html`
+- Replaced `placeholder-a` slot (weight 0.24) — one less "Coming Soon" in the pool
+- Swirl/nav color: warm amber `rgb(200, 140, 50)` — desert night atmosphere, distinct from Laila red and orb neutral purple
+
+---
+
+### Truck orb visuals (background + sprite)
+
+When the truck game is revealed in the orb, it now shows a full scene — same pattern as Laila's Still Water + Laila sprite.
+
+**Background (`drawTruckBg`, called from `drawExpBg`):**
+- Three-band indigo sky gradient (`#1f1640 → #241a48 → #2a2052`) matching the game's palette
+- Deterministic child's-drawing star grid — alternating dots and `+` plus-signs on a regular cell grid, same pattern formula as the game (`k = ((col + row*3) % 6 + 6) % 6`)
+- Crescent moon upper-right — pixel-by-pixel circle with inner-circle cutout (same technique as game)
+- Dark ground strip + road centre-line dashes at bottom of orb
+
+**Sprite (`drawTruckScene`):**
+- Scale: `s = R / 58` (truck 60 game units wide → ~50% of orb diameter)
+- Position: centered slightly left, bottom of truck rests on orb ground line, gentle ±3px vertical bob (`Math.sin(ts * 0.0008)`)
+- Draws in scaled context (`ctx.translate` + `ctx.scale`) with `x=0, y=0` as truck top-left — all game coordinates work as-is
+- Includes: chimney, static 3-puff smoke, lavender truck body, cage bars, all 5 cow eyes at full health (golden), cab window, Noam's orange hair + peach face + googly eyes + open mouth, 3 wheels with hub marks
+- Character dispatcher: `drawExpCharacter(exp, alpha, ts)` routes by `exp.id` → `drawLaila` or `drawTruckScene`. New games add one `else if` branch.
+
+**Key coordinate mapping (for future sprites):**
+- Truck top-left = `(0, 0)` in scaled context
+- `TRUCK_H = 28` (height in game units)
+- Wheel y relative to truck top = 26 (= GROUND_Y - 2 - (GROUND_Y - TRUCK_H))
+- Noam drawn at `(40, 4)` relative to truck top-left
+
+---
+
+### Title one-line fitting
+
+Reveal title (`#reveal-title`) now always stays on exactly one line regardless of game name length.
+
+**CSS:** `white-space: nowrap; overflow: hidden;` — prevents wrapping, enables `scrollWidth` measurement.
+
+**JS (in `showReveal`):**
+```js
+revTitle.style.fontSize = '2.4rem';
+while (revTitle.scrollWidth > revTitle.offsetWidth && parseFloat(revTitle.style.fontSize) > 0.5) {
+  revTitle.style.fontSize = (parseFloat(revTitle.style.fontSize) - 0.05) + 'rem';
+}
+```
+Shrinks in 0.05rem steps until text fits. Runs synchronously after `textContent` is set — layout is available immediately because the panel stays in DOM (just `opacity: 0`) when hidden.
+
+---
+
+### Orb UX overhaul — press to play
+
+**Old:** Press orb to reveal → press again to reshuffle → "Enter" button to navigate.
+**New:** Press orb to reveal → **press orb to launch** → ↺ button to reshuffle.
+
+**Interaction logic by state:**
+- `idle` → press orb → inward swirl → `revealed`
+- `revealed` + `exp.url` exists → press orb → `shining` (450ms flash) → navigate
+- `revealed` + no url → press orb → reshuffle (same as before)
+- `revealed` → press `↺ draw again` button → `doReshuffle()` → outward swirl → next pick
+
+**`↺ draw again` button:**
+- Cinzel serif, 0.72rem, letter-spaced, uppercase
+- Color and border use `var(--reveal-color)` — tints to the current game's accent automatically
+- 45% opacity at rest, 100% on hover
+- Hidden (`aria-hidden="true"`) for non-playable experiences (Coming Soon, secret)
+
+---
+
+### Shine effect (launch animation)
+
+When orb is pressed on a playable game:
+
+1. `state = 'shining'`, `shineStart = performance.now()`
+2. **Background:** draws the experience background at full alpha
+3. **Character silhouette:** `ctx.filter = 'brightness(0.02) saturate(0) contrast(1.4)'` — dims character to ~2% brightness, desaturates to grey, contrast crushes residual color → near-pure black silhouette. Filter applied only during character draw (save/restore isolated).
+4. **Flash overlay:** warm white-gold radial gradient from center (`rgba(255,248,220,α)` → amber edge), covers the full orb
+5. **Rim:** blazes from experience color to warm white-gold (`rgba(255,240,180,...)`)
+6. **Duration:** 450ms, `shineAlpha = Math.pow(elapsed/shineDur, 0.65)` (fast initial rise)
+7. **Navigate:** `window.location.href = currentExp.url` when `elapsed >= shineDur`
+
+**Silhouette math:**
+- `brightness = 1 - shineAlpha * 0.98` → 0.02 at peak
+- `saturate = max(0, 1 - shineAlpha * 1.6)` → hits 0 at shineAlpha ≈ 0.63 (desaturates before peak)
+- `contrast(1.4)` pushes remaining dim pixels toward black
+
+**Canvas filter note:** `ctx.filter` supported Chrome 52+, Firefox 49+, Safari 18+. Wrapped in try/catch — on failure, character renders normally against the flash (still looks good).
+
+---
+
+### Next session
+
+- UI/design review pass (Stage 3.5 in launch runway plan)
+- Remaining 4 tarot cards → enable dust effect
+- R2 video uploads (showreel 188MB, truck clip 123MB, etc.)
+- Pending curation decisions: DnD characters, Oshrit's full folder, graphic design work

@@ -1,52 +1,11 @@
 ---
 import Base from '../layouts/Base.astro';
+import { experiences as rawExperiences } from '../data/experiences';
 
-const experiences = [
-  {
-    id: 'lailas-descent',
-    title: "Laila's Descent",
-    tagline: "She came looking for the exit. There isn't one.",
-    eyebrow: 'Horror Shooter',
-    status: 'demo',
-    url: '/experiences/lailas-descent',
-    weight: 0.50,
-    swirlR: 238, swirlG: 34,  swirlB: 34,
-    hasCharacter: true,
-  },
-  {
-    id: 'placeholder-a',
-    title: '[Untitled Experience]',
-    tagline: 'Something is being assembled beneath this surface.',
-    eyebrow: 'Coming Soon',
-    status: 'conjuring',
-    url: null,
-    weight: 0.24,
-    swirlR: 120, swirlG: 224, swirlB: 88,
-    hasCharacter: false,
-  },
-  {
-    id: 'placeholder-b',
-    title: '[No Name Yet]',
-    tagline: 'Not ready. Possibly not safe.',
-    eyebrow: 'Coming Soon',
-    status: 'conjuring',
-    url: null,
-    weight: 0.24,
-    swirlR: 112, swirlG: 64,  swirlB: 184,
-    hasCharacter: false,
-  },
-  {
-    id: 'secret',
-    title: '⊹  ⊹  ⊹',
-    tagline: "You found something that doesn't have a name yet. Check back.",
-    eyebrow: '',
-    status: 'unknown',
-    url: null,
-    weight: 0.02,
-    swirlR: 245, swirlG: 208, swirlB: 96,
-    hasCharacter: false,
-  },
-];
+const experiences = rawExperiences.map(e => ({
+  ...e,
+  url: e.status === 'demo' ? `/experiences/${e.id}` : null,
+}));
 ---
 
 <Base title="Online Playthings" description="Interactive browser experiences from White Owl Studio — games, worlds, and hidden things. Press the orb to see what you find.">
@@ -71,9 +30,7 @@ const experiences = [
       <div class="orb-reveal" id="orb-reveal" aria-hidden="true">
         <p class="reveal-eyebrow" id="reveal-eyebrow"></p>
         <h2 class="reveal-title"  id="reveal-title"></h2>
-        <div class="reveal-actions">
-          <a class="btn-enter" id="btn-enter" href="#">Enter</a>
-        </div>
+        <button class="btn-reshuffle" id="btn-reshuffle" type="button" aria-label="Try a different experience" aria-hidden="true">↺ &thinsp;draw again</button>
       </div>
 
     </div>
@@ -184,35 +141,30 @@ const experiences = [
   }
   .reveal-title {
     font-family: 'Cinzel', serif;
-    font-size: clamp(1.4rem, 4vw, 2.4rem);
+    font-size: 2.4rem;
     font-weight: 400;
     color: var(--text);
     letter-spacing: 0.04em;
-    line-height: 1.15;
+    white-space: nowrap;
+    overflow: hidden;
     text-shadow: 0 0 32px var(--reveal-color, transparent);
   }
-  .reveal-actions {
-    margin-top: 0.75rem;
-    display: flex;
-    justify-content: center;
-  }
-  .btn-enter {
+  .btn-reshuffle {
     font-family: 'Cinzel', serif;
-    font-size: 0.68rem;
-    letter-spacing: 0.25em;
+    font-size: 0.72rem;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--reveal-color, var(--accent-experiences));
-    border: 1px solid var(--reveal-color, var(--accent-experiences));
-    padding: 0.6rem 1.75rem;
-    text-decoration: none;
-    transition: background 0.22s, color 0.22s;
-    display: inline-block;
+    background: none;
+    border: 1px solid var(--reveal-color, rgba(245,208,96,0.25));
+    color: var(--reveal-color, rgba(245,208,96,0.5));
+    opacity: 0.45;
+    padding: 0.55rem 1.75rem;
+    cursor: pointer;
+    transition: opacity 0.22s;
+    margin-top: 0.65rem;
   }
-  .btn-enter:hover {
-    background: var(--reveal-color, var(--accent-experiences));
-    color: var(--bg);
-  }
-  .btn-enter[aria-hidden='true'] { display: none; }
+  .btn-reshuffle:hover { opacity: 1; }
+  .btn-reshuffle[aria-hidden='true'] { display: none; }
 
   @media (max-width: 480px) {
     .xp-hero { justify-content: flex-start; padding-top: clamp(80px, 15vw, 120px); }
@@ -222,13 +174,13 @@ const experiences = [
 <script define:vars={{ experiences }}>
 (function () {
   /* ─── DOM ──────────────────────────────────────────────────────────── */
-  const wrap     = document.getElementById('orb-wrap');
-  const canvas   = document.getElementById('orb-canvas');
-  const rim      = document.getElementById('orb-rim');
-  const revPanel = document.getElementById('orb-reveal');
-  const revEye   = document.getElementById('reveal-eyebrow');
-  const revTitle = document.getElementById('reveal-title');
-  const btnEnter = document.getElementById('btn-enter');
+  const wrap        = document.getElementById('orb-wrap');
+  const canvas      = document.getElementById('orb-canvas');
+  const rim         = document.getElementById('orb-rim');
+  const revPanel    = document.getElementById('orb-reveal');
+  const revEye      = document.getElementById('reveal-eyebrow');
+  const revTitle    = document.getElementById('reveal-title');
+  const btnReshuffle= document.getElementById('btn-reshuffle');
   if (!canvas || !wrap) return;
 
   /* ─── Canvas init ───────────────────────────────────────────────────── */
@@ -252,6 +204,9 @@ const experiences = [
   let swirlDur    = 960;
   let swirlCol    = [100, 40, 200];
   let secretTimer = null;
+  let shineAlpha  = 0;
+  let shineStart  = 0;
+  const shineDur  = 450;
 
   /* ─── Neutral background: dark purple fog wisps + glitter ──────────── */
   const fogWisps = Array.from({ length: 5 }, (_, i) => ({
@@ -360,6 +315,60 @@ const experiences = [
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fill();
       });
+
+    } else if (exp.id === 'drive-that-truck') {
+      /* Arava Desert Night — indigo sky + pixel-art stars + ground */
+      ctx.globalAlpha = alpha;
+
+      const groundY = CY + R * 0.40;
+
+      // Three-band indigo sky
+      const sky = ctx.createLinearGradient(0, CY - R, 0, groundY);
+      sky.addColorStop(0,    '#1f1640');
+      sky.addColorStop(0.35, '#241a48');
+      sky.addColorStop(0.72, '#2a2052');
+      sky.addColorStop(1,    '#2a2052');
+      ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+
+      // Ground strip
+      ctx.fillStyle = '#0c081e'; ctx.fillRect(0, groundY, W, H);
+      ctx.fillStyle = '#221a3a'; ctx.fillRect(0, groundY, W, 1);
+
+      // Road centre-line dashes
+      ctx.fillStyle = '#8a7aa0';
+      const dashY = groundY + R * 0.09;
+      for (let dx = 0; dx < W; dx += 18) ctx.fillRect(dx, Math.floor(dashY), 8, 1);
+
+      // Crescent moon (upper-right quadrant)
+      const mX = CX + R * 0.48, mY = CY - R * 0.58, mR = R * 0.068;
+      ctx.fillStyle = '#dad4c8';
+      for (let py = -Math.ceil(mR); py <= Math.ceil(mR); py++) {
+        for (let px = -Math.ceil(mR); px <= Math.ceil(mR); px++) {
+          if (px*px + py*py > mR*mR) continue;
+          const ox = mR*0.42, oy = -mR*0.08;
+          if ((px-ox)*(px-ox)+(py-oy)*(py-oy) < (mR*0.80)*(mR*0.80)) continue;
+          ctx.fillRect(Math.floor(mX+px), Math.floor(mY+py), 1, 1);
+        }
+      }
+
+      // Child's-drawing star grid — deterministic dots and plus-signs
+      ctx.fillStyle = '#f0ece4';
+      const sDX = R * 0.115, sDY = R * 0.092;
+      let sRow = 0;
+      for (let sy = CY - R * 0.88; sy < groundY - R * 0.15; sy += sDY, sRow++) {
+        let sCol = 0;
+        for (let sx = CX - R * 0.92; sx < CX + R * 0.92; sx += sDX, sCol++) {
+          const k = ((sCol + sRow * 3) % 6 + 6) % 6;
+          const px = Math.floor(sx), py = Math.floor(sy);
+          if (k === 0) {
+            ctx.fillRect(px-1, py, 3, 1); ctx.fillRect(px, py-1, 1, 3); // big +
+          } else if (k === 1 || k === 3) {
+            ctx.fillRect(px-1, py, 3, 1); ctx.fillRect(px, py-1, 1, 3); // small +
+          } else {
+            ctx.fillRect(px, py, 1, 1); // dot
+          }
+        }
+      }
 
     } else {
       /* Generic tinted atmosphere for other experiences */
@@ -544,18 +553,130 @@ const experiences = [
     ctx.restore();
   }
 
+  /* ─── Character dispatcher ─────────────────────────────────────────── */
+  function drawExpCharacter(exp, alpha, ts) {
+    if (!exp?.hasCharacter) return;
+    if (exp.id === 'lailas-descent')    drawLaila(alpha, ts);
+    else if (exp.id === 'drive-that-truck') drawTruckScene(alpha, ts);
+  }
+
+  /* ─── Truck + Noam sprite ───────────────────────────────────────────── */
+  function drawTruckScene(alpha, ts) {
+    if (alpha <= 0.01) return;
+
+    const s    = R / 58;                        // 1 game unit = R/58 CSS px
+    const bobY = Math.sin(ts * 0.0008) * 3;    // gentle vertical float
+    const groundY = CY + R * 0.40;             // matches drawTruckBg groundY
+
+    // Truck top-left in orb space — centered slightly left like the game
+    const tx = CX - 32 * s;
+    const ty = groundY - 28 * s + bobY;
+
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.translate(tx, ty);
+    ctx.scale(s, s);
+    // From here: game units relative to (0,0) = truck top-left. TRUCK_H=28.
+
+    // ── CHIMNEY ──
+    ctx.fillStyle = '#3a2418'; ctx.fillRect(9, -7, 3, 8);
+    ctx.fillStyle = '#1a1828'; ctx.fillRect(8, -8, 5, 1);
+    // static smoke — 3 puffs
+    ctx.fillStyle = '#7a6a90';
+    ctx.fillRect(7, -9, 5, 2);   ctx.fillRect(8,  -10, 3, 1);
+    ctx.fillRect(4, -11, 6, 2);  ctx.fillRect(5,  -12, 4, 1);
+    ctx.fillRect(2, -13, 7, 2);  ctx.fillRect(3,  -14, 5, 1);
+    ctx.fillStyle = '#9c8cb0';
+    ctx.fillRect(8, -9, 1, 1);   ctx.fillRect(5,  -11, 1, 1);
+
+    // ── BODY (lavender silhouette) ──
+    ctx.fillStyle = '#8a86a4';
+    ctx.fillRect(1, 2, 36, 21); ctx.fillRect(37, 8, 21, 15); ctx.fillRect(50, 13, 8, 10);
+    ctx.fillStyle = '#a8a4c0'; // top highlights
+    ctx.fillRect(2, 2, 34, 1); ctx.fillRect(38, 9, 11, 1);
+    ctx.fillStyle = '#5a566a'; // bottom shadow
+    ctx.fillRect(1, 20, 36, 3); ctx.fillRect(37, 20, 21, 3);
+
+    // ── CAGE INTERIOR + BARS ──
+    ctx.fillStyle = '#1c1a2e'; ctx.fillRect(3, 5, 32, 16);
+    ctx.fillStyle = '#0a0814';
+    for (let i = 0; i < 6; i++) ctx.fillRect(4 + i*6, 5, 1, 16);
+    ctx.fillRect(3, 5, 32, 1); ctx.fillRect(3, 20, 32, 1);
+
+    // ── COW EYES (all 5, full health) ──
+    const cs = [{x:5,y:8},{x:14,y:8},{x:23,y:8},{x:9,y:15},{x:19,y:15}];
+    cs.forEach(sl => {
+      ctx.fillStyle = '#e8e0d4';
+      ctx.fillRect(sl.x, sl.y, 2, 2); ctx.fillRect(sl.x+3, sl.y, 2, 2);
+      ctx.fillStyle = '#0a0814';
+      ctx.fillRect(sl.x+1, sl.y+1, 1, 1); ctx.fillRect(sl.x+4, sl.y+1, 1, 1);
+    });
+
+    // ── CAB DETAILS ──
+    ctx.fillStyle = '#1c1a2e'; ctx.fillRect(39, 10, 9, 6); // window void
+    ctx.fillStyle = '#1a1828';
+    ctx.fillRect(39, 9, 9, 1); ctx.fillRect(39, 16, 10, 1); // window frame
+    ctx.fillStyle = '#5a566a'; ctx.fillRect(37, 8, 1, 15);  // cab back edge
+    ctx.fillStyle = '#f5d8a0'; ctx.fillRect(56, 18, 2, 2);  // headlight
+
+    // ── CHASSIS + WHEEL ARCHES ──
+    ctx.fillStyle = '#1a1828';
+    ctx.fillRect(0, 23, 58, 1);
+    ctx.fillRect(5, 22, 8, 2); ctx.fillRect(19, 22, 8, 2); ctx.fillRect(44, 22, 9, 2);
+
+    // ── NOAM IN CAB — drawNoamHead(40, 4) ──
+    // Hair tuft (3 prongs above cab roof)
+    ctx.fillStyle = '#e07840';
+    ctx.fillRect(42, 4, 1, 1); ctx.fillRect(44, 3, 1, 1);
+    ctx.fillRect(44, 4, 1, 1); ctx.fillRect(46, 4, 1, 1);
+    ctx.fillRect(41, 5, 8, 2);
+    ctx.fillStyle = '#a04820'; ctx.fillRect(41, 7, 8, 1);
+    // Face
+    ctx.fillStyle = '#eab68a';
+    ctx.fillRect(41, 8, 8, 8); ctx.fillRect(40, 9, 1, 6); ctx.fillRect(49, 9, 1, 6);
+    ctx.fillRect(42, 16, 6, 1);
+    ctx.fillStyle = '#b88068';
+    ctx.fillRect(48, 9, 1, 7); ctx.fillRect(42, 15, 6, 1);
+    // Eyes
+    ctx.fillStyle = '#f8f4e8';
+    ctx.fillRect(41, 9, 3, 3); ctx.fillRect(46, 9, 3, 3);
+    ctx.fillStyle = '#0a0612';
+    ctx.fillRect(42, 10, 1, 1); ctx.fillRect(47, 10, 1, 1);
+    // Eye rims
+    ctx.fillRect(41,9,1,1); ctx.fillRect(43,9,1,1); ctx.fillRect(41,11,1,1); ctx.fillRect(43,11,1,1);
+    ctx.fillRect(46,9,1,1); ctx.fillRect(48,9,1,1); ctx.fillRect(46,11,1,1); ctx.fillRect(48,11,1,1);
+    // Mouth + tongue
+    ctx.fillStyle = '#7a2018'; ctx.fillRect(43, 13, 4, 3);
+    ctx.fillStyle = '#e05858'; ctx.fillRect(44, 14, 2, 1);
+
+    // ── WHEELS ──
+    [[9,26],[23,26],[49,26]].forEach(([cx,cy]) => {
+      ctx.fillStyle = '#0a0814';
+      ctx.fillRect(cx-3, cy-3, 7, 6);
+      ctx.fillRect(cx-4, cy-2, 1, 4); ctx.fillRect(cx+4, cy-2, 1, 4);
+      ctx.fillRect(cx-2, cy-4, 5, 1); ctx.fillRect(cx-2, cy+3, 5, 1);
+      ctx.fillStyle = '#5a566a'; ctx.fillRect(cx, cy-1, 2, 2); // hub
+    });
+
+    ctx.restore();
+  }
+
   /* ─── DOM show/hide ────────────────────────────────────────────────── */
   function showReveal(exp) {
     const rc = `rgb(${exp.swirlR},${exp.swirlG},${exp.swirlB})`;
     revPanel.style.setProperty('--reveal-color', rc);
     revEye.textContent   = exp.eyebrow;
     revTitle.textContent = exp.title;
+    // Shrink font until title fits on one line
+    revTitle.style.fontSize = '2.4rem';
+    while (revTitle.scrollWidth > revTitle.offsetWidth && parseFloat(revTitle.style.fontSize) > 0.5) {
+      revTitle.style.fontSize = (parseFloat(revTitle.style.fontSize) - 0.05) + 'rem';
+    }
 
     if (exp.url) {
-      btnEnter.href = exp.url;
-      btnEnter.removeAttribute('aria-hidden');
+      btnReshuffle.removeAttribute('aria-hidden');
     } else {
-      btnEnter.setAttribute('aria-hidden', 'true');
+      btnReshuffle.setAttribute('aria-hidden', 'true');
     }
 
     // Aurora rim shifts to experience colour — still diffuse, no hard outline
@@ -578,15 +699,17 @@ const experiences = [
     state      = 'idle';
     revAlpha   = 0;
     bgAlpha    = 0;
+    shineAlpha = 0;
     currentExp = null;
     swirlParts = [];
-    rim.style.boxShadow = '';   // revert to CSS animation
+    rim.style.boxShadow = '';
     revPanel.setAttribute('aria-hidden', 'true');
+    btnReshuffle.setAttribute('aria-hidden', 'true');
   }
 
   /* ─── Press handler ────────────────────────────────────────────────── */
   function handlePress() {
-    if (state === 'swirling') return;
+    if (state === 'swirling' || state === 'shining') return;
 
     if (state === 'idle') {
       currentExp = pickExp(null);
@@ -597,13 +720,28 @@ const experiences = [
       state = 'swirling';
 
     } else if (state === 'revealed') {
-      pendingExp = pickExp(currentExp);
-      spawnSwirl('outward', [currentExp.swirlR, currentExp.swirlG, currentExp.swirlB], 70);
-      swirlDir = 'outward'; swirlDur = 500;
-      swirlStart = performance.now();
-      state = 'swirling';
-      revPanel.setAttribute('aria-hidden', 'true');
+      if (currentExp.url) {
+        // Playable game — shine then launch
+        state = 'shining';
+        shineStart = performance.now();
+      } else {
+        // Not playable — reshuffle
+        doReshuffle();
+      }
     }
+  }
+
+  function doReshuffle() {
+    if (state !== 'revealed') return;
+    clearTimeout(secretTimer);
+    pendingExp = pickExp(currentExp);
+    spawnSwirl('outward', [currentExp.swirlR, currentExp.swirlG, currentExp.swirlB], 70);
+    swirlDir = 'outward'; swirlDur = 500;
+    swirlStart = performance.now();
+    state = 'swirling';
+    revPanel.setAttribute('aria-hidden', 'true');
+    btnReshuffle.setAttribute('aria-hidden', 'true');
+    btnReshuffle.setAttribute('aria-hidden', 'true');
   }
 
   function pickExp(exclude) {
@@ -649,7 +787,7 @@ const experiences = [
       if (swirlDir === 'inward') {
         if (elapsed > swirlDur * 0.62 && currentExp?.hasCharacter) {
           revAlpha = Math.min((elapsed - swirlDur*0.62) / (swirlDur*0.45), 1);
-          drawLaila(revAlpha, ts);
+          drawExpCharacter(currentExp, revAlpha, ts);
         }
         if (prog >= 1) {
           state = 'revealed'; revAlpha = 1; swirlParts = [];
@@ -657,7 +795,7 @@ const experiences = [
         }
       } else {
         revAlpha = Math.max(1 - elapsed / (swirlDur * 0.65), 0);
-        if (currentExp?.hasCharacter) drawLaila(revAlpha, ts);
+        drawExpCharacter(currentExp, revAlpha, ts);
         if (prog >= 1) {
           currentExp = pendingExp;
           spawnSwirl('inward', [currentExp.swirlR, currentExp.swirlG, currentExp.swirlB]);
@@ -666,8 +804,46 @@ const experiences = [
       }
     }
 
+    if (state === 'shining') {
+      const elapsed = ts - shineStart;
+      shineAlpha = Math.min(Math.pow(elapsed / shineDur, 0.65), 1);
+
+      // Draw experience background at full opacity
+      if (currentExp) drawExpBg(currentExp, 1, ts);
+
+      // Character as dark silhouette — brightness filter dims to near-black
+      if (currentExp?.hasCharacter) {
+        ctx.save();
+        try {
+          const br  = (1 - shineAlpha * 0.98).toFixed(3);
+          const sat = Math.max(0, 1 - shineAlpha * 1.6).toFixed(2);
+          ctx.filter = `brightness(${br}) saturate(${sat}) contrast(1.4)`;
+        } catch(e) {}
+        drawExpCharacter(currentExp, 1, ts);
+        ctx.restore();
+      }
+
+      // Bright radial flash — warm white/gold from center
+      const flash = ctx.createRadialGradient(CX, CY, 0, CX, CY, R);
+      flash.addColorStop(0,    `rgba(255,248,220,${shineAlpha})`);
+      flash.addColorStop(0.45, `rgba(255,230,140,${shineAlpha * 0.88})`);
+      flash.addColorStop(0.8,  `rgba(255,200,80,${shineAlpha * 0.45})`);
+      flash.addColorStop(1,    `rgba(255,170,40,${shineAlpha * 0.08})`);
+      ctx.fillStyle = flash;
+      ctx.fillRect(0, 0, W, H);
+
+      // Rim blazes to warm white
+      rim.style.boxShadow = `
+        0 0 90px 40px rgba(255,240,180,${shineAlpha * 0.75}),
+        0 0 160px 70px rgba(255,210,100,${shineAlpha * 0.40}),
+        0 0 220px 90px rgba(255,180,50,${shineAlpha * 0.15})
+      `;
+
+      if (elapsed >= shineDur) window.location.href = currentExp.url;
+    }
+
     if (state === 'revealed') {
-      if (currentExp?.hasCharacter) drawLaila(revAlpha, ts);
+      drawExpCharacter(currentExp, revAlpha, ts);
       // Ambient glitter shimmer in revealed state
       if (Math.random() < 0.018) {
         const [sr, sg, sb] = [currentExp.swirlR, currentExp.swirlG, currentExp.swirlB];
@@ -692,6 +868,7 @@ const experiences = [
   wrap.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePress(); }
   });
+  btnReshuffle.addEventListener('click', doReshuffle);
   document.addEventListener('astro:before-swap', () => cancelAnimationFrame(rafId));
 })();
 </script>
