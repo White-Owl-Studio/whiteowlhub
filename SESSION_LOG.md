@@ -770,3 +770,30 @@ When orb is pressed on a playable game:
 ### Next session
 - Same as above (UI/design review, tarot cards, R2 uploads, curation decisions)
 - Optional: strip unused Cormorant Garamond `@import`
+
+---
+
+## Session 15 — 2026-06-20
+
+**Goal:** Rebrand the shop page to *White Owl's Witchy Shop of Stuff* and replace the placeholder catalog with real, live listings linking out to Etsy/Gumroad.
+
+### What was done
+
+- **Rebrand:** nav label `Our Shop` → `Witchy Shop`; homepage tarot card IV → `Witchy Shop`; page header → "The Witchy Shop of Stuff" with approved studio-overflow copy; new page `<title>`, ledger footer, meta description. Section accent stays teal `--accent-shop`.
+- **New data file `src/data/shop.ts`** — typed `Product[]`, one object per listing (name, category, detail, voice-guide `oneLiner`, price, platform, url, `images[]`, sigil). Adding a listing = append one object. Mirrors the experiences-page data pattern.
+- **`shop.astro` rewritten** to map over `shop.ts`. Whole card is an `<a target="_blank">` to the platform (no native checkout — "commerce on the site later"). Dropped the film-filter tabs (overkill for 6 curated items).
+- **6 curated listings** (Michael's picks): Saar Mug (Etsy 4515040912), Reaper Mug (4520161458), Primal Death Mandala Woven Blanket (4515022629), Primal Death Pajama Pants (4515591449), Reaper Tote (4520161257), Gumroad Art Collection Vol.1 (`/l/lcbcxm`). All verified live via Printify API (POD products sync to Etsy).
+- **Imagery:** 3 photos per product. Pulled real Printify mockup angles from the Printify API (token in `witchy-shop/pipeline/.env`); blanket leads with the on-couch `context` mockup. Reaper mug/tote lacked enough mockups → composited the raw Reaper artwork (`witchy-shop/art-library/raw/illustrations/reaper.png`) on a dark ground via PIL. Gumroad pack = cover + 2 gallery art pieces scraped from the product page. All WebP-converted (`npm run convert-webp`; note: `update-webp-paths` does NOT scan `shop.ts`, so `.webp` paths were set manually).
+- **Interactions:** (1) marquee scroll speed eases 1→0.1 by cursor's vertical distance from a picture's middle (Web Animations `playbackRate`, hover on `.preview-illustration` only); (2) card cross-fade gallery cycles the 3 photos ONLY while hovering the image, resets to primary on leave; (3) marquee caption legibility fixed by removing the band-wide bottom gradient (it sat above the transform-stacking-context track) and replacing it with a per-image bottom fade. Respects `prefers-reduced-motion`.
+- Build passes, verified in browser (no console errors). **Committed `afd109a` and pushed to `main`** → Cloudflare auto-deploy to whiteowlhub.com.
+
+### Open follow-up
+- **`public/games/lailas-descent.html` has large uncommitted changes** (+1172/−305: responsive canvas height + gameplay tuning) from a prior session — NOT committed this session (unrelated to shop). Offered to commit/push separately; Michael ended session before deciding. **Decide next session so it isn't lost.**
+- `.astro/settings.json` has a trivial auto-bumped timestamp — ignore.
+- GitHub MCP token in `~/.claude/settings.json` is stale (401 on `get_me`); the git remote's embedded token still works for push. Refresh the MCP token when convenient.
+- Gumroad card art (`art-collection-vol1-2`) is fine; could swap for a cleaner square cover if one becomes available.
+
+### Next session
+- Decide on the uncommitted Laila's Descent game changes (commit or discard)
+- When more listings go live, append to `src/data/shop.ts` (+ drop images in `public/shop/`, run `convert-webp`, set `.webp` paths)
+- Same standing items (UI/design review, tarot cards, R2 uploads, curation decisions)
