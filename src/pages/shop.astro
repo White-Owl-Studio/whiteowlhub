@@ -1,90 +1,14 @@
 ---
 import Base from '../layouts/Base.astro';
-
-const catalog = [
-  {
-    id: 1, category: 'Print', slug: 'wall-haunting',
-    film: 'film-i', filmLabel: 'Film I — The Owl\'s Descent',
-    name: "The Owl's Wall Haunting",
-    detail: '18 × 24" giclée — edition of 50',
-    price: 'from €35',
-    blurb: "A full-colour print from Film I. Ships flat. Arrives slightly damp. We are not responsible for what it does after 3am.",
-    sigil: 'frame',
-  },
-  {
-    id: 2, category: 'Merch Puppet', slug: 'cloth-companion',
-    film: 'film-ii', filmLabel: 'Film II — The One Who Drives the Truck',
-    name: "The Cloth Companion",
-    detail: 'Handmade puppet — 28 cm — limited run',
-    price: 'from €90',
-    blurb: "A character from Film II, made in cloth and wire. Do not leave face-down. Each one is slightly different. They prefer it that way.",
-    sigil: 'puppet',
-  },
-  {
-    id: 3, category: 'Digital Pack', slug: 'ghost-archive',
-    film: 'studio', filmLabel: 'White Owl Studio',
-    name: "The Ghost Archive Vol. I",
-    detail: '240+ pages — concept art, storyboards & animatics — digital',
-    price: 'from €18',
-    blurb: "From the studio vault. Downloadable. Cannot be undownloaded. Contents may settle during transit between dimensions.",
-    sigil: 'spiral',
-  },
-  {
-    id: 4, category: 'Art Book', slug: 'studio-grimoire',
-    film: 'studio', filmLabel: 'White Owl Studio',
-    name: "The Studio Grimoire",
-    detail: '192 pp hard cover — first printing only',
-    price: 'from €55',
-    blurb: "A printed record of how the work is made. Heavy. Smells faintly of ink and something older. Do not read aloud in unfamiliar rooms.",
-    sigil: 'book',
-  },
-  {
-    id: 5, category: 'Print', slug: 'six-films',
-    film: 'film-ii', filmLabel: 'Film II — The One Who Drives the Truck',
-    name: "Six Films, One Poster",
-    detail: '24 × 36" illustrated sheet — edition of 100',
-    price: 'from €40',
-    blurb: "All six films, one image. Film II takes centre stage. Each character is aware of the others. Frame at your own discretion.",
-    sigil: 'frame',
-  },
-  {
-    id: 6, category: 'Merch Puppet', slug: 'small-familiar',
-    film: 'film-i', filmLabel: 'Film I — The Owl\'s Descent',
-    name: "Small Familiar (Assorted)",
-    detail: 'Soft puppet — 16 cm — assorted character, limited run',
-    price: 'from €45',
-    blurb: "Arrives in the shape of someone from Film I. We cannot say which one. Suitable for ages 8 and up, or those who have made peace with uncertainty.",
-    sigil: 'puppet',
-  },
-  {
-    id: 7, category: 'Digital Pack', slug: 'wallpapers-beyond',
-    film: 'studio', filmLabel: 'White Owl Studio',
-    name: "Wallpapers from the Beyond",
-    detail: '40 desktop + mobile wallpapers — digital download',
-    price: 'from €8',
-    blurb: "Forty wallpapers from film frames and concept art. They own them now. You are simply the host device.",
-    sigil: 'spiral',
-  },
-  {
-    id: 8, category: 'Art Book', slug: 'bound-descent',
-    film: 'film-i', filmLabel: 'Film I — The Owl\'s Descent',
-    name: "The Bound Descent",
-    detail: 'Visual development of Film I — 240 pp hard cover — edition of 200',
-    price: 'from €70',
-    blurb: "The complete visual world of Film I, pressed between hard covers. Handle with care. It has been waiting.",
-    sigil: 'book',
-  },
-];
+import { products } from '../data/shop';
 
 /* Duplicate for seamless scroll loop */
-const previewItems = [...catalog, ...catalog];
+const previewItems = [...products, ...products];
 
-const filters = [
-  { key: 'all',     label: 'All' },
-  { key: 'film-i',  label: 'The Owl\'s Descent' },
-  { key: 'film-ii', label: 'The One Who Drives the Truck' },
-  { key: 'studio',  label: 'Studio' },
-];
+const platformLabel: Record<string, string> = {
+  etsy: 'Etsy',
+  gumroad: 'Gumroad',
+};
 
 const sigils: Record<string, string> = {
   frame: `<svg viewBox="0 0 80 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -137,12 +61,12 @@ const sigils: Record<string, string> = {
 };
 ---
 
-<Base title="Our Shop" description="Goods from White Owl Studio — prints, puppets, digital packs, and art books. Almost ready.">
+<Base title="Witchy Shop of Stuff" description="White Owl's Witchy Shop of Stuff — prints, mugs, blankets, and digital art from the studio floor. Everything here came from a story.">
 
   <!-- ══════════════════════════════════ TITLE PAGE ══ -->
   <section class="shop-header">
     <div class="shop-header-inner">
-      <p class="eyebrow">Our Shop</p>
+      <p class="eyebrow">White Owl Studio</p>
 
       <div class="header-rule">
         <div class="rule-line"></div>
@@ -156,11 +80,11 @@ const sigils: Record<string, string> = {
         <div class="rule-line"></div>
       </div>
 
-      <h1 class="shop-title">The Emporium<br/>of Strange Goods</h1>
+      <h1 class="shop-title">The Witchy Shop<br/>of Stuff</h1>
       <p class="shop-subtitle">
-        A catalog of objects being prepared for release from White Owl Studio.<br/>
-        Some items are more ready than others.<br/>
-        Some are aware of being listed.
+        Where the work overflows. Textures filmed at dusk,<br/>
+        characters drawn at 3am, frames that asked to stay.<br/>
+        Everything here came from a story. Take what you need.
       </p>
     </div>
   </section>
@@ -171,55 +95,56 @@ const sigils: Record<string, string> = {
       {previewItems.map(item => (
         <div class="preview-card">
           <div class="preview-illustration">
-            <div class="preview-sigil" set:html={sigils[item.sigil]} />
+            <img src={item.images[0]} alt="" class="preview-img" loading="lazy" decoding="async" />
             <div class="preview-corner preview-corner--tl"></div>
             <div class="preview-corner preview-corner--br"></div>
           </div>
           <p class="preview-label">{item.name}</p>
-          <p class="preview-franchise">{item.filmLabel}</p>
+          <p class="preview-franchise">{item.category}</p>
         </div>
       ))}
     </div>
-    <!-- Gradient fade at bottom pulling eye downward -->
-    <div class="preview-fade"></div>
     <div class="preview-scroll-hint">↓</div>
   </div>
 
-  <!-- ══════════════════════════════════ FILTER TABS ══ -->
+  <!-- ══════════════════════════════════ CATALOG ══ -->
   <section class="shop-catalog">
-
-    <div class="filter-bar" role="tablist" aria-label="Filter by film">
-      {filters.map(f => (
-        <button
-          class={`filter-tab${f.key === 'all' ? ' filter-tab--active' : ''}`}
-          data-filter={f.key}
-          role="tab"
-          aria-selected={f.key === 'all' ? 'true' : 'false'}
-        >
-          {f.label}
-        </button>
-      ))}
-    </div>
 
     <!-- ══════════════════════════════ CATALOG GRID ══ -->
     <div class="catalog-grid" id="catalog-grid">
-      {catalog.map((item, i) => (
-        <article
+      {products.map((item, i) => (
+        <a
           class="catalog-entry"
-          data-film={item.film}
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
           style={`--stagger: ${i * 60}ms`}
         >
-          <!-- Film franchise tag -->
+          <!-- Platform tag -->
           <div class="entry-franchise">
             <span class="franchise-dot" aria-hidden="true"></span>
-            {item.filmLabel}
+            Available on {platformLabel[item.platform]}
           </div>
 
-          <!-- Illustration placeholder -->
-          <div class="entry-illustration">
-            <!-- PLACEHOLDER: replace with <img src={`/shop/${item.slug}.jpg`} alt={item.name} class="entry-img" /> -->
+          <!-- Real product photos, framed — cross-fade gallery -->
+          <div class="entry-illustration" data-gallery>
             <div class="entry-sigil" set:html={sigils[item.sigil]} />
-            <code class="entry-img-path">{`/shop/${item.slug}.jpg`}</code>
+            {item.images.map((src, n) => (
+              <img
+                src={src}
+                alt={n === 0 ? item.name : `${item.name} — view ${n + 1}`}
+                class:list={['entry-img', { 'is-active': n === 0 }]}
+                loading="lazy"
+                decoding="async"
+              />
+            ))}
+            {item.images.length > 1 && (
+              <div class="gallery-dots" aria-hidden="true">
+                {item.images.map((_, n) => (
+                  <span class:list={['gallery-dot', { 'is-active': n === 0 }]} />
+                ))}
+              </div>
+            )}
           </div>
 
           <!-- Body -->
@@ -227,23 +152,20 @@ const sigils: Record<string, string> = {
             <p class="entry-category">{item.category}</p>
             <h2 class="entry-name">{item.name}</h2>
             <p class="entry-detail">{item.detail}</p>
-            <p class="entry-blurb">{item.blurb}</p>
+            <p class="entry-blurb">{item.oneLiner}</p>
 
             <div class="entry-footer">
               <span class="entry-price">{item.price}</span>
               <div class="entry-status">
-                <span class="status-dot" aria-hidden="true"></span>
-                <span class="status-text">Not yet conjured</span>
+                <span class="status-text">View on {platformLabel[item.platform]}</span>
+                <span class="status-arrow" aria-hidden="true">→</span>
               </div>
             </div>
           </div>
 
-        </article>
+        </a>
       ))}
     </div>
-
-    <!-- Empty state when filter has no results -->
-    <p class="filter-empty" id="filter-empty" aria-live="polite"></p>
 
   </section>
 
@@ -256,10 +178,10 @@ const sigils: Record<string, string> = {
         <polygon points="60,4 65,10 60,16 55,10" stroke="currentColor" stroke-width="0.6" fill="none" opacity="0.5"/>
         <circle cx="60" cy="10" r="1.5" fill="currentColor" opacity="0.5"/>
       </svg>
-      <p class="ledger-line">This market opens when the work is done.</p>
+      <p class="ledger-line">Every piece comes with one line of story.</p>
       <p class="ledger-sub">
-        All goods will be hand-selected or hand-made.<br/>
-        Limited runs. No restocks. No returns from beyond.
+        Made or chosen by hand, out of the Negev desert.<br/>
+        More arrives as the films do. Take what you need.
       </p>
     </div>
   </section>
@@ -336,11 +258,6 @@ const sigils: Record<string, string> = {
     animation: scroll-preview 28s linear infinite;
     width: max-content;
   }
-  /* Pause on hover */
-  .preview-band:hover .preview-track {
-    animation-play-state: paused;
-  }
-
   @keyframes scroll-preview {
     from { transform: translateX(0); }
     to   { transform: translateX(-50%); }
@@ -368,6 +285,24 @@ const sigils: Record<string, string> = {
     justify-content: center;
     color: var(--accent-shop);
     flex-shrink: 0;
+    overflow: hidden;
+  }
+  /* Subtle fade on the image bottom only — never reaches the caption strip */
+  .preview-illustration::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 40%;
+    background: linear-gradient(to bottom, transparent, rgba(5, 4, 9, 0.5));
+    pointer-events: none;
+    z-index: 1;
+  }
+  .preview-img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
   }
   .preview-corner {
     position: absolute;
@@ -375,47 +310,35 @@ const sigils: Record<string, string> = {
     height: 8px;
     border-color: rgba(66,224,176,0.3);
     border-style: solid;
+    z-index: 2;
   }
   .preview-corner--tl { top: 5px; left: 5px;   border-width: 1px 0 0 1px; }
   .preview-corner--br { bottom: 5px; right: 5px; border-width: 0 1px 1px 0; }
 
-  .preview-sigil {
-    width: 44px;
-    height: 44px;
-    color: var(--accent-shop);
-    opacity: 0.5;
-  }
-  .preview-sigil svg { width: 100%; height: 100%; display: block; }
-
   .preview-label {
+    position: relative;
+    z-index: 3; /* sit above the bottom fade gradient (z-index 2) */
     font-family: 'Cinzel', serif;
-    font-size: 0.64rem;
+    font-size: 0.66rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--text);
     padding: 0.5rem 0.6rem 0.2rem;
     line-height: 1.3;
+    text-shadow: 0 1px 8px var(--bg), 0 0 2px var(--bg);
   }
   .preview-franchise {
+    position: relative;
+    z-index: 3; /* sit above the bottom fade gradient (z-index 2) */
     font-family: 'Crimson Pro', serif;
     font-style: italic;
-    font-size: 0.68rem;
+    font-size: 0.72rem;
     color: var(--accent-shop);
-    opacity: 0.55;
+    opacity: 0.95;
     padding: 0 0.6rem 0.5rem;
+    text-shadow: 0 1px 8px var(--bg), 0 0 2px var(--bg);
   }
 
-  /* Gradient bottom fade — draws eye downward */
-  .preview-fade {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 70%;
-    background: linear-gradient(to bottom, transparent 0%, var(--bg) 100%);
-    pointer-events: none;
-    z-index: 2;
-  }
   /* Left + right edge fades */
   .preview-band::before,
   .preview-band::after {
@@ -454,43 +377,11 @@ const sigils: Record<string, string> = {
     50%       { transform: translateX(-50%) translateY(4px); opacity: 0.7; }
   }
 
-  /* ════════════════════════════════ FILTER BAR ══ */
+  /* ════════════════════════════════ CATALOG ══ */
   .shop-catalog {
     padding: 0 var(--section-px) var(--section-py);
     max-width: 1200px;
     margin: 0 auto;
-  }
-
-  .filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: clamp(24px, 3vw, 40px);
-    padding-bottom: clamp(20px, 2.5vw, 32px);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .filter-tab {
-    font-family: 'Cinzel', serif;
-    font-size: 0.66rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    background: none;
-    border: 1px solid var(--border);
-    padding: 0.45rem 1rem;
-    cursor: pointer;
-    transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
-    white-space: nowrap;
-  }
-  .filter-tab:hover {
-    color: var(--accent-shop);
-    border-color: rgba(66,224,176,0.3);
-  }
-  .filter-tab--active {
-    color: var(--accent-shop);
-    border-color: rgba(66,224,176,0.4);
-    background: rgba(66,224,176,0.06);
   }
 
   /* ════════════════════════════════ CATALOG GRID ══ */
@@ -509,6 +400,8 @@ const sigils: Record<string, string> = {
     position: relative;
     overflow: hidden;
     transition: background 0.3s ease;
+    text-decoration: none;
+    color: inherit;
 
     /* Entrance animation */
     animation: entry-appear 0.5s ease both;
@@ -530,13 +423,12 @@ const sigils: Record<string, string> = {
   }
   .catalog-entry:hover { background: var(--surface); }
   .catalog-entry:hover::before { border-color: rgba(66,224,176,0.22); }
-
-  /* Filtered-out state */
-  .catalog-entry.is-hidden {
-    display: none;
+  .catalog-entry:focus-visible {
+    outline: 2px solid var(--accent-shop);
+    outline-offset: -2px;
   }
 
-  /* ── Franchise tag ── */
+  /* ── Platform tag ── */
   .entry-franchise {
     display: flex;
     align-items: center;
@@ -583,19 +475,20 @@ const sigils: Record<string, string> = {
     border-color: rgba(66,224,176,0.35);
     border-style: solid;
     pointer-events: none;
+    z-index: 2;
   }
   .entry-illustration::before { top: 8px;    left: 8px;   border-width: 1px 0 0 1px; }
   .entry-illustration::after  { bottom: 8px; right: 8px;  border-width: 0 1px 1px 0; }
 
+  /* Sigil sits underneath as a fallback while the photo loads */
   .entry-sigil {
+    position: absolute;
     width: clamp(48px, 8vw, 72px);
     height: clamp(48px, 8vw, 72px);
     color: var(--accent-shop);
-    opacity: 0.6;
-    transition: opacity 0.35s ease;
+    opacity: 0.45;
     flex-shrink: 0;
   }
-  .catalog-entry:hover .entry-sigil { opacity: 0.9; }
   .entry-sigil svg { width: 100%; height: 100%; display: block; }
 
   .entry-img {
@@ -604,16 +497,36 @@ const sigils: Record<string, string> = {
     width: 100%; height: 100%;
     object-fit: cover;
     display: block;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.8s ease, transform 0.5s ease;
   }
-  .entry-img-path {
-    font-size: 0.55rem;
-    color: rgba(66,224,176,0.15);
-    text-align: center;
-    word-break: break-all;
+  .entry-img.is-active { opacity: 1; }
+  .catalog-entry:hover .entry-img.is-active { transform: scale(1.04); }
+
+  /* ── Gallery dot indicators ── */
+  .gallery-dots {
     position: absolute;
-    bottom: 0.5rem;
-    left: 0.5rem;
-    right: 0.5rem;
+    bottom: 10px;
+    left: 0; right: 0;
+    z-index: 3;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    pointer-events: none;
+  }
+  .gallery-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--bone);
+    opacity: 0.4;
+    transition: opacity 0.4s ease, transform 0.4s ease, background 0.4s ease;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.7);
+  }
+  .gallery-dot.is-active {
+    opacity: 0.95;
+    transform: scale(1.3);
+    background: var(--accent-shop);
   }
 
   /* ── Entry body ── */
@@ -677,47 +590,22 @@ const sigils: Record<string, string> = {
     align-items: center;
     gap: 0.45rem;
   }
-  .status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent-shop);
-    flex-shrink: 0;
-    opacity: 0.7;
-    animation: conjure-pulse 2.8s ease-in-out infinite;
-  }
   .status-text {
     font-family: 'Cinzel', serif;
     font-size: 0.61rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--accent-shop);
-    opacity: 0.6;
+    opacity: 0.75;
     white-space: nowrap;
   }
-  @keyframes conjure-pulse {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50%       { opacity: 0.9; transform: scale(1.25); }
+  .status-arrow {
+    color: var(--accent-shop);
+    opacity: 0.75;
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
   }
-  .catalog-entry:nth-child(2) .status-dot { animation-delay: 0.4s; }
-  .catalog-entry:nth-child(3) .status-dot { animation-delay: 0.8s; }
-  .catalog-entry:nth-child(4) .status-dot { animation-delay: 1.2s; }
-  .catalog-entry:nth-child(5) .status-dot { animation-delay: 0.6s; }
-  .catalog-entry:nth-child(6) .status-dot { animation-delay: 1.0s; }
-  .catalog-entry:nth-child(7) .status-dot { animation-delay: 1.4s; }
-  .catalog-entry:nth-child(8) .status-dot { animation-delay: 0.2s; }
-
-  /* Empty filter state */
-  .filter-empty {
-    font-family: 'Crimson Pro', serif;
-    font-style: italic;
-    color: var(--text-muted);
-    font-size: 1rem;
-    text-align: center;
-    padding: 3rem 0;
-    display: none;
-  }
-  .filter-empty.is-visible { display: block; }
+  .catalog-entry:hover .status-arrow { transform: translateX(3px); }
 
   /* ════════════════════════════════ LEDGER ══ */
   .shop-ledger {
@@ -750,8 +638,6 @@ const sigils: Record<string, string> = {
   /* ── Mobile ── */
   @media (max-width: 600px) {
     .catalog-grid { grid-template-columns: 1fr 1fr; }
-    .filter-bar { gap: 0.35rem; }
-    .filter-tab { font-size: 0.57rem; padding: 0.4rem 0.75rem; }
   }
   @media (max-width: 400px) {
     .catalog-grid { grid-template-columns: 1fr; }
@@ -759,36 +645,46 @@ const sigils: Record<string, string> = {
 </style>
 
 <script>
-  /* ── Film filter ── */
-  const tabs    = document.querySelectorAll<HTMLButtonElement>('.filter-tab');
-  const entries = document.querySelectorAll<HTMLElement>('.catalog-entry');
-  const empty   = document.getElementById('filter-empty')!;
+  /* ── Marquee: scroll speed eases toward 0.1 as the cursor nears a picture's vertical middle ── */
+  const mAnim = document.querySelector('.preview-track')?.getAnimations?.()[0];
+  const band = document.querySelector('.preview-band');
+  if (mAnim && band) {
+    const MIN = 0.1, MAX = 1;
+    band.addEventListener('pointermove', (e) => {
+      const ill = (e.target as Element).closest?.('.preview-illustration');
+      if (!ill) return;
+      const r = ill.getBoundingClientRect();
+      const mid = r.top + r.height / 2;
+      const dist = Math.min(1, Math.abs((e as PointerEvent).clientY - mid) / (r.height / 2));
+      mAnim.playbackRate = MIN + (MAX - MIN) * dist; // middle → 0.1, top/bottom edge → 1
+    });
+    band.addEventListener('pointerout', (e) => {
+      const to = (e as PointerEvent).relatedTarget as Element | null;
+      if (!to || !to.closest?.('.preview-illustration')) mAnim.updatePlaybackRate(1);
+    });
+  }
 
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const filter = tab.dataset.filter!;
-
-      /* Update tab state */
-      tabs.forEach(t => {
-        t.classList.remove('filter-tab--active');
-        t.setAttribute('aria-selected', 'false');
-      });
-      tab.classList.add('filter-tab--active');
-      tab.setAttribute('aria-selected', 'true');
-
-      /* Show/hide entries */
-      let visible = 0;
-      entries.forEach(entry => {
-        const match = filter === 'all' || entry.dataset.film === filter;
-        entry.classList.toggle('is-hidden', !match);
-        if (match) visible++;
-      });
-
-      /* Empty state */
-      empty.classList.toggle('is-visible', visible === 0);
-      if (visible === 0) {
-        empty.textContent = 'No items found for this selection — check back when the conjuring is complete.';
-      }
+  /* ── Cards: cross-fade through the 3 photos only while the cursor is over the image ── */
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('[data-gallery]').forEach((g) => {
+    const imgs = Array.from(g.querySelectorAll<HTMLElement>('.entry-img'));
+    const dots = Array.from(g.querySelectorAll<HTMLElement>('.gallery-dot'));
+    if (imgs.length < 2) return;
+    let idx = 0;
+    let timer = 0;
+    const show = (n: number) => {
+      idx = n;
+      imgs.forEach((im, i) => im.classList.toggle('is-active', i === n));
+      dots.forEach((d, i) => d.classList.toggle('is-active', i === n));
+    };
+    g.addEventListener('pointerenter', () => {
+      if (reduce) return;
+      show((idx + 1) % imgs.length);            // advance at once for instant feedback
+      timer = window.setInterval(() => show((idx + 1) % imgs.length), 1200);
+    });
+    g.addEventListener('pointerleave', () => {
+      window.clearInterval(timer);
+      show(0);                                   // rest back on the primary photo
     });
   });
 </script>
