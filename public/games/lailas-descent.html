@@ -7,7 +7,8 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; overflow: hidden; }
     body { background: #020408; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: monospace; }
-    canvas { display: block; image-rendering: pixelated; cursor: pointer; }
+    canvas { display: block; image-rendering: pixelated; cursor: pointer;
+             height: min(94vh, calc(94vw * 780 / 560)); }
     #controls { color: #554466; font-size: 14px; margin-top: 10px; letter-spacing: 1px; flex-shrink: 0; }
   </style>
 </head>
@@ -28,8 +29,8 @@ const COL = {
 
 // ── zone constants ─────────────────────────────────────────────────────────────
 const ZONE_WAVE_COUNTS = [0, 3, 5, 5, 3];
-const ZONE_WAVE_DELAYS = [0, 180, 120, 100, 180];
-const MH_RISE=70, MH_EXPOSE=150, MH_TELL=45, MH_SLAM=22, MH_STUN=25, MH_RECEDE=60;
+const ZONE_WAVE_DELAYS = [0, 150, 100, 85, 150];
+const MH_RISE=70, MH_EXPOSE=210, MH_TELL=45, MH_SLAM=22, MH_STUN=25, MH_RECEDE=60;
 const MH_PEAK=H*0.80;
 
 // ── input ──────────────────────────────────────────────────────────────────────
@@ -39,20 +40,38 @@ addEventListener('keydown', e => {
   if ([' ','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
   if (e.key===' ' && gameState==='intro' && INTRO_PHASES[introPhase].name==='start') startGamePlay();
   if (e.key==='Enter' && (gameState==='gameover'||gameState==='victory')) {
-    if (gameState==='gameover') { runCount++; localStorage.setItem('lailaRuns', runCount); }
+    if (gameState==='victory') {
+      // True ending: the loop is broken. Feathers and falls are released.
+      runCount=0; dreamFragmentLevel=0; lailaFree=true;
+      localStorage.setItem('lailaRuns','0'); localStorage.setItem('lailaDreams','0');
+      localStorage.setItem('lailaFree','1');
+    }
     Aud.onDeath();
     introPhase=RUN_START_PHASE; introTimer=0; introPrevPhase=-1; gameState='intro';
   }
-  // ── debug shortcuts ──
+  // Skip repeat-run wake sequence straight to the start screen
+  if ((e.key===' '||e.key==='Enter') && gameState==='intro'
+      && INTRO_PHASES[introPhase].name!=='start' && introPhase>=RUN_START_PHASE) {
+    introPhase=INTRO_PHASES.length-1; introTimer=0; introPrevPhase=INTRO_PHASES.length-1;
+    Aud.introPhaseSound('start');
+    keys[' ']=false;
+    return;
+  }
+  // ── debug shortcuts (all gated behind god mode except the toggle itself) ──
   if (e.key==='`') debugMode=!debugMode; // backtick: toggle god mode
-  if (e.key==='Tab' && gameState==='playing'){e.preventDefault();// skip wave
+  if (debugMode && e.key==='Tab' && gameState==='playing'){e.preventDefault();// skip wave
     enemies=[];boss=null;waveDelay=1;}
-  if (e.key===']' && gameState==='playing') // boost projectile
+  if (debugMode && e.key===']' && gameState==='playing') // boost projectile
     projectileLevel=Math.min(projectileLevel+1,3);
-  if (e.key==='[' && gameState==='playing') // grant abilities
+  if (debugMode && e.key==='[' && gameState==='playing') // grant abilities
     {player.hasDrift=true;player.hasStillness=true;}
-  if (e.key==='\\' && gameState==='playing') // skip zone
+  if (debugMode && e.key==='\\' && gameState==='playing') // skip zone
     {if(currentZone<4){zoneTransTimer=90;}}
+  // ── pause / mute ──
+  if ((e.key==='Escape'||e.key==='p'||e.key==='P') && (gameState==='playing')) {
+    paused=!paused; Aud.setPaused(paused);
+  }
+  if (e.key==='m'||e.key==='M') Aud.toggleMute();
   // ── cutscene triggers (god mode only) ──
   if(debugMode && gameState==='playing'){
     if(e.key==='1'){cutscene.active=false;startCutscene('drowning');}
@@ -84,17 +103,119 @@ const INTRO_PHASES = [
   {name:'waking',  dur:440},{name:'why',     dur:320},{name:'start',  dur:99999},
 ];
 const RUN_START_PHASE = 5;
-const OWL_ART = ['    /\\_____/\\    ','   /  O   O  \\   ','  ( ==  ^  == )  ','   )    |    (   ','  ( (  )|(  ) )  ',' (__(__)_|(__)__) '];
-const OWL_WINGS = [
-  ['    /\\_____/\\    ','   /  O   O  \\   ','  ( ==  ^  == )  ','   )    |    (   ','  ( (  )|(  ) )  ',' (__(__)_|(__)__) '],
-  [' \\___________/  ',' \\   O   O   /   ','  ( ==  ^  == )  ','   )    |    (   ','  ( (  )|(  ) )  ',' (__(__)_|(__)__) '],
+// ── cinematic ASCII art assets — intentional full-frame designs ────────────────
+// The Grand Owl — perched, facing the viewer. Breathes via size oscillation, blinks.
+const OWL_GRAND = [
+  '   _/\\_________/\\_   ',
+  '  /               \\  ',
+  ' |    (O)   (O)    | ',
+  ' |       \\ /       | ',
+  ' |      ( v )      | ',
+  ' | \\     ___     / | ',
+  ' |( \\   /   \\   / )| ',
+  ' | \\ \\ (     ) / / | ',
+  ' |  \\ \\ \\   / / /  | ',
+  '  \\  \'--\\ | /--\'  /  ',
+  '   \\_____| |_____/   ',
+  '        _| |_        ',
+  '       (_/ \\_)       ',
 ];
-const LAILA_SIT = ['   o   ','  (^)  ','  /|\\  ',' (___)  '];
+const OWL_GRAND_EYES = 2; // line index for blink swap
+const OWL_GRAND_BLINK = ' |    (—)   (—)    | ';
+function getGrandOwl(t){
+  const blink=(t%300)<12;
+  if(!blink)return OWL_GRAND;
+  const f=OWL_GRAND.slice();f[OWL_GRAND_EYES]=OWL_GRAND_BLINK;return f;
+}
+// The Owl in flight — two wing frames
+const OWL_WINGS = [
+  ['\\  \\   _______   /  /',
+   ' \\  \\ /  O O  \\ /  / ',
+   '  \\  (    v    )  /  ',
+   '   \\ / \\_____/ \\ /   ',
+   '    (   )   (   )    ',
+   '     \\  (   )  /     ',
+   '      ) _) (_ (      '],
+  ['      _______        ',
+   '     /  O O  \\       ',
+   '   _(    v    )_     ',
+   '  / / \\_____/ \\ \\    ',
+   ' / /  )     (  \\ \\   ',
+   '/ /  ( _) (_ )  \\ \\  ',
+   '\\/    \\     /    \\/  '],
+];
+// Laila — seated meditation (per-line colors: hair / eyes / skin / dress)
+const LAILA_GRAND = [
+  '    _,,,,,_    ',
+  '  ,,,,,,,,,,,  ',
+  '  ,,       ,,  ',
+  '    o     o    ',
+  '    \\.___./    ',
+  '   /       \\   ',
+  '  |  ,   ,  |  ',
+  '  | (  |  ) |  ',
+  '   \\__/ \\__/   ',
+];
+const LAILA_GRAND_COLS = ['#ee2222','#ee2222','#ee2222','#44cc44','#f0d0a0','#f0eee8','#f0eee8','#f0eee8','#f0eee8'];
+// Laila — rising (ending ascent: arms raised, eyes closed, serene)
+const LAILA_RISE = [
+  '    _,,,,,_    ',
+  '   (,,,,,,,)   ',
+  '    ( - - )    ',
+  ' \\    | |    / ',
+  '  \\   | |   /  ',
+  '   \\__| |__/   ',
+  '      | |      ',
+  '     /   \\     ',
+  '    (_____)    ',
+];
+const LAILA_RISE_COLS = ['#ee2222','#ee2222','#f0d0a0','#f0eee8','#f0eee8','#f0eee8','#f0eee8','#f0eee8','#f0eee8'];
+const LAILA_SIT = ['   o   ','  (^)  ','  /|\\  ',' (___)  ']; // small distant figure
+// ASCII crescent moon + mountain ridge (full-frame backgrounds stay in the medium)
+const MOON_ASCII = [
+  '    ,#### ',
+  '  #####   ',
+  ' ####     ',
+  ' ###      ',
+  ' ####     ',
+  '  #####   ',
+  '    `#### ',
+];
+const MTN_ASCII = [
+  '          /\\                  /\\          ',
+  '    /\\   /  \\       /\\      /  \\   /\\    ',
+  '   /  \\ /    \\  /\\ /  \\    /    \\ /  \\   ',
+  '  /    V      \\/  V    \\  /      V    \\  ',
+  ' /                      \\/              \\ ',
+];
+
+// Per-line-colored ASCII renderer — the cinematic workhorse
+function drawAsciiC(lines,colors,cx,cy,size=13,lh=17,alpha=1,glowCol=null,glowBlur=0){
+  ctx.save();ctx.globalAlpha=alpha;ctx.font=`${size}px monospace`;ctx.textAlign='center';
+  if(glowCol)glow(glowCol,glowBlur);
+  const th=lines.length*lh;
+  lines.forEach((l,i)=>{ctx.fillStyle=(colors&&colors[Math.min(i,colors.length-1)])||'#ffffff';ctx.fillText(l,cx,cy-th/2+i*lh+lh);});
+  noGlow();ctx.restore();
+}
+// Full-frame drifting ASCII water/dust field — fills the screen with living texture
+function drawAsciiField(alpha,t,density=110,col='#3a6a8a',drift=0.35){
+  const chars=['~','≈','·','.',':','°'];
+  ctx.save();ctx.font='11px monospace';ctx.textAlign='center';
+  for(let i=0;i<density;i++){
+    const x=12+((i*97)%28)*20;
+    const y=(((i*53)%39)*20+t*drift+i*7)%(H+20)-10;
+    ctx.globalAlpha=alpha*(0.10+0.10*Math.sin(i*1.7+t*0.03));
+    ctx.fillStyle=col;
+    ctx.fillText(chars[(i+Math.floor(t/40))%chars.length],x,y);
+  }
+  ctx.restore();ctx.globalAlpha=1;
+}
 
 // ── game state ─────────────────────────────────────────────────────────────────
 let score, hi=0, waveDelay, gameState, dreamFragmentLevel=0;
+let lailaFree=false, paused=false, playerFiredThisFrame=false;
 let currentZone, zoneWave, bossSpawnTimer, frameCount, zoneTransTimer;
-let midHand=null, midHandDone=false;
+let midHand=null, midHandDone=false, z2HandSurge=0;
 let debugMode=false;
 let introPrevPhase=-1;
 let cutscene={active:false,type:'',phase:0,timer:0,lailaY:0,lailaAngle:0,chainsDone:0,shadowY:0};
@@ -113,12 +234,14 @@ function resetGameState() {
   currentZone=1; zoneWave=0; bossSpawnTimer=0; frameCount=0; zoneTransTimer=0;
   bullets=[]; eBullets=[]; enemies=[]; particles=[]; drops=[];
   boss=null; projectileLevel=0; midHand=null; midHandDone=false;
+  cutscene.active=false; cutscene.type=''; cutscene.phase=0; cutscene.timer=0;
+  paused=false;
   player={
     x:W/2, y:H-110, w:28, h:38, spd:2.2,
     hp:5, maxHp:5, iframes:0, shootCD:0, shootRate:50,
     chokeTimer:0, slowTimer:0,
     hasDrift:false, driftCD:0, driftActive:false, driftTimer:0, driftVx:0, driftVy:0,
-    hasStillness:false, stillnessActive:false, stillnessTimer:0
+    hasStillness:false, stillnessActive:false, stillnessTimer:0, stillnessCD:0
   };
 }
 
@@ -584,6 +707,17 @@ const Aud = (() => {
     setTimeout(stopAll, 250);
   }
 
+  let muted = false;
+  function setPaused(p) {
+    if (!ac) return;
+    if (p) ac.suspend(); else ac.resume();
+  }
+  function toggleMute() {
+    if (!master) return;
+    muted = !muted;
+    master.gain.setTargetAtTime(muted ? 0 : 0.5, ac.currentTime, 0.05);
+  }
+
   function setZone(z) {
     if (!ac) return;
     fadeOut(() => { [null, z1, z2, z3, z4][z]?.(); }, z === 1 ? 0.15 : 0.7);
@@ -810,25 +944,7 @@ const Aud = (() => {
       fg.gain.setValueAtTime(0,now+1.2);fg.gain.linearRampToValueAtTime(0.036,now+2.2);fg.gain.setTargetAtTime(0,now+3.5,0.9);
       fo.connect(fbf);fbf.connect(fg);fg.connect(master);fo.start(now+1.2);fo.stop(now+6);running.push(fo);
     } else if (ph===1) {
-      // Transformation — ascending shimmer arpeggio + wing whoosh
-      [196.0,246.9,293.7,369.9,440.0].forEach((f,i)=>{
-        const o=ac.createOscillator();o.type='sine';o.frequency.value=f;
-        const bf2=ac.createBiquadFilter();bf2.type='bandpass';bf2.frequency.value=f;bf2.Q.value=4;
-        const g=ac.createGain();const dt=i*0.20;
-        g.gain.setValueAtTime(0,now+dt);g.gain.linearRampToValueAtTime(0.045,now+dt+0.14);g.gain.setTargetAtTime(0,now+dt+0.45,0.32);
-        o.connect(bf2);bf2.connect(g);g.connect(master);o.start(now+dt);o.stop(now+dt+0.9);running.push(o);
-      });
-      const wf=ac.createBiquadFilter();wf.type='bandpass';wf.frequency.value=275;wf.Q.value=1.1;
-      const wg=ac.createGain();wg.gain.setValueAtTime(0,now);wg.gain.linearRampToValueAtTime(0.032,now+0.9);wg.gain.setTargetAtTime(0,now+1.4,0.55);
-      noiseSrc(wf);wf.connect(wg);wg.connect(master);
-      [146.8,174.6,220.0].forEach((f,i)=>{
-        const o=ac.createOscillator();o.type='sine';o.frequency.value=f;
-        const g=ac.createGain();
-        g.gain.setValueAtTime(0,now+0.6+i*0.25);g.gain.linearRampToValueAtTime(0.028,now+0.9+i*0.25);g.gain.setTargetAtTime(0,now+2.5,1.3);
-        o.connect(g);g.connect(master);o.start(now+0.6+i*0.25);o.stop(now+5);running.push(o);
-      });
-    } else if (ph===1) {
-      // Surface burst — thud + splash (moved from old ph3, now ph1)
+      // Surface burst — thud + splash + sky pings
       const to=ac.createOscillator();to.type='sine';
       to.frequency.setValueAtTime(88,now);to.frequency.exponentialRampToValueAtTime(24,now+0.32);
       const tg=ac.createGain();tg.gain.setValueAtTime(0.40,now);tg.gain.exponentialRampToValueAtTime(0.001,now+0.45);
@@ -851,19 +967,21 @@ const Aud = (() => {
         o.connect(g);g.connect(master);o.start(now);o.stop(now+9);running.push(o);
       });
     } else if (ph===3) {
-      // BURST — low thud + splash noise + three sky pings
-      const to=ac.createOscillator();to.type='sine';
-      to.frequency.setValueAtTime(88,now);to.frequency.exponentialRampToValueAtTime(24,now+0.32);
-      const tg=ac.createGain();tg.gain.setValueAtTime(0.40,now);tg.gain.exponentialRampToValueAtTime(0.001,now+0.45);
-      to.connect(tg);tg.connect(master);to.start(now);to.stop(now+0.5);
-      const sf=ac.createBiquadFilter();sf.type='bandpass';sf.frequency.value=540;sf.Q.value=0.9;
-      const sgg=ac.createGain();sgg.gain.setValueAtTime(0.13,now);sgg.gain.exponentialRampToValueAtTime(0.001,now+0.62);
-      noiseSrc(sf);sf.connect(sgg);sgg.connect(master);
-      [1047,1319,1568].forEach((f,i)=>{
+      // Flight to the moon — ascending melody + sustained approach chord
+      [{f:220,t:0.3},{f:277.2,t:1.5},{f:329.6,t:2.8},{f:440,t:4.2},{f:554.4,t:5.8},{f:659.3,t:7.5},{f:880,t:9.5}].forEach(n=>{
+        const o=ac.createOscillator();o.type='sine';o.frequency.value=n.f;
+        const bf=ac.createBiquadFilter();bf.type='bandpass';bf.frequency.value=n.f;bf.Q.value=3;
+        const g=ac.createGain();
+        g.gain.setValueAtTime(0,now+n.t);g.gain.linearRampToValueAtTime(0.045,now+n.t+0.25);g.gain.setTargetAtTime(0,now+n.t+0.9,0.45);
+        o.connect(bf);bf.connect(g);g.connect(master);o.start(now+n.t);o.stop(now+n.t+2.0);running.push(o);
+      });
+      // Approach chord builds in the second half — growing anticipation
+      [110,165,220].forEach((f,i)=>{
         const o=ac.createOscillator();o.type='sine';o.frequency.value=f;
         const g=ac.createGain();
-        g.gain.setValueAtTime(0,now+0.38+i*0.18);g.gain.linearRampToValueAtTime(0.038,now+0.48+i*0.18);g.gain.setTargetAtTime(0,now+0.68+i*0.18,0.36);
-        o.connect(g);g.connect(master);o.start(now+0.38+i*0.18);o.stop(now+1.2+i*0.18);running.push(o);
+        g.gain.setValueAtTime(0,now+6.0+i*0.5);g.gain.linearRampToValueAtTime(0.026,now+7.5+i*0.5);
+        g.gain.setTargetAtTime(0,now+10.5,1.4);
+        o.connect(g);g.connect(master);o.start(now+6.0+i*0.5);o.stop(now+14);running.push(o);
       });
     } else if (ph===4) {
       // Lake + mountains — A minor awe chord, staggered entry, sustains the full 4s phase
@@ -878,24 +996,7 @@ const Aud = (() => {
       const ag=ac.createGain();ag.gain.value=0.011;
       noiseSrc(af);af.connect(ag);ag.connect(master);
     } else if (ph===5) {
-      // Ascending melody — owl flying to moon (6s phase: melody + sustained approach)
-      [{f:220,t:0.3},{f:277.2,t:1.0},{f:329.6,t:1.8},{f:440,t:2.6},{f:554.4,t:3.5},{f:659.3,t:4.5},{f:880,t:5.5}].forEach(n=>{
-        const o=ac.createOscillator();o.type='sine';o.frequency.value=n.f;
-        const bf=ac.createBiquadFilter();bf.type='bandpass';bf.frequency.value=n.f;bf.Q.value=3;
-        const g=ac.createGain();
-        g.gain.setValueAtTime(0,now+n.t);g.gain.linearRampToValueAtTime(0.045,now+n.t+0.20);g.gain.setTargetAtTime(0,now+n.t+0.65,0.35);
-        o.connect(bf);bf.connect(g);g.connect(master);o.start(now+n.t);o.stop(now+n.t+1.4);running.push(o);
-      });
-      // Sustained approach chord builds in second half (3s+) — growing anticipation
-      [110,165,220].forEach((f,i)=>{
-        const o=ac.createOscillator();o.type='sine';o.frequency.value=f;
-        const g=ac.createGain();
-        g.gain.setValueAtTime(0,now+3.0+i*0.4);g.gain.linearRampToValueAtTime(0.026,now+4.0+i*0.4);
-        g.gain.setTargetAtTime(0,now+5.5,1.0);
-        o.connect(g);g.connect(master);o.start(now+3.0+i*0.4);o.stop(now+8);running.push(o);
-      });
-    } else if (ph===7) {
-      // Feather phase (8s) — deep bell, lake hum, then a second quiet note after stillness settles
+      // Feather descent — deep bell, lake hum, then a second quiet note after stillness settles
       const bo=ac.createOscillator();bo.type='sine';bo.frequency.value=220;
       const bbf=ac.createBiquadFilter();bbf.type='bandpass';bbf.frequency.value=220;bbf.Q.value=5;
       const bg=ac.createGain();
@@ -911,6 +1012,28 @@ const Aud = (() => {
       sg2.gain.setValueAtTime(0,now+4.0);sg2.gain.linearRampToValueAtTime(0.030,now+4.9);sg2.gain.setTargetAtTime(0,now+6.5,1.8);
       so2.connect(sbf);sbf.connect(sg2);sg2.connect(master);so2.start(now+4.0);so2.stop(now+10);running.push(so2);
     }
+  }
+
+  // Transformation — ascending shimmer arpeggio + wing whoosh (fired mid-ascent)
+  function teTransform() {
+    if (!ac || !master) return;
+    const now = ac.currentTime;
+    [196.0,246.9,293.7,369.9,440.0].forEach((f,i)=>{
+      const o=ac.createOscillator();o.type='sine';o.frequency.value=f;
+      const bf2=ac.createBiquadFilter();bf2.type='bandpass';bf2.frequency.value=f;bf2.Q.value=4;
+      const g=ac.createGain();const dt=i*0.20;
+      g.gain.setValueAtTime(0,now+dt);g.gain.linearRampToValueAtTime(0.045,now+dt+0.14);g.gain.setTargetAtTime(0,now+dt+0.45,0.32);
+      o.connect(bf2);bf2.connect(g);g.connect(master);o.start(now+dt);o.stop(now+dt+0.9);running.push(o);
+    });
+    const wf=ac.createBiquadFilter();wf.type='bandpass';wf.frequency.value=275;wf.Q.value=1.1;
+    const wg=ac.createGain();wg.gain.setValueAtTime(0,now);wg.gain.linearRampToValueAtTime(0.032,now+0.9);wg.gain.setTargetAtTime(0,now+1.4,0.55);
+    noiseSrc(wf);wf.connect(wg);wg.connect(master);
+    [146.8,174.6,220.0].forEach((f,i)=>{
+      const o=ac.createOscillator();o.type='sine';o.frequency.value=f;
+      const g=ac.createGain();
+      g.gain.setValueAtTime(0,now+0.6+i*0.25);g.gain.linearRampToValueAtTime(0.028,now+0.9+i*0.25);g.gain.setTargetAtTime(0,now+2.5,1.3);
+      o.connect(g);g.connect(master);o.start(now+0.6+i*0.25);o.stop(now+5);running.push(o);
+    });
   }
 
   function teMoonFlash() {
@@ -1002,13 +1125,15 @@ const Aud = (() => {
 
   return { boot, setZone, breathe, onDeath, victory, bossStart, bossEnd,
            sfxFire, sfxHit, sfxKill, sfxPlayerHit, sfxBossHit, introPhaseSound,
-           tePhaseSound, teMoonFlash, teFeatherLand, teEndingMusic };
+           tePhaseSound, teTransform, teMoonFlash, teFeatherLand, teEndingMusic,
+           setPaused, toggleMute };
 })();
 
 function init() {
   introPhase=0; introTimer=0; introPrevPhase=-1;
   runCount=parseInt(localStorage.getItem('lailaRuns')||'0');
   dreamFragmentLevel=parseInt(localStorage.getItem('lailaDreams')||'0');
+  lailaFree=localStorage.getItem('lailaFree')==='1';
   hi=0; gameState='intro';
   resetGameState();
   // Intro screen particles — purple, drifting down
@@ -1074,6 +1199,12 @@ function initZoneBgElements(zone) {
   } else if (zone===2) {
     for (let i=0;i<3;i++) bgElements.push({type:'face',x:80+Math.random()*400,y:100+Math.random()*500,opacity:0,timer:400+Math.random()*400,phase:'idle'});
     bgElements.push({type:'reflection',x:W/2,y:H/2,opacity:0,timer:900+Math.random()*300,active:false,lingering:false});
+    // The puppetmaster's hands — foggy silhouettes at the edges, creeping closer
+    [{side:'L',by:H*0.22,sc:1.6,ph:0.0,dp:0.9},{side:'R',by:H*0.55,sc:2.1,ph:1.7,dp:1.0},
+     {side:'L',by:H*0.62,sc:1.3,ph:3.1,dp:0.7},{side:'R',by:H*0.18,sc:1.5,ph:4.4,dp:0.8},
+     {side:'B',by:0,    sc:2.4,ph:2.2,dp:1.0},{side:'L',by:H*0.40,sc:1.9,ph:5.3,dp:0.95},
+     {side:'R',by:H*0.78,sc:1.4,ph:0.9,dp:0.75},{side:'B',by:0,   sc:1.7,ph:3.8,dp:0.85}]
+      .forEach(h=>bgElements.push({type:'pmhand',...h}));
   } else if (zone===4) {
     // Chains at varied angles and scales
   [{x:60,angle:-0.15,len:0.55,scale:1.4},{x:160,angle:0.35,len:0.45,scale:0.6},{x:270,angle:-0.05,len:0.65,scale:1.1},{x:370,angle:0.55,len:0.38,scale:0.45},{x:450,angle:-0.28,len:0.50,scale:0.9},{x:530,angle:0.12,len:0.60,scale:1.3},{x:110,angle:0.7,len:0.40,scale:0.5},{x:420,angle:-0.6,len:0.42,scale:0.7}].forEach(c=>bgElements.push({type:'vchain',...c}));
@@ -1157,8 +1288,8 @@ const EDEFS={
   decoy:      {w:16,h:16,hp:1,spd:0.06,fireRate:9999,score:20},
   echo:       {w:50,h:38,hp:6,spd:0.55,fireRate:9999,score:35},
   signal:     {w:36,h:36,hp:6,spd:0,   fireRate:9999,score:60},
-  root:       {w:40,h:32,hp:5,spd:0.22,fireRate:9999,score:20},
-  chain:      {w:22,h:22,hp:6,spd:0.48,fireRate:9999,score:45},
+  root:       {w:26,h:26,hp:4,spd:0,   fireRate:9999,score:20},
+  chain:      {w:20,h:20,hp:6,spd:0,   fireRate:9999,score:45},
   owlguardian:{w:72,h:56,hp:8,spd:0,   fireRate:9999,score:80},
 };
 
@@ -1169,12 +1300,12 @@ function initSpecial(type){
     case 'hand':        return {size:1,lungeTimer:180,lunging:false,lungeVx:0,lungeVy:0,retreatTimer:0};
     case 'seeker':      return {};
     case 'handcluster': return {choking:false};
-    case 'reflection':  return {history:[],respawnTimer:0};
-    case 'glitch':      return {teleTimer:50+Math.random()*30,visible:true};
-    case 'decoy':       return {disguised:true};
+    case 'reflection':  return {history:[],respawnTimer:0,respawnsLeft:1};
+    case 'glitch':      return {teleTimer:25+Math.random()*25,visible:false};
+    case 'decoy':       return {disguised:true,bobPhase:Math.random()*Math.PI*2,creepTimer:360};
     case 'echo':        return {comps:[{hp:2,dead:false},{hp:2,dead:false},{hp:2,dead:false}]};
-    case 'signal':      return {pulseTimer:0,waves:[]};
-    case 'chain':       return {history:[],s2x:0,s2y:0,s3x:0,s3y:0,s2hp:2,s3hp:2};
+    case 'signal':      return {pulseTimer:-40,waves:[],matTimer:40};
+    case 'chain':       return {};
     case 'owlguardian': return {perched:true,swoopAngle:0,swoopProgress:0};
     default:            return {};
   }
@@ -1187,7 +1318,7 @@ function makeEnemy(type,x,y){
            score:d.score,canBeHit:true,dead:false,vx:0,vy:0,
            special:initSpecial(type)};
   if(type==='owlguardian')e.canBeHit=false;
-  if(type==='chain'){e.special.s2x=x;e.special.s2y=y+22;e.special.s3x=x;e.special.s3y=y+44;}
+  if(type==='glitch')e.canBeHit=false; // enters through its first materialization
   return e;
 }
 
@@ -1204,14 +1335,29 @@ const ZWC={
 };
 
 // ── wave spawning ──────────────────────────────────────────────────────────────
+// Stationary / near-still enemies must spawn INSIDE the arena — anything parked
+// above y=-10 can never be hit (bullet cull) and silently blocks wave-clear.
+function spawnPos(type,pad){
+  switch(type){
+    case 'signal':   return {x:pad+40+Math.random()*(W-pad*2-80), y:110+Math.random()*H*0.30};
+    case 'lakemoss': return {x:pad+Math.random()*(W-pad*2),       y:70+Math.random()*H*0.35};
+    case 'glitch':   return {x:pad+Math.random()*(W-pad*2),       y:90+Math.random()*H*0.40};
+    case 'decoy':    return {x:128+Math.random()*54,              y:16+Math.random()*12}; // hides at the HUD feather line
+    case 'root':     return {x:pad+Math.random()*(W-pad*2),       y:H-8};  // anchored to the lake bed
+    case 'chain':    return {x:pad+80+Math.random()*(W-pad*2-160),y:-12};  // hung from the dark above
+    default:         return {x:pad+Math.random()*(W-pad*2),       y:-40-Math.random()*80};
+  }
+}
 function spawnWave(){
   zoneWave++;
+  if(currentZone===2)z2HandSurge=120; // the hands stir at every new wave
   const pad=60,wc=ZWC[currentZone][Math.min(zoneWave-1,ZWC[currentZone].length-1)];
-  wc.forEach(({t,n})=>{for(let i=0;i<n;i++)enemies.push(makeEnemy(t,pad+Math.random()*(W-pad*2),-40-Math.random()*80));});
+  wc.forEach(({t,n})=>{for(let i=0;i<n;i++){const p=spawnPos(t,pad);enemies.push(makeEnemy(t,p.x,p.y));}});
   // Difficulty scaling: extra enemy after 5+ deaths
   if(runCount>5&&currentZone<4){
     const pool=ZWC[currentZone];const extras=pool[Math.floor(Math.random()*pool.length)];
-    enemies.push(makeEnemy(extras[0].t,pad+Math.random()*(W-pad*2),-40-Math.random()*60));
+    const p=spawnPos(extras[0].t,pad);
+    enemies.push(makeEnemy(extras[0].t,p.x,p.y));
   }
 }
 
@@ -1285,8 +1431,14 @@ function updateBoss(){
     return true;
   });
   if(!boss)return;
-  // Contact with boss body
-  if(player.iframes<=0&&boss&&hit(player.x,player.y,player.w,player.h,boss.x,boss.y,boss.w*0.55,boss.h*0.55))damagePlayer();
+  // Contact with boss body (Zone 3: fragments only — there is no central body)
+  if(player.iframes<=0&&boss){
+    if(currentZone===3){
+      for(const fr of boss.fragments){
+        if(fr.active&&hit(player.x,player.y,player.w,player.h,fr.x,fr.y,52,42)){damagePlayer();break;}
+      }
+    } else if(hit(player.x,player.y,player.w,player.h,boss.x,boss.y,boss.w*0.55,boss.h*0.55))damagePlayer();
+  }
 }
 
 function updateBoss_owlDistant(){
@@ -1304,8 +1456,9 @@ function updateBoss_owlDistant(){
   } else {
     b.beamX+=b.beamDir*(W/b.beamTimer);b.beamTimer--;
     const bh=b.phase===2?8:13;
-    // Damage player if in beam path
-    if(player.iframes<=0&&Math.abs(player.y-(b.y+b.h*0.3))<bh+10&&b.beamTimer>0)damagePlayer();
+    // Damage player only inside the swept region of the beam
+    const inBeamX=b.beamDir>0?player.x<=b.beamX:player.x>=b.beamX;
+    if(player.iframes<=0&&inBeamX&&Math.abs(player.y-(b.y+b.h*0.3))<bh+10&&b.beamTimer>0)damagePlayer();
     if(b.beamTimer<=0)b.beamActive=false;
   }
   // Cold orbs
@@ -1324,11 +1477,15 @@ function updateBoss_owlUrgent(){
   if(!b.swoopActive){
     b.x+=b.driftDir*b.driftSpd;
     if(b.x<b.w/2+20||b.x>W-b.w/2-20){b.driftDir*=-1;}
-    if(b.fireCD<=0){
-      // Start swoop
-      b.swoopActive=true;b.swoopT=0;
+    // A rushing shadow crosses the path before the owl commits — read it
+    if(b.fireCD===40){
       b.swoopSX=b.x;b.swoopSY=b.y;
-      b.swoopEX=b.swoopSX<W/2?W+60:-60;b.swoopEY=b.y+(Math.random()-0.5)*80;
+      b.swoopEX=b.x<W/2?W+60:-60;b.swoopEY=b.y+(Math.random()-0.5)*80;
+      b.shadowTele=40;
+    }
+    if(b.shadowTele>0)b.shadowTele--;
+    if(b.fireCD<=0){
+      b.swoopActive=true;b.swoopT=0;b.shadowTele=0;
       b.fireCD=b.phase===2?150:200;
     }
   } else {
@@ -1336,58 +1493,111 @@ function updateBoss_owlUrgent(){
     const t=b.swoopT,mx=W/2,my=player.y-40;
     b.x=b.swoopSX*(1-t)**2+2*mx*t*(1-t)+b.swoopEX*t**2;
     b.y=b.swoopSY*(1-t)**2+2*my*t*(1-t)+b.swoopEY*t**2;
-    // Feather burst at mid-swoop
+    // Feather burst at mid-swoop — feathers slow and LINGER, drifting down
     if(t>0.45&&t<0.55&&!b.burstFired){
       b.burstFired=true;
       const n=b.phase===2?8:12;
-      for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2;eBullets.push({x:b.x,y:b.y,vx:Math.cos(a)*1.6,vy:Math.sin(a)*1.6,col:'#ffe8a0',r:4.5});}
+      for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2;eBullets.push({x:b.x,y:b.y,vx:Math.cos(a)*1.7,vy:Math.sin(a)*1.7,col:'#ffe8a0',r:4.5,feather:true,age:0});}
     }
     if(b.swoopT>=1){b.swoopActive=false;b.burstFired=false;b.y=Math.min(b.y,160);}
   }
   if(b.breatheText>0)b.breatheText--;
 }
 
+// The Fragmented Owl — a broken broadcast. Only ONE fragment is live at a
+// time; a static burst announces every channel switch. Learn to watch the
+// signal, not the pieces. Phase 2: all channels open at once, then the slam.
 function updateBoss_owlFragmented(){
   const b=boss;
   const allDead=b.fragments.every(f=>!f.active);
   if(allDead){onBossDefeated();return;}
-  // Check phase 2 trigger (any fragment dead + boss hp below 50%)
   if(b.hp<=b.maxHp*0.35&&b.phase===1){b.phase=2;b.breatheText=120;}
+  // Channel switching (phase 1 only — phase 2 is full chaos)
+  if(b.phase===1){
+    b.chTimer=(b.chTimer||0)-1;
+    if(b.chStatic>0)b.chStatic--;
+    if(b.chTimer<=0){
+      const live=b.fragments.filter(f=>f.active);
+      b.liveIdx=(b.liveIdx===undefined?0:b.liveIdx+1)%live.length;
+      b.liveFrag=live[b.liveIdx];
+      b.chStatic=20; // the static burst — channel change incoming
+      b.chTimer=150;
+    }
+  }
   b.fragments.forEach(fr=>{
     if(!fr.active)return;
     if(fr.fireCD>0)fr.fireCD--;
-    // Behavior per fragment type
-    if(fr.type==='leftWing'){fr.x=W*0.18+Math.sin(frameCount*0.022)*60;fr.y=150+Math.sin(frameCount*0.015)*30;if(fr.fireCD<=0){eBullets.push({x:fr.x,y:fr.y,vx:0.8,vy:1.2,col:'#cc00ff',r:4});fr.fireCD=b.phase===2?80:130;}}
-    else if(fr.type==='rightWing'){fr.x=W*0.82+Math.sin(frameCount*0.018+2)*60;fr.y=155+Math.sin(frameCount*0.013+1)*28;if(fr.fireCD<=0){eBullets.push({x:fr.x,y:fr.y,vx:-0.8,vy:1.2,col:'#cc00ff',r:4});fr.fireCD=b.phase===2?85:140;}}
-    else if(fr.type==='eye'){fr.x=W/2+Math.sin(frameCount*0.014)*45;fr.y=120+Math.sin(frameCount*0.02)*25;if(fr.fireCD<=0){fireAt({x:fr.x,y:fr.y},player.x,player.y);eBullets[eBullets.length-1].col='#ff00ff';fr.fireCD=b.phase===2?90:130;}}
-    else if(fr.type==='body'){fr.body_t=(fr.body_t||0)+0.01;fr.x=W/2;fr.y=230+Math.sin(fr.body_t)*15;fr.pulseTimer=(fr.pulseTimer||0)+1;if(fr.pulseTimer%130===0){for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2;eBullets.push({x:fr.x,y:fr.y,vx:Math.cos(a)*1.4,vy:Math.sin(a)*1.4,col:'#ff44ff',r:4});}}  }
+    const isLive=b.phase===2||fr===b.liveFrag;
+    fr.live=isLive;
+    // Movement always; fire only on the live channel
+    if(fr.type==='leftWing'){fr.x=W*0.18+Math.sin(frameCount*0.022)*60;fr.y=150+Math.sin(frameCount*0.015)*30;if(isLive&&fr.fireCD<=0&&!b.chStatic){eBullets.push({x:fr.x,y:fr.y,vx:0.8,vy:1.2,col:'#cc00ff',r:4});fr.fireCD=b.phase===2?80:55;}}
+    else if(fr.type==='rightWing'){fr.x=W*0.82+Math.sin(frameCount*0.018+2)*60;fr.y=155+Math.sin(frameCount*0.013+1)*28;if(isLive&&fr.fireCD<=0&&!b.chStatic){eBullets.push({x:fr.x,y:fr.y,vx:-0.8,vy:1.2,col:'#cc00ff',r:4});fr.fireCD=b.phase===2?85:58;}}
+    else if(fr.type==='eye'){fr.x=W/2+Math.sin(frameCount*0.014)*45;fr.y=120+Math.sin(frameCount*0.02)*25;if(isLive&&fr.fireCD<=0&&!b.chStatic){fireAt({x:fr.x,y:fr.y},player.x,player.y);eBullets[eBullets.length-1].col='#ff00ff';fr.fireCD=b.phase===2?90:62;}}
+    else if(fr.type==='body'){fr.body_t=(fr.body_t||0)+0.01;fr.x=W/2;fr.y=230+Math.sin(fr.body_t)*15;fr.pulseTimer=(fr.pulseTimer||0)+1;if(isLive&&fr.pulseTimer%(b.phase===2?130:85)===0&&!b.chStatic){for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2;eBullets.push({x:fr.x,y:fr.y,vx:Math.cos(a)*1.4,vy:Math.sin(a)*1.4,col:'#ff44ff',r:4});}}  }
   });
-  // Phase 2: slam together
-  if(b.phase===2){b.breatheText--;const prog=Math.max(0,b.breatheText/120);b.fragments.forEach(fr=>{if(!fr.active)return;fr.x=fr.x*(prog)+(W/2)*(1-prog);fr.y=fr.y*(prog)+(180)*(1-prog);});}
-  b.x=W/2;b.y=180;// boss center for contact check
+  // Phase 2: slam together (breatheText decremented once, below)
+  if(b.phase===2){const prog=Math.max(0,b.breatheText/120);b.fragments.forEach(fr=>{if(!fr.active)return;fr.x=fr.x*(prog)+(W/2)*(1-prog);fr.y=fr.y*(prog)+(180)*(1-prog);});}
+  b.x=W/2;b.y=180;// boss center reference (contact is per-fragment)
   if(b.breatheText>0)b.breatheText--;
 }
 
+// The Shadow — the trial. She mirrors Laila's movement, and her weapon is
+// LAILA'S weapon, returned dark: when you fire, she answers with the shadow
+// of your current projectile. At the end she stops fighting entirely and
+// walks toward you. The last blow is a decision.
+function shadowFire(b){
+  const lv=projectileLevel;
+  const ang=Math.atan2(player.y-b.y,player.x-b.x);
+  if(lv===2){ // dark moonlight — a fan, like yours
+    [-0.3,0,0.3].forEach(off=>eBullets.push({x:b.x,y:b.y,vx:Math.cos(ang+off)*2.2,vy:Math.sin(ang+off)*2.2,col:'#0a3322',r:5,dark:2}));
+  } else if(lv===3){ // the void, answered
+    eBullets.push({x:b.x,y:b.y,vx:Math.cos(ang)*1.7,vy:Math.sin(ang)*1.7,col:'#001a10',r:10,dark:3});
+  } else if(lv===1){ // a dark feather — fast
+    eBullets.push({x:b.x,y:b.y,vx:Math.cos(ang)*3.1,vy:Math.sin(ang)*3.1,col:'#0a2a1a',r:4,dark:1});
+  } else { // a black bubble
+    eBullets.push({x:b.x,y:b.y,vx:Math.cos(ang)*2.3,vy:Math.sin(ang)*2.3,col:'#0a3322',r:4.5,dark:0});
+  }
+}
 function updateBoss_shadow(){
   const b=boss;
-  // Mirror Laila's movement with lag
+  const frac=b.hp/b.maxHp;
+  if(frac<=0.5&&b.phase===1)b.phase=2;
+  // The walk — below 10% she stops attacking and simply comes to you
+  if(frac<=0.10){
+    b.walking=true;
+    const a=Math.atan2(player.y-b.y,player.x-b.x);
+    b.x+=Math.cos(a)*0.45;b.y+=Math.sin(a)*0.45;
+    if(player.iframes<=0&&hit(player.x,player.y,player.w,player.h,b.x,b.y,b.w*0.4,b.h*0.4))damagePlayer();
+    return;
+  }
+  // Mirrors Laila's movement with lag
   b.x+=(player.x-b.x)*0.035;
   b.y=Math.min(b.y,H-220);
-  if(b.hp<=b.maxHp*0.5&&b.phase===1){b.phase=2;}
-  if(b.fireCD<=0){
-    const shots=b.phase===2?3:2;
-    const ang=Math.atan2(player.y-b.y,player.x-b.x);
-    for(let i=0;i<shots;i++){const a=ang+(i-(shots-1)/2)*0.25;eBullets.push({x:b.x,y:b.y,vx:Math.cos(a)*2,vy:Math.sin(a)*2,col:'#004422',r:4});}
-    b.fireCD=b.phase===2?70:90;
+  // Your fire, echoed back a beat later
+  b.idleT=(b.idleT||0)+1;
+  if(b.echoDelay>0){b.echoDelay--;if(b.echoDelay===0)shadowFire(b);}
+  if(playerFiredThisFrame&&!b.echoDelay&&b.fireCD<=0){b.echoDelay=14;b.fireCD=b.phase===2?30:46;b.idleT=0;}
+  // She does not wait forever for a pacifist
+  if(b.idleT>180&&b.fireCD<=0){shadowFire(b);b.fireCD=b.phase===2?30:46;b.idleT=0;}
+  // Phase 2: she dashes THROUGH you, leaving afterimages
+  if(b.phase===2&&!b.dashT&&frameCount%220===0){
+    b.dashT=18;b.dashA=Math.atan2(player.y-b.y,player.x-b.x);b.trail=[];
   }
-  // Shadow dash
-  if(b.phase===2&&frameCount%240===0){b.x+=player.x>b.x?120:-120;b.x=Math.max(b.w/2,Math.min(W-b.w/2,b.x));}
+  if(b.dashT>0){
+    b.dashT--;
+    (b.trail=b.trail||[]).push({x:b.x,y:b.y,a:0.5});
+    b.x+=Math.cos(b.dashA)*9;b.y+=Math.sin(b.dashA)*9;
+    b.x=Math.max(b.w/2,Math.min(W-b.w/2,b.x));b.y=Math.max(90,Math.min(H-140,b.y));
+  }
+  if(b.trail){b.trail.forEach(tp=>tp.a*=0.93);b.trail=b.trail.filter(tp=>tp.a>0.03);}
 }
 
 function onBossDefeated(){
   if(!boss)return;
   score+=boss.score;burst(boss.x,boss.y,'#ffffff',50,6);
   if(currentZone===2)player.hasStillness=true;
+  // Design 1.5: boss kill guarantees one projectile stage advance
+  if(currentZone<4&&projectileLevel<3){projectileLevel++;burst(player.x,player.y,'#ffffff',16,3);}
   Aud.bossEnd();
   boss=null;
   if(currentZone===1)     startCutscene('drowning');
@@ -1405,7 +1615,7 @@ function startCutscene(type){
 // ── Zone 2 mid-zone hand event ─────────────────────────────────────────────────
 function triggerMidHand(){
   midHand={x:W/2,y:H+240,phase:'rising',timer:0,
-           hp:5,maxHp:5,slamX:W/2,curlProgress:0,flashTimer:0,hitPlayer:false};
+           hp:4,maxHp:4,slamX:W/2,curlProgress:0,flashTimer:0,hitPlayer:false};
 }
 
 function updateMidHand(){
@@ -1460,68 +1670,273 @@ function killMidHand(){
 
 // ── enemy behavior ─────────────────────────────────────────────────────────────
 // ── per-enemy update handlers ─────────────────────────────────────────────────
-function updateEnemy_rotwood(e,s){e.y+=e.spd;}
+// Rotwood — waterlogged log. Drifts with the current; when something passes
+// beneath, it tilts (the wind-up) and rolls sideways across the water.
+// The only horizontal threat in a vertical zone.
+function updateEnemy_rotwood(e,s){
+  if(s.swayPhase===undefined)s.swayPhase=Math.random()*Math.PI*2;
+  s.state=s.state||'drift';s.t=(s.t||0)+1;s.angle=s.angle||0;
+  if(s.state==='drift'){
+    e.y+=e.spd;e.x+=Math.sin(frameCount*0.01+s.swayPhase)*0.3;
+    s.angle=Math.sin(frameCount*0.008+s.swayPhase)*0.12;
+    s.cd=(s.cd||0)-1;
+    if(s.cd<=0&&e.y>60&&e.y<player.y-90&&Math.abs(e.x-player.x)<130){s.state='tilt';s.t=0;}
+  } else if(s.state==='tilt'){
+    // tilts up against the roll direction — readable wind-up (~0.85s)
+    const target=player.x>e.x?-0.55:0.55;
+    s.angle+=(target-s.angle)*0.07;
+    e.y+=e.spd*0.3;
+    if(s.t>=50){s.state='roll';s.t=0;s.rollDir=player.x>e.x?1:-1;}
+  } else if(s.state==='roll'){
+    e.x+=s.rollDir*2.4;e.y+=0.7;
+    s.angle+=s.rollDir*0.22; // tumbling across the frame
+    if(s.t>=70||e.x<e.w/2+6||e.x>W-e.w/2-6){s.state='drift';s.cd=260;}
+  }
+}
+// Deep Light — the cold lure. Drawn toward warmth; its pulse quickens as it
+// closes in. The pulse IS the countdown. Killed from range, it dies quietly.
 function updateEnemy_deeplight(e,s){
-  e.x+=Math.sin(frameCount*0.04+s.driftPhase)*0.8;e.y+=e.spd;
-  const dd=Math.sqrt((e.x-player.x)**2+(e.y-player.y)**2);
+  const dx=player.x-e.x,dy=player.y-e.y,dd=Math.sqrt(dx*dx+dy*dy)||1;
+  e.x+=dx/dd*0.26+Math.sin(frameCount*0.04+s.driftPhase)*0.5;
+  e.y+=dy/dd*0.20+e.spd*0.4;
+  s.pulse=(s.pulse||0)+0.05+Math.max(0,240-dd)*0.0011; // quickens with proximity
   if(dd<55&&!s.detonated){s.detonated=true;for(let i=0;i<8;i++){const a=(i/8)*Math.PI*2;eBullets.push({x:e.x,y:e.y,vx:Math.cos(a)*2,vy:Math.sin(a)*2,col:'#88ccff',r:3});}burst(e.x,e.y,'#88ccff',10,3);score+=e.score;e.dead=true;}
 }
+// Lake Moss — camouflaged ambusher. Notices you, shivers (the tell), then
+// blooms a spore field that LINGERS — area denial that forces re-routing.
 function updateEnemy_lakemoss(e,s){
   e.y+=e.spd;
+  if(s.cooldown>0)s.cooldown--;
   const dl=Math.sqrt((e.x-player.x)**2+(e.y-player.y)**2);
-  if(!s.bloomed&&dl<72){s.bloomed=true;s.bloomTimer=35;}
-  if(s.bloomed&&s.bloomTimer>0){s.bloomR=Math.min(60,s.bloomR+3.5);s.bloomTimer--;if(Math.sqrt((e.x-player.x)**2+(e.y-player.y)**2)<s.bloomR)player.slowTimer=Math.max(player.slowTimer,35);if(s.bloomTimer<=0){s.bloomed=false;s.bloomR=0;}}
+  if(!s.bloomed&&!s.shiver&&!s.cooldown&&dl<95)s.shiver=25;
+  if(s.shiver>0){s.shiver--;if(s.shiver<=0){s.bloomed=true;s.bloomTimer=240;}}
+  if(s.bloomed){
+    s.bloomR=Math.min(75,(s.bloomR||0)+2.8);
+    s.bloomTimer--;
+    if(Math.sqrt((e.x-player.x)**2+(e.y-player.y)**2)<s.bloomR)player.slowTimer=Math.max(player.slowTimer,35);
+    if(s.bloomTimer<=0){s.bloomed=false;s.bloomR=0;s.cooldown=140;}
+  }
 }
+// The Hand — approach, SPLAY (fingers spread wide: the grab is coming),
+// snap-lunge, then hang LIMP — the miss leaves it open. Risk/reward timing.
 function updateEnemy_hand(e,s){
   s.size=1+zoneWave*0.18;
-  if(s.retreatTimer>0){e.y-=1.2;s.retreatTimer--;return;}
-  if(s.lunging){e.x+=s.lungeVx;e.y+=s.lungeVy;s.lungeTimer--;if(s.lungeTimer<=0){s.lunging=false;s.retreatTimer=18;}}
-  else{const hdx=player.x-e.x,hdy=player.y-e.y,hd=Math.sqrt(hdx*hdx+hdy*hdy)||1;e.x+=hdx/hd*0.25;e.y+=hdy/hd*0.25+e.spd*0.5;s.lungeTimer--;if(s.lungeTimer<=0){const a=Math.atan2(player.y-e.y,player.x-e.x);s.lunging=true;s.lungeVx=Math.cos(a)*3.2;s.lungeVy=Math.sin(a)*3.2;s.lungeTimer=22;}}
+  s.state=s.state||'approach';s.t=(s.t||0)+1;
+  if(s.state==='approach'){
+    const hdx=player.x-e.x,hdy=player.y-e.y,hd=Math.sqrt(hdx*hdx+hdy*hdy)||1;
+    e.x+=hdx/hd*0.45;e.y+=hdy/hd*0.35+e.spd*0.4;
+    if(hd<260&&s.t>40){s.state='splay';s.t=0;}
+  } else if(s.state==='splay'){
+    e.y+=0.15; // half-second of open fingers — read it
+    if(s.t>=30){s.state='lunge';s.t=0;const a=Math.atan2(player.y-e.y,player.x-e.x);s.lungeVx=Math.cos(a)*3.6;s.lungeVy=Math.sin(a)*3.6;}
+  } else if(s.state==='lunge'){
+    e.x+=s.lungeVx;e.y+=s.lungeVy;
+    if(s.t>=24){s.state='limp';s.t=0;}
+  } else if(s.state==='limp'){
+    e.y+=0.5; // spent — drifts, exposed. The punish window.
+    if(s.t>=38){s.state='approach';s.t=0;}
+  }
 }
+// The Seeker — it watches. The pupil tracks you always; it fires only when it
+// BLINKS. Closed eyes mean the shot is coming. Inverted telegraph.
 function updateEnemy_seeker(e,s){
-  e.x+=(player.x-e.x)*0.004;e.y+=e.spd;
-  if(e.fireCD<=0&&e.y>0&&!player.stillnessActive){fireAt(e,player.x,player.y);e.fireCD=140;}
+  e.x+=(player.x-e.x)*0.005;e.y+=e.spd*(s.blink>0?0.2:1);
+  s.watch=(s.watch||0)+1;
+  const aligned=Math.abs(e.x-player.x)<70&&player.y>e.y;
+  if(!s.blink&&e.y>30&&(s.watch>200||(aligned&&s.watch>90))&&!player.stillnessActive)s.blink=22;
+  if(s.blink>0){
+    s.blink--;
+    if(s.blink===0){fireAt(e,player.x,player.y);eBullets[eBullets.length-1].col='#ffaa20';s.watch=0;}
+  }
 }
+// Hand Cluster — grasping surges. A clutching rhythm: straight dodgeable
+// surge, then an open-handed pause where it spreads wider. Choke on contact.
 function updateEnemy_handcluster(e,s){
+  s.state=s.state||'pause';s.t=(s.t||0)+1;
   const cdx=player.x-e.x,cdy=player.y-e.y,cd=Math.sqrt(cdx*cdx+cdy*cdy)||1;
-  e.x+=cdx/cd*e.spd;e.y+=cdy/cd*e.spd;
+  if(s.state==='pause'){
+    e.x+=cdx/cd*0.25;e.y+=cdy/cd*0.25; // hangs open, drifting closer
+    if(s.t>=35){s.state='surge';s.t=0;s.sx=cdx/cd;s.sy=cdy/cd;}
+  } else {
+    e.x+=s.sx*2.7;e.y+=s.sy*2.7; // committed straight clutch — sidestep it
+    if(s.t>=40){s.state='pause';s.t=0;}
+  }
   if(cd<32&&player.iframes<=0&&!s.choking){s.choking=true;player.chokeTimer=60;e.x-=cdx/cd*30;e.y-=cdy/cd*30;}
   if(s.choking&&player.chokeTimer<=0)s.choking=false;
 }
+// The Reflection — your violence, returned. She mirrors your movement on a
+// delay and fires ONLY when you fire while your lines cross. Shooting near
+// her is the risk.
 function updateEnemy_reflection(e,s){
-  if(s.respawnTimer>0){s.respawnTimer--;e.y=H+200;return;}
+  if(s.respawnTimer>0){s.respawnTimer--;e.y=-200;return;} // park above screen (below-screen cull would delete it)
   s.history.push({x:player.x,y:player.y});if(s.history.length>45)s.history.shift();
   if(s.history.length>0){const ph=s.history[0];e.x=W-ph.x+W*0.1;e.y=ph.y;}
-  if(Math.abs(e.x-player.x)<26&&Math.abs(e.y-player.y)<32&&e.fireCD<=0&&e.y>0){fireAt(e,player.x,player.y);e.fireCD=80;}
+  if(e.fireCD>0)return;
+  if(playerFiredThisFrame&&Math.abs(e.x-player.x)<36&&e.y>0){fireAt(e,player.x,player.y);eBullets[eBullets.length-1].col='#6688aa';e.fireCD=30;}
 }
+// The Glitch — corruption you learn to read. RGB static builds at the
+// destination BEFORE it materializes; the shot comes a beat after it lands.
 function updateEnemy_glitch(e,s){
   s.teleTimer--;
-  if(s.teleTimer<=0){e.x=80+Math.random()*(W-160);e.y=80+Math.random()*(H*0.5);s.visible=true;e.canBeHit=true;if(e.y>0&&!player.stillnessActive)fireAt(e,player.x,player.y);s.teleTimer=60+Math.random()*40;}
+  if(s.fireDelay>0){s.fireDelay--;if(s.fireDelay===0&&s.visible&&!player.stillnessActive){fireAt(e,player.x,player.y);eBullets[eBullets.length-1].col='#ff6600';}}
+  if(s.visible){
+    if(s.teleTimer<=0){
+      s.visible=false;e.canBeHit=false;s.teleTimer=30+Math.random()*20;
+      s.nextX=80+Math.random()*(W-160);s.nextY=80+Math.random()*(H*0.5); // static will betray this spot
+    }
+  } else if(s.teleTimer<=0){
+    e.x=s.nextX!==undefined?s.nextX:e.x;e.y=s.nextY!==undefined?s.nextY:e.y;
+    s.visible=true;e.canBeHit=true;s.fireDelay=10;
+    s.teleTimer=64+Math.random()*36;
+  }
 }
 function updateEnemy_decoy(e,s){
-  if(s.disguised){e.y+=e.spd*0.3;e.canBeHit=false;}
+  if(s.disguised){
+    // Hides among the HUD feathers — gentle bob, then begins creeping toward Laila
+    e.canBeHit=false;
+    e.y+=Math.sin(frameCount*0.03+s.bobPhase)*0.06;
+    if(s.creepTimer>0)s.creepTimer--;
+    else{e.x+=(player.x-e.x)*0.0012;e.y+=(player.y-e.y)*0.0012;} // almost imperceptible
+    // Proximity reveal — it gets too close and drops the act
+    if(Math.abs(e.x-player.x)<46&&Math.abs(e.y-player.y)<52){s.disguised=false;e.canBeHit=true;}
+    // Last one standing: nothing left to hide behind — it steps out on its own
+    if(enemies.filter(o=>!o.dead).length===1){
+      s.soloTimer=(s.soloTimer||0)+1;
+      if(s.soloTimer>90){s.disguised=false;e.canBeHit=true;burst(e.x,e.y,'#ccccff',8,2);}
+    } else s.soloTimer=0;
+  }
   else{e.x+=(player.x-e.x)*0.08+(Math.random()-0.5)*5;e.y+=(player.y-e.y)*0.08+(Math.random()-0.5)*5;e.canBeHit=true;}
 }
+// The Echo — three chromatic fragments of Laila orbiting a hollow center.
+// Kill all three before any reassembles: dead fragments flicker back at 1hp
+// after 4 seconds. A kill-order puzzle under time.
+function echoCompPos(e,i){
+  const s=e.special,a=(s.rot||0)+i*(Math.PI*2/3);
+  return {x:e.x+Math.cos(a)*26,y:e.y+Math.sin(a)*20};
+}
 function updateEnemy_echo(e,s){
-  e.x+=(Math.random()-0.5)*0.15;e.y+=e.spd;
+  s.rot=(s.rot||0)+0.018;
+  e.x+=(player.x-e.x)*0.0035;e.y+=e.spd*0.55;
+  s.comps.forEach(c=>{
+    if(c.dead){
+      c.reTimer=(c.reTimer||240)-1;
+      if(c.reTimer<=0){c.dead=false;c.hp=1;c.flicker=30;burst(e.x,e.y,'#cc44cc',6,2);} // it remembers itself
+    }
+    if(c.flicker>0)c.flicker--;
+  });
   e.hp=s.comps.reduce((sum,c)=>sum+(c.dead?0:c.hp),0);if(e.hp<=0)e.dead=true;
 }
+// The Signal — static broadcaster. Its ring gaps ROTATE with the spinning
+// hexagon (watch the body to know where safety is), and every third pulse
+// is a twin ring with offset gaps — thread one, then the other.
 function updateEnemy_signal(e,s){
-  s.pulseTimer++;if(s.pulseTimer>=90){s.waves.push({r:0,opacity:0.8});s.pulseTimer=0;}
-  s.waves=s.waves.filter(w=>{w.r+=2.2;w.opacity-=0.015;if(player.iframes<=0&&w.opacity>0.1){const dp=Math.abs(Math.sqrt((player.x-e.x)**2+(player.y-e.y)**2)-w.r);if(dp<12){const angD=((Math.atan2(player.y-e.y,player.x-e.x)*180/Math.PI)+360)%360;const inGap=[0,90,180,270].some(g=>Math.min(Math.abs(angD-g),360-Math.abs(angD-g))<22.5);if(!inGap)damagePlayer();}}return w.opacity>0;});
+  if(s.matTimer>0){s.matTimer--;e.canBeHit=s.matTimer<=0;return;} // materializing — harmless, untouchable
+  s.gapRot=(s.gapRot||0)+0.005;
+  s.pulseTimer++;
+  if(s.pulseTimer>=90){
+    s.pulseCount=(s.pulseCount||0)+1;
+    s.waves.push({r:0,opacity:0.8,gapOff:s.gapRot});
+    if(s.pulseCount%3===0)s.waves.push({r:-30,opacity:0.8,gapOff:s.gapRot+0.52}); // the twin — gaps don't line up
+    s.pulseTimer=0;
+  }
+  s.waves=s.waves.filter(w=>{
+    w.r+=2.4;w.opacity-=0.015;
+    if(w.r>0&&player.iframes<=0&&w.opacity>0.1){
+      const dp=Math.abs(Math.sqrt((player.x-e.x)**2+(player.y-e.y)**2)-w.r);
+      if(dp<12){
+        const angD=((Math.atan2(player.y-e.y,player.x-e.x)-w.gapOff)*180/Math.PI%360+360)%360;
+        const inGap=[0,90,180,270].some(g=>Math.min(Math.abs(angD-g),360-Math.abs(angD-g))<22.5);
+        if(!inGap)damagePlayer();
+      }
+    }
+    return w.opacity>0;
+  });
   enemies.forEach(oe=>{if(oe===e||oe.type==='signal')return;const sdx=e.x-oe.x,sdy=e.y-oe.y,sd=Math.sqrt(sdx*sdx+sdy*sdy)||1;if(sd<200){oe.x+=sdx/sd*0.35;oe.y+=sdy/sd*0.35;}});
 }
-function updateEnemy_root(e,s){e.y+=e.spd;}
-function updateEnemy_chain(e,s){
-  s.history.push({x:e.x,y:e.y});if(s.history.length>50)s.history.shift();
-  const cdx2=player.x-e.x,cdy2=player.y-e.y,cd2=Math.sqrt(cdx2*cdx2+cdy2*cdy2)||1;
-  e.x+=cdx2/cd2*e.spd;e.y+=cdy2/cd2*e.spd;
-  if(s.s2hp>0&&s.history.length>20){const hp2=s.history[s.history.length-20];s.s2x=hp2.x;s.s2y=hp2.y;}
-  if(s.s3hp>0&&s.history.length>5){const hp3=s.history[0];s.s3x=hp3.x;s.s3y=hp3.y;}
+// The Root — territorial growth. Anchored to the lake bed, it grows toward
+// Laila one telegraphed segment at a time; the TIP is the only weak point,
+// and wounding it forces a recoil. Space itself closes in.
+function updateEnemy_root(e,s){
+  if(!s.segs)s.segs=[{x:e.x,y:e.y}];
+  s.growT=(s.growT||0)+1;
+  if(s.retract>0){
+    s.retract--;
+    if(s.segs.length>1&&s.retract%16===0)s.segs.pop(); // recoils, segment by segment
+  } else if(s.growT>=46&&s.segs.length<7){
+    s.growT=0;
+    const tip=s.segs[s.segs.length-1];
+    const a=Math.atan2(player.y-tip.y,player.x-tip.x)+(Math.random()-0.5)*0.5;
+    s.segs.push({x:Math.max(20,Math.min(W-20,tip.x+Math.cos(a)*46)),y:tip.y+Math.sin(a)*46});
+  }
+  const nt=s.segs[s.segs.length-1];
+  e.x=nt.x;e.y=nt.y; // the entity IS the tip — the only thing bullets can wound
+  if(player.iframes<=0)s.segs.forEach(p=>{
+    if(Math.abs(p.x-player.x)<26&&Math.abs(p.y-player.y)<26)player.slowTimer=Math.max(player.slowTimer,60);
+  });
 }
+// The Chain — a pendulum hung from the dark above. It pulls back slowly
+// (the creak), then sweeps a fast arc through the arena. Its three links can
+// only be broken while it hangs or winds up — never mid-sweep.
+function updateEnemy_chain(e,s){
+  if(s.ax===undefined){
+    s.ax=e.x;s.ay=-12;s.ang=(Math.random()<0.5?-1:1)*1.15;
+    s.state='hang';s.t=0;s.dir=-Math.sign(s.ang);
+    s.links=[2,2,2];s.len=210+Math.random()*60;
+  }
+  s.t++;
+  if(s.state==='hang'){
+    s.ang+=Math.sin(frameCount*0.02)*0.0008; // drifts, watching
+    if(s.t>50){s.state='windup';s.t=0;}
+  } else if(s.state==='windup'){
+    s.ang-=s.dir*0.006; // pulls back against the coming sweep — the creak
+    if(s.t>=55){s.state='sweep';s.t=0;}
+  } else if(s.state==='sweep'){
+    s.ang+=s.dir*0.052;
+    if(s.ang*s.dir>=1.15){s.ang=s.dir*1.15;s.state='hang';s.t=0;s.dir*=-1;}
+  }
+  s.ax+=(player.x-s.ax)*0.0012; // the anchor itself creeps after her
+  s.pts=[1,2,3].map(k=>({x:s.ax+Math.sin(s.ang)*s.len*k/3,y:s.ay+Math.cos(s.ang)*s.len*k/3}));
+  e.x=s.pts[2].x;e.y=s.pts[2].y;
+  e.canBeHit=s.state!=='sweep'; // too fast to catch mid-sweep
+  if(s.state==='sweep'&&player.iframes<=0&&!player.stillnessActive){
+    s.pts.forEach((p,i)=>{if(s.links[i]>0&&Math.abs(p.x-player.x)<20&&Math.abs(p.y-player.y)<24)damagePlayer();});
+  }
+}
+// The Owl Guardian — perched, untouchable, patient. Its eyes IGNITE half a
+// second before the swoop; the swoop curves and drags a wind-wake that
+// pushes Laila. After two swoops it perches exhausted — wings down, mortal.
 function updateEnemy_owlguardian(e,s){
-  if(s.perched){e.canBeHit=false;const gd=Math.sqrt((player.x-e.x)**2+(player.y-e.y)**2);if(gd<140){s.perched=false;s.swoopAngle=Math.atan2(player.y-e.y,player.x-e.x);s.swoopProgress=0;e.canBeHit=true;}}
-  else{s.swoopProgress+=3.5;e.x+=Math.cos(s.swoopAngle)*3.5;e.y+=Math.sin(s.swoopAngle)*1.8;if(s.swoopProgress>300){s.perched=true;s.swoopProgress=0;e.canBeHit=false;e.x=Math.max(60,Math.min(W-60,e.x));e.y=Math.max(80,Math.min(H*0.4,e.y));}}
+  if(s.exhaust>0){
+    s.exhaust--;e.canBeHit=true; // spent — the punish window
+    if(s.exhaust<=0){s.perched=true;s.swoops=0;e.canBeHit=false;}
+    return;
+  }
+  if(s.perched){
+    e.canBeHit=false;
+    const gd=Math.sqrt((player.x-e.x)**2+(player.y-e.y)**2);
+    s.patience=(s.patience||0)+1;
+    // It strikes when you come close — or when its patience runs out.
+    // (Never a statue: camping at range cannot stall the wave.)
+    if(!s.flare&&(gd<150||s.patience>300))s.flare=30; // amber eyes flare — it has chosen
+    if(s.flare>0){
+      s.flare--;
+      if(s.flare<=0){s.perched=false;s.patience=0;s.swoopAngle=Math.atan2(player.y-e.y,player.x-e.x);s.swoopProgress=0;e.canBeHit=true;}
+    }
+  } else {
+    s.swoopProgress+=3.5;
+    const curve=Math.sin(s.swoopProgress*0.01)*0.5;
+    e.x+=Math.cos(s.swoopAngle+curve)*3.6;e.y+=Math.sin(s.swoopAngle+curve)*2.0;
+    // wind-wake — the pass itself displaces her
+    if(Math.abs(e.x-player.x)<90&&Math.abs(e.y-player.y)<70){
+      player.x=Math.max(player.w/2,Math.min(W-player.w/2,player.x+Math.cos(s.swoopAngle)*0.55));
+    }
+    if(s.swoopProgress>300){
+      s.swoops=(s.swoops||0)+1;
+      e.x=Math.max(60,Math.min(W-60,e.x));e.y=Math.max(80,Math.min(H*0.4,e.y));
+      s.swoopProgress=0;
+      if(s.swoops>=2)s.exhaust=90; else {s.perched=true;e.canBeHit=false;}
+    }
+  }
 }
 
 function updateEnemyBehavior(e){
@@ -1546,6 +1961,7 @@ function updateEnemyBehavior(e){
 
 // ── update ─────────────────────────────────────────────────────────────────────
 function update() {
+  if(paused)return;
   frameCount++;
   if(gameState==='intro'){updateIntro();return;}
   if(gameState!=='playing')return;
@@ -1583,12 +1999,15 @@ function update() {
     if(dx||dy){player.driftActive=true;player.driftTimer=14;player.driftCD=90;player.driftVx=dx*5.5;player.driftVy=dy*5.5;}
   }
   if(player.stillnessTimer>0)player.stillnessTimer--;
-  if(player.stillnessActive&&player.stillnessTimer<=0)player.stillnessActive=false;
-  if(player.hasStillness&&!player.stillnessActive&&(keys['e']||keys['E'])){player.stillnessActive=true;player.stillnessTimer=120;}
+  if(player.stillnessCD>0)player.stillnessCD--;
+  if(player.stillnessActive&&player.stillnessTimer<=0){player.stillnessActive=false;player.stillnessCD=480;}
+  if(player.hasStillness&&!player.stillnessActive&&player.stillnessCD<=0&&(keys['e']||keys['E'])){player.stillnessActive=true;player.stillnessTimer=120;}
 
   // Shooting
+  playerFiredThisFrame=false;
   if(player.shootCD>0)player.shootCD--;
   if(player.shootCD<=0){
+    playerFiredThisFrame=true;
     const lv=projectileLevel;
     if(lv===2){[-0.5,0,0.5].forEach(vx=>bullets.push({x:player.x,y:player.y-player.h/2,vx,vy:-4.5,level:2,r:4,damage:1}));}
     else if(lv===3){bullets.push({x:player.x,y:player.y-player.h/2,vx:0,vy:-3.5,level:3,r:9,damage:3});}
@@ -1600,7 +2019,14 @@ function update() {
   if(player.iframes>0)player.iframes--;
 
   bullets=bullets.filter(b=>{b.x+=b.vx||0;b.y+=b.vy;return b.y>-10&&b.x>-20&&b.x<W+20;});
-  eBullets=eBullets.filter(b=>{b.x+=b.vx||0;b.y+=b.vy;return b.y<H+10&&b.x>-10&&b.x<W+10;});
+  eBullets=eBullets.filter(b=>{
+    if(b.feather){ // lingering feathers decelerate, then drift down like real ones
+      b.age++;b.vx*=0.965;b.vy=b.vy*0.965+0.022;
+      b.x+=b.vx+Math.sin(b.age*0.06)*0.4;b.y+=b.vy;
+      return b.age<340&&b.y<H+10&&b.x>-10&&b.x<W+10;
+    }
+    b.x+=b.vx||0;b.y+=b.vy;return b.y<H+10&&b.x>-10&&b.x<W+10;
+  });
 
   updateBoss();
   if(midHand)updateMidHand();
@@ -1625,25 +2051,34 @@ function update() {
       const hcol=getEnemyColor(e);
       if(hit(b.x,b.y,b.r*2,b.r*2,e.x,e.y,e.w,e.h)){
         if(e.type==='echo'){
-          const ci=b.x<e.x-12?0:b.x>e.x+12?2:1;
-          if(!e.special.comps[ci].dead){e.special.comps[ci].hp--;if(e.special.comps[ci].hp<=0){e.special.comps[ci].dead=true;burst(e.x+(ci-1)*16,e.y,['#ff4444','#44ff44','#4444ff'][ci],8,3);}}
+          // hit the orbiting fragment nearest the bullet
+          let bi=-1,bd=9999;
+          e.special.comps.forEach((c,i)=>{if(c.dead)return;const p=echoCompPos(e,i);const d=Math.sqrt((b.x-p.x)**2+(b.y-p.y)**2);if(d<bd){bd=d;bi=i;}});
+          if(bi>=0&&bd<30){
+            const c=e.special.comps[bi];c.hp--;
+            if(c.hp<=0){c.dead=true;c.reTimer=240;const p=echoCompPos(e,bi);burst(p.x,p.y,['#ff4444','#44ff44','#4444ff'][bi],8,3);}
+          }
           e.hp=e.special.comps.reduce((s,c)=>s+(c.dead?0:c.hp),0);
         } else if(e.type==='chain'){
-          const segs=[{x:e.x,y:e.y,k:'main'},{x:e.special.s2x,y:e.special.s2y,k:'s2'},{x:e.special.s3x,y:e.special.s3y,k:'s3'}];
-          let bestD=9999,best=null;
-          segs.forEach(sg=>{const d=Math.sqrt((b.x-sg.x)**2+(b.y-sg.y)**2);if(d<bestD){bestD=d;best=sg;}});
-          if(best){if(best.k==='s2'&&e.special.s2hp>0){e.special.s2hp--;e.hp--;}else if(best.k==='s3'&&e.special.s3hp>0){e.special.s3hp--;e.hp--;}else if(best.k==='main')e.hp--;}
+          // break the nearest living link — only while it hangs or winds up
+          const s2=e.special;
+          if(s2.pts&&s2.links){
+            let bi=-1,bd=9999;
+            s2.pts.forEach((p,i)=>{if(s2.links[i]<=0)return;const d=Math.sqrt((b.x-p.x)**2+(b.y-p.y)**2);if(d<bd){bd=d;bi=i;}});
+            if(bi>=0&&bd<26){s2.links[bi]--;e.hp--;if(s2.links[bi]<=0)burst(s2.pts[bi].x,s2.pts[bi].y,'#2a2535',12,3);}
+          } else e.hp--;
           burst(b.x,b.y,hcol,6,3);
         } else {
           burst(b.x,b.y,hcol,6,3);e.hp-=(b.damage||1);
+          if(e.type==='root')e.special.retract=36; // the vine recoils when wounded
         }
         Aud.sfxHit(currentZone);
         if(b.piercing&&b.hitEnemies)b.hitEnemies.push(e);else alive=false;
         if(e.hp<=0){
           score+=e.score;burst(e.x,e.y,hcol,18);
           Aud.sfxKill(currentZone);
-          // Reflection: respawn instead of dying
-          if(e.type==='reflection'){e.hp=e.maxHp;e.special.respawnTimer=600;return true;}
+          // Reflection: respawns once before dying for real
+          if(e.type==='reflection'&&e.special.respawnsLeft>0){e.special.respawnsLeft--;e.hp=e.maxHp;e.special.respawnTimer=300;return true;}
           // Seeker: release 3 hand-burst projectiles on death
           if(e.type==='seeker'){for(let si=0;si<3;si++){const sa=Math.atan2(player.y-e.y,player.x-e.x)+(si-1)*0.4;eBullets.push({x:e.x,y:e.y,vx:Math.cos(sa)*1.8,vy:Math.sin(sa)*1.8,col:'#ffaa20',r:4});}}
           maybeDropPowerup(e.x,e.y);if(currentZone===3)spawnGeoFlash(e.x,e.y);e.dead=true;return false;
@@ -1668,12 +2103,10 @@ function update() {
   if(player.iframes<=0&&!player.stillnessActive){
     enemies.forEach(e=>{
       if(e.dead||!e.canBeHit)return;
-      if(['lakemoss','handcluster','signal','root'].includes(e.type))return;
+      if(['lakemoss','handcluster','signal','root','chain'].includes(e.type))return; // these damage on their own terms
       if(e.type==='decoy'&&e.special.disguised)return;
       if(hit(player.x,player.y,player.w,player.h,e.x,e.y,e.w,e.h))damagePlayer();
     });
-    // Root contact: slow
-    enemies.forEach(e=>{if(e.type==='root'&&hit(player.x,player.y,player.w,player.h,e.x,e.y,e.w,e.h))player.slowTimer=Math.max(player.slowTimer,180);});
     eBullets=eBullets.filter(b=>{
       if(hit(b.x,b.y,b.r*2,b.r*2,player.x,player.y,player.w+6,player.h+6)){damagePlayer();burst(b.x,b.y,'#ff4466',8,3);return false;}
       return true;
@@ -1709,7 +2142,7 @@ function update() {
   }
 }
 
-function fireAt(e,tx,ty){const dx=tx-e.x,dy=ty-e.y,dist=Math.sqrt(dx*dx+dy*dy)||1,spd=e.type==='watcher'?2.5:1.5;eBullets.push({x:e.x,y:e.y,vx:(dx/dist)*spd,vy:(dy/dist)*spd,col:COL.eBullet,r:3.5});}
+function fireAt(e,tx,ty){const dx=tx-e.x,dy=ty-e.y,dist=Math.sqrt(dx*dx+dy*dy)||1,spd=currentZone>=3?1.8:1.5;eBullets.push({x:e.x,y:e.y,vx:(dx/dist)*spd,vy:(dy/dist)*spd,col:COL.eBullet,r:3.5});}
 function damagePlayer(){if(player.iframes>0)return;if(debugMode){player.iframes=40;return;}player.hp--;player.iframes=100;burst(player.x,player.y,COL.accent,22);Aud.sfxPlayerHit();if(player.hp<=0){Aud.onDeath();gameState='gameover';hi=Math.max(hi,score);runCount++;dreamFragmentLevel=Math.min(8,dreamFragmentLevel+1);localStorage.setItem('lailaRuns',runCount);localStorage.setItem('lailaDreams',dreamFragmentLevel);}}
 function maybeDropPowerup(x,y){
   if(currentZone===4)return;
@@ -1717,8 +2150,8 @@ function maybeDropPowerup(x,y){
   const r=Math.random();
   if(r<0.05)drops.push({x,y,kind:'heal'});
   else if(r<0.12&&!player.hasDrift)drops.push({x,y,kind:'drift'});
-  else if(r<0.19)drops.push({x,y,kind:'upgrade'});
-  else if(r<0.26&&player.shootRate>18)drops.push({x,y,kind:'firerate'});
+  else if(r<0.17&&projectileLevel<3)drops.push({x,y,kind:'upgrade'}); // bosses now guarantee stages — drops accelerate, not carry
+  else if(r<0.25&&player.shootRate>18)drops.push({x,y,kind:'firerate'});
 }
 function collectDrop(kind){
   if(kind==='heal')player.hp=Math.min(player.hp+1,player.maxHp);
@@ -1755,7 +2188,7 @@ const CS_PHASES={
 };
 // Editable script lines — modified live by cutscene-editor.html
 const csText={
-  z3Title:       '/ Laila peaks behind the curtain /',
+  z3Title:       '/ Laila peeks behind the curtain /',
   z4Title:       '/ At the bottom of the lake, someone\'s trapped /',
   unchainSilence:'It\'s you. ',
   breatheWord:   'Breathe.',
@@ -1796,8 +2229,8 @@ function drawCutscene(){
   updateZoneParticles();
 
   if(cs.type==='drowning')        drawCS_drowning(t);
-  else if(cs.type==='transition_z3') drawCS_transition(t,csText.z3Title,cs.phase);
-  else if(cs.type==='transition_z4') drawCS_transition(t,csText.z4Title,cs.phase);
+  else if(cs.type==='transition_z3') drawCS_transition(t,csText.z3Title,cs.phase,'fist');
+  else if(cs.type==='transition_z4') drawCS_transition(t,csText.z4Title,cs.phase,'face');
   else if(cs.type==='unchaining') drawCS_unchaining(t);
   else if(cs.type==='true_ending')drawCS_trueEnding(t);
 }
@@ -1852,7 +2285,7 @@ function drawCS_drowning(t){
   }
 }
 
-function drawCS_transition(t,title,ph){
+function drawCS_transition(t,title,ph,fragKind){
   if(ph===0){
     const a=Math.min(1,t/40);ctx.fillStyle=`rgba(0,0,0,${a})`;ctx.fillRect(0,0,W,H);
   } else if(ph===1){
@@ -1862,7 +2295,7 @@ function drawCS_transition(t,title,ph){
     if(df>0&&dreamFragmentLevel>0){
       const dfA=df*Math.min(1,dreamFragmentLevel/3)*0.4;
       ctx.save();ctx.globalAlpha=dfA;
-      if(title.includes('CHANNELS')){
+      if(fragKind==='fist'){
         // Zone 2→3: a fist closing — oval shapes
         ctx.strokeStyle='#662200';ctx.lineWidth=2;
         ctx.beginPath();ctx.ellipse(W/2,H/2,50,38,0,0,Math.PI*2);ctx.stroke();
@@ -1991,18 +2424,20 @@ function teWaveLine(y,alpha,col='#3a7a99'){
   ctx.globalAlpha=1;
 }
 function teDrawMoon(cx,cy,r,alpha){
-  ctx.save();ctx.globalAlpha=alpha;glow('#fffbe0',18*alpha);
-  ctx.fillStyle='#fffbe0';ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle='#04020e';ctx.beginPath();ctx.arc(cx+r*0.38,cy,r*0.80,0,Math.PI*2);ctx.fill();
-  noGlow();ctx.restore();
+  if(alpha<=0||r<=0)return;
+  // Soft halo behind an ASCII crescent — the moon stays in the medium
+  ctx.save();
+  const mg=ctx.createRadialGradient(cx,cy,0,cx,cy,r*2.6);
+  mg.addColorStop(0,`rgba(255,251,224,${0.30*alpha})`);mg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=mg;ctx.fillRect(cx-r*2.6,cy-r*2.6,r*5.2,r*5.2);
+  ctx.restore();
+  const ms=Math.max(4,r*0.42);
+  drawAsciiC(MOON_ASCII,['#fffbe0'],cx,cy,ms,Math.round(ms*1.15),alpha,'#fffbe0',14*alpha);
 }
 function teDrawMountains(yBase,alpha){
-  ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='#06040f';ctx.beginPath();
-  ctx.moveTo(0,H);ctx.lineTo(0,yBase+30);ctx.lineTo(35,yBase-15);ctx.lineTo(85,yBase+8);
-  ctx.lineTo(140,yBase-52);ctx.lineTo(195,yBase-8);ctx.lineTo(248,yBase-30);ctx.lineTo(W/2-28,yBase+12);
-  ctx.lineTo(W/2+28,yBase+12);ctx.lineTo(W-248,yBase-30);ctx.lineTo(W-195,yBase-8);
-  ctx.lineTo(W-140,yBase-52);ctx.lineTo(W-85,yBase+8);ctx.lineTo(W-35,yBase-15);ctx.lineTo(W,yBase+30);ctx.lineTo(W,H);
-  ctx.closePath();ctx.fill();ctx.restore();
+  if(alpha<=0)return;
+  drawAsciiC(MTN_ASCII,['#0e0a22'],W/2,yBase-24,13,15,alpha*0.9);
+  ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle='#06040f';ctx.fillRect(0,yBase+8,W,Math.max(0,H-yBase-8));ctx.restore();
 }
 
 // ── per-phase true-ending draw functions ───────────────────────────────────────
@@ -2019,25 +2454,29 @@ function drawTE_p0(t){ // 900f: camera follows Laila up through the lake
     ctx.fillStyle=lg;ctx.fillRect(0,0,W,H);
     teWaveLine(surfaceScreenY,Math.min(0.75,(scroll-0.55)*3.5));
   }
+  drawAsciiField(0.30+scroll*0.25,t,90,'#2a4a77',1.1); // water rushing past as she rises
   const charY=H*0.58;
   if(sp<0.42){
-    glow('#e0c890',8);drawAscii(['  o  ','(^_^)','~/|\\~','  |  ',' (v) '],W/2,charY,'#e0c890',13,17,Math.min(1,t/40));noGlow();
+    drawAsciiC(LAILA_RISE,LAILA_RISE_COLS,W/2,charY,11,13,Math.min(1,t/40),'#e0c890',8);
     const ta=Math.min(1,(t-80)/35)*Math.min(1,(820-t)/60)*0.28;
     if(t>80&&t<820){ctx.globalAlpha=ta;ctx.fillStyle='#2255aa';ctx.font='11px monospace';ctx.textAlign='center';ctx.fillText('she is rising',W/2,H-45);ctx.globalAlpha=1;}
   } else if(sp<0.72){
-    const tp=(sp-0.42)/0.30,ws=Math.floor(tp*8);
+    if(t===378)Aud.teTransform();
+    const tp=(sp-0.42)/0.30;
+    // Laila dissolves into light as the owl takes shape around her
     const lailaA=Math.max(0,1-tp*1.4);
-    if(lailaA>0){glow('#e0c890',8*lailaA);drawAscii(['  o  ','(^_^)','~/|\\~','  |  ',' (v) '],W/2,charY,'#e0c890',13,17,lailaA);noGlow();}
+    if(lailaA>0)drawAsciiC(LAILA_RISE,LAILA_RISE_COLS,W/2,charY,11,13,lailaA,'#ffffff',12*(1-lailaA)+8);
     if(tp>0.08){
-      glow('#ffffff',16*Math.min(1,tp/0.3));ctx.globalAlpha=Math.min(1,tp/0.3)*0.92;ctx.fillStyle='#ffffff';ctx.font='13px monospace';ctx.textAlign='center';
-      ctx.fillText('/'.repeat(ws)+'   '+'\\'.repeat(ws),W/2,charY-24);ctx.fillText('/\\_____/\\',W/2,charY-10);ctx.fillText('( O   O )',W/2,charY+5);ctx.fillText(' ( =^= ) ',W/2,charY+19);ctx.fillText('   )|(   ',W/2,charY+33);
-      noGlow();ctx.globalAlpha=1;
+      const oA=Math.min(1,tp/0.3)*0.92;
+      const oS=7+tp*5; // the owl grows into being
+      const wing=OWL_WINGS[Math.floor(frameCount/9)%2];
+      drawAsciiC(wing,['#ffffff'],W/2,charY-4,oS,Math.round(oS*1.35),oA,'#ffffff',16*Math.min(1,tp/0.3));
     }
     const ta2=Math.min(1,(sp-0.55)/0.10)*Math.min(1,(0.68-sp)/0.04)*0.32;
     if(sp>0.55&&sp<0.68){ctx.globalAlpha=ta2;ctx.fillStyle='#88ccff';ctx.font='11px monospace';ctx.textAlign='center';ctx.fillText('she is becoming',W/2,H-45);ctx.globalAlpha=1;}
   } else {
     const wing=OWL_WINGS[Math.floor(frameCount/7)%2];
-    glow('#ffffff',14+8*Math.sin(t*0.1));drawAscii(wing,W/2,charY,'#ffffff',13,18,1);noGlow();
+    drawAsciiC(wing,['#ffffff'],W/2,charY,12,16,1,'#ffffff',14+8*Math.sin(t*0.1));
   }
 }
 function drawTE_p1(t){ // 200f: burst through surface
@@ -2384,6 +2823,17 @@ function drawBg_stillWater(){
   const lg=ctx.createRadialGradient(W/2,-10,0,W/2,-10,300);
   lg.addColorStop(0,`rgba(184,212,240,${ls})`);lg.addColorStop(1,'rgba(0,0,0,0)');
   ctx.fillStyle=lg;ctx.fillRect(0,0,W,H*0.6);
+  // God rays — slow-swaying light shafts from the surface world, dimming as she descends
+  for(let si=0;si<3;si++){
+    const sway=Math.sin(frameCount*0.004+si*2.1)*30;
+    const sx=W*(0.25+si*0.25)+sway, sw2=26+si*10;
+    const sg=ctx.createLinearGradient(0,0,0,H*0.55);
+    sg.addColorStop(0,`rgba(184,212,240,${ls*0.30})`);sg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=sg;
+    ctx.beginPath();ctx.moveTo(sx-sw2*0.4,0);ctx.lineTo(sx+sw2*0.4,0);
+    ctx.lineTo(sx+sw2*1.6+sway*0.4,H*0.55);ctx.lineTo(sx-sw2*1.6+sway*0.4,H*0.55);
+    ctx.closePath();ctx.fill();
+  }
   // Sediment (upward)
   zoneParticles.forEach(p=>{ctx.globalAlpha=p.a;ctx.fillStyle='#8ab0cc';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();});
   ctx.globalAlpha=1;
@@ -2405,6 +2855,31 @@ function drawBg_stillWater(){
   });
 }
 
+// One puppetmaster hand — slender marionette fingers, fog-dark, with faint
+// strings angled down toward Laila. They are why the abyss reaches for her.
+function drawPuppetHand(x,y,scale,angle,alpha,curl){
+  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.scale(scale,scale);
+  ctx.globalAlpha=alpha;
+  ctx.fillStyle='#140307';ctx.strokeStyle='#140307';ctx.lineCap='round';
+  // forearm fading off-frame
+  const fg=ctx.createLinearGradient(-90,0,0,0);
+  fg.addColorStop(0,'rgba(20,3,7,0)');fg.addColorStop(1,'rgba(20,3,7,1)');
+  ctx.fillStyle=fg;ctx.beginPath();ctx.moveTo(-95,-13);ctx.lineTo(0,-11);ctx.lineTo(0,11);ctx.lineTo(-95,13);ctx.closePath();ctx.fill();
+  // palm
+  ctx.fillStyle='#140307';
+  ctx.beginPath();ctx.ellipse(6,0,15,13,0,0,Math.PI*2);ctx.fill();
+  // five long slender fingers, slightly curled
+  for(let f=0;f<5;f++){
+    const fa=(f-2)*0.30+curl*0.12;
+    const fl=34-(Math.abs(f-2)*5);
+    ctx.lineWidth=4.5-Math.abs(f-2)*0.7;
+    ctx.beginPath();ctx.moveTo(14,(f-2)*5.2);
+    ctx.quadraticCurveTo(14+Math.cos(fa)*fl*0.6,(f-2)*5.6+Math.sin(fa)*fl*0.6,
+                         14+Math.cos(fa+curl*0.5)*fl,(f-2)*6+Math.sin(fa+curl*0.5)*fl);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
 function drawBg_hunger(){
   const redness=Math.min(1,(zoneWave-1)/4);
   const r1=Math.floor(13+redness*30);
@@ -2413,6 +2888,49 @@ function drawBg_hunger(){
   const pulse=Math.sin(frameCount*0.018);
   ctx.fillStyle=`rgba(40,0,12,${0.10+pulse*0.06})`;ctx.fillRect(0,0,W,H);
   if(pulse>0.6){ctx.fillStyle='rgba(60,0,8,0.05)';ctx.fillRect(0,H*0.3,W,H*0.4);}
+  // ── The puppetmaster's hands ──
+  if(z2HandSurge>0)z2HandSurge--;
+  const surge=z2HandSurge>0?Math.sin(Math.PI*(1-z2HandSurge/120))*1.0:0;
+  const chase=midHandDone; // after the giant hand, they stop pretending
+  const visN=chase?8:Math.min(8,1+zoneWave); // wave 1: two hands. then more.
+  let hi2=0;
+  bgElements.forEach(el=>{
+    if(el.type!=='pmhand')return;
+    hi2++;if(hi2>visN)return;
+    const creep=Math.sin(frameCount*0.006+el.ph)*0.5+0.5;     // slow individual reach
+    const reach=(26+zoneWave*15+creep*22+surge*55)*(chase?1.5:1)*el.dp;
+    const fogA=(0.10+redness*0.05+surge*0.08)*el.dp*(chase?1.45:1);
+    const curl=0.3+creep*0.4+surge*0.5;
+    let hx,hy,ha;
+    if(el.side==='L'){hx=-70+reach;hy=el.by+Math.sin(frameCount*0.004+el.ph)*18;ha=0.1+Math.sin(frameCount*0.003+el.ph)*0.10;}
+    else if(el.side==='R'){hx=W+70-reach;hy=el.by+Math.sin(frameCount*0.004+el.ph)*18;ha=Math.PI-0.1+Math.sin(frameCount*0.003+el.ph)*0.10;}
+    else{hx=W*0.2+el.ph*W*0.12;hy=H+76-reach;ha=-Math.PI/2+Math.sin(frameCount*0.003+el.ph)*0.12;}
+    drawPuppetHand(hx,hy,el.sc,ha,fogA,curl);
+    // marionette strings — two faint threads angling toward Laila
+    if(player&&fogA>0.08){
+      ctx.save();ctx.globalAlpha=fogA*0.4;ctx.strokeStyle='#3a0a14';ctx.lineWidth=0.7;
+      ctx.beginPath();ctx.moveTo(hx,hy);ctx.lineTo(player.x+(el.ph-2.6)*14,player.y);ctx.stroke();
+      ctx.restore();
+    }
+  });
+  // Chase surges — after the jump-scare, hands RUSH past behind the field
+  if(chase){
+    if(!window._z2chasers)window._z2chasers=[];
+    if(frameCount%110===0&&window._z2chasers.length<3){
+      window._z2chasers.push({x:60+Math.random()*(W-120),y:H+140,vy:-(6+Math.random()*4),sc:2.0+Math.random()*1.4,ph:Math.random()*6});
+    }
+    window._z2chasers=window._z2chasers.filter(c=>{
+      c.y+=c.vy;c.x+=(player.x-c.x)*0.004;
+      // motion-blur trail
+      for(let g2=0;g2<3;g2++)drawPuppetHand(c.x,c.y-c.vy*g2*2.4,c.sc,-Math.PI/2,0.05-g2*0.013,0.8);
+      drawPuppetHand(c.x,c.y,c.sc,-Math.PI/2,0.15,0.8);
+      return c.y>-180;
+    });
+  } else window._z2chasers=[];
+  // Fog over the hands — they live behind the haze
+  const fog=ctx.createLinearGradient(0,0,0,H);
+  fog.addColorStop(0,`rgba(${r1},8,20,0.22)`);fog.addColorStop(0.5,'rgba(20,4,12,0.10)');fog.addColorStop(1,`rgba(${r1},6,16,0.26)`);
+  ctx.fillStyle=fog;ctx.fillRect(0,0,W,H);
   // Embers — warmer color on close particles, cooler on far ones
   zoneParticles.forEach(p=>{
     if(p.kind!=='ember')return;
@@ -2535,17 +3053,24 @@ function drawBg_binding(){
     ag.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle=ag;ctx.fillRect(0,0,W,H);
   }
-  // Shadow boss silhouette in deep bg
+  // The Shadow waits in the deep background — HER silhouette, growing closer
+  // as the zone empties. Her breath syncs with Laila's aura.
   const prog=Math.min(1,zoneWave/ZONE_WAVE_COUNTS[4]);
   if(!boss){
-    ctx.save();ctx.globalAlpha=0.04+prog*0.14;ctx.fillStyle='#000';
-    const sx=W/2,sy=H*0.84+(1-prog)*30;
-    ctx.beginPath();ctx.ellipse(sx,sy,28,42,0,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.arc(sx,sy-50,18,0,Math.PI*2);ctx.fill();
-    ctx.beginPath();ctx.moveTo(sx-18,sy-8);ctx.bezierCurveTo(sx-65,-28+sy,sx-85,sy+18,sx-52,sy+32);ctx.fill();
-    ctx.beginPath();ctx.moveTo(sx+18,sy-8);ctx.bezierCurveTo(sx+65,-28+sy,sx+85,sy+18,sx+52,sy+32);ctx.fill();
-    ctx.restore();
+    const sx=W/2,sy=H*0.86+(1-prog)*26;
+    const breathe2=1+Math.sin(frameCount*0.018)*0.03; // she breathes, slowly
+    drawLailaVariant(sx,sy,{
+      floatOff:3.14,scale:(0.9+prog*0.9)*breathe2,mirror:true,
+      alpha:0.05+prog*0.16,
+      hairCol:'#060204',dressCol:'#020503',skinCol:'#030604',
+      eyeCol:'#000000',eyeGlow:'#000000',eyeOverrideAlpha:0, // eyes still closed
+      l1Mod:([px,py],i)=>([2,3,7,8].includes(i)?[px*1.18,py-5]:[px,py])
+    });
   }
+  // Diagonal tension — the world leans toward the bottom of the lake
+  const dg2=ctx.createLinearGradient(0,0,W,H);
+  dg2.addColorStop(0,'rgba(10,6,20,0)');dg2.addColorStop(1,'rgba(2,1,6,0.30)');
+  ctx.fillStyle=dg2;ctx.fillRect(0,0,W,H);
   // Void dust — depth-layered: larger/brighter particles closer
   zoneParticles.forEach(p=>{
     if(p.kind!=='void')return;
@@ -2599,35 +3124,88 @@ function drawIntro(){
   if(name==='fade_in')return;
   if(name==='dream'){
     ctx.fillStyle='rgba(15,0,30,0.35)';ctx.fillRect(0,0,W,H);
-    if(t>40)drawAscii(LAILA_SIT,W/2,400,'#f0d0a0',12,16,Math.min(1,(t-40)/80)*a);
-    if(t>200){glow('#f0f0e0',10);drawAscii(OWL_ART,W/2,220,'#f0f0d8',14,20,Math.min(1,(t-200)/100)*a);noGlow();}
+    drawAsciiField(a*0.45,frameCount,80,'#3a2a55',0.10); // slow dream-dust, full frame
+    // Faint ground line beneath Laila
+    ctx.globalAlpha=a*0.18;ctx.fillStyle='#5a4a77';ctx.font='12px monospace';ctx.textAlign='center';
+    ctx.fillText('___,______________,___',W/2,476);ctx.globalAlpha=1;
+    if(t>40)drawAsciiC(LAILA_GRAND,LAILA_GRAND_COLS,W/2,430,11,13,Math.min(1,(t-40)/80)*a,'#f0d0a0',6);
+    if(t>200){
+      const owlA=Math.min(1,(t-200)/100)*a;
+      const breath=13+Math.sin(frameCount*0.025)*0.5; // the owl breathes
+      drawAsciiC(getGrandOwl(t),['#f0f0d8'],W/2,205,breath,Math.round(breath*1.30),owlA,'#f0f0e0',12);
+    }
     if(t>360){ctx.globalAlpha=Math.min(1,(t-360)/50)*a*0.45;ctx.font='italic 14px monospace';ctx.fillStyle='#7a5588';ctx.textAlign='center';ctx.fillText('she sat before the owl',W/2,H-90);ctx.globalAlpha=1;}
     return;
   }
   if(name==='breathe'){
     ctx.fillStyle='rgba(15,0,30,0.35)';ctx.fillRect(0,0,W,H);
-    glow('#f0f0e0',16);drawAscii(OWL_ART,W/2,220,'#f8f8f0',14,20,a);noGlow();
-    drawAscii(LAILA_SIT,W/2,400,'#f0d0a0',12,16,a);
+    drawAsciiField(a*0.45,frameCount,80,'#3a2a55',0.10);
+    const breath=13+Math.sin(frameCount*0.025)*0.6;
+    drawAsciiC(getGrandOwl(t),['#f8f8f0'],W/2,205,breath,Math.round(breath*1.30),a,'#f0f0e0',16);
+    drawAsciiC(LAILA_GRAND,LAILA_GRAND_COLS,W/2,430,11,13,a,'#f0d0a0',6);
+    // The word arrives letter by letter, each letter floating on its own slow wave
     const shown=csText.breatheWord.slice(0,Math.floor(t/18));
-    if(shown.length>0){ctx.save();ctx.globalAlpha=Math.min(1,t/40)*a;glow('#ffffff',24);ctx.font='bold 30px monospace';ctx.fillStyle='#f0f0f0';ctx.textAlign='center';ctx.fillText(shown,W/2,325);noGlow();ctx.restore();}
+    if(shown.length>0){
+      ctx.save();ctx.globalAlpha=Math.min(1,t/40)*a;glow('#ffffff',24);
+      ctx.font='bold 30px monospace';ctx.fillStyle='#f0f0f0';ctx.textAlign='center';
+      const lw=19, x0=W/2-(shown.length-1)*lw/2;
+      for(let li=0;li<shown.length;li++){
+        const wy=Math.sin(frameCount*0.045+li*0.9)*3.2;
+        ctx.fillText(shown[li],x0+li*lw,325+wy);
+      }
+      noGlow();ctx.restore();
+    }
     return;
   }
   if(name==='nest'){
     const wm=Math.min(1,t/120);
     ctx.fillStyle=`rgba(${Math.floor(18+wm*22)},${Math.floor(wm*4)},${Math.floor(8+wm*4)},0.45)`;ctx.fillRect(0,0,W,H);
-    drawAscii(LAILA_SIT,W/2,380,'#f0d0a0',12,16,a*0.85);
-    glow('#551a00',8);drawAscii(['\\ \\\\   |   // /',' \\ \\\\ | // / ','  \\\\[  o  ]//  ','  //[  o  ]\\\\  ',' / // | \\\\ \\ ','/ //   |   \\\\ \\'],W/2,370,'#6a3020',13,17,Math.min(1,t/90)*a);noGlow();
+    drawAsciiC(LAILA_GRAND,LAILA_GRAND_COLS,W/2,372,9,11,a*0.85,'#f0d0a0',4);
+    // The nest — woven twigs closing around her
+    glow('#551a00',8);
+    drawAscii([
+      '\\ \\\\ \\   |   / // /',
+      ' \\_\\\\_\\  |  /_//_/ ',
+      '  \\\\ [=======] //  ',
+      '  // [=======] \\\\  ',
+      ' /_//_/  |  \\_\\\\_\\ ',
+      '/ // /   |   \\ \\\\ \\',
+    ],W/2,372,'#6a3020',13,17,Math.min(1,t/90)*a);noGlow();
     if(t>200){ctx.globalAlpha=Math.min(1,(t-200)/40)*a;ctx.font='italic 16px monospace';ctx.fillStyle='#cc8866';ctx.textAlign='center';ctx.fillText('but she could not.',W/2,H-90);ctx.globalAlpha=1;}
-    const wl=Math.min(1,t/310)*0.22;ctx.globalAlpha=wl*a*2.5;ctx.fillStyle='#08112a';ctx.fillRect(0,H*(1-wl),W,H*wl);ctx.globalAlpha=1;
+    // Water rises in living ASCII rows, drifting against each other
+    const wl=Math.min(1,t/310)*0.26;
+    ctx.globalAlpha=wl*a*1.6;ctx.fillStyle='#08112a';ctx.fillRect(0,H*(1-wl),W,H*wl);ctx.globalAlpha=1;
+    const rows=Math.floor(wl*H/15);
+    ctx.font='12px monospace';ctx.textAlign='center';
+    for(let ri=0;ri<rows;ri++){
+      const ry=H-ri*15-6;
+      const sh=Math.sin(frameCount*0.03+ri*0.8)*6*(ri%2?1:-1);
+      ctx.globalAlpha=a*Math.min(0.4,0.12+ri*0.02);
+      ctx.fillStyle=ri===rows-1?'#3a6a99':'#16304d';
+      ctx.fillText(ri%2?'≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈':'~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~≈~',W/2+sh,ry);
+    }
+    ctx.globalAlpha=1;
     return;
   }
   if(name==='drowning'){
     const wl=0.18+(t/dur)*0.72;
     ctx.fillStyle='#04081a';ctx.fillRect(0,0,W,H);ctx.fillStyle='#07112e';ctx.fillRect(0,H*(1-wl),W,H*wl);
-    const sinkY=360+(t/dur)*240,la=Math.max(0,1-t/(dur*0.75));
-    drawAscii(LAILA_SIT,W/2,sinkY,'#f0d0a0',12,16,la*a);
+    // Full-frame water texture + dying light shaft from above
+    drawAsciiField(a*0.5,frameCount,110,'#2a4a77',-0.25);
+    const shaftA=Math.max(0,0.20-(t/dur)*0.20)*a;
+    if(shaftA>0){
+      const sg=ctx.createLinearGradient(0,0,0,H*0.6);
+      sg.addColorStop(0,`rgba(184,212,240,${shaftA})`);sg.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=sg;ctx.beginPath();ctx.moveTo(W/2-60,0);ctx.lineTo(W/2+60,0);ctx.lineTo(W/2+150,H*0.6);ctx.lineTo(W/2-150,H*0.6);ctx.closePath();ctx.fill();
+    }
+    // Laila sinks, slowly tilting — serene, surrendering
+    const sinkY=340+(t/dur)*260,la=Math.max(0,1-t/(dur*0.80));
+    ctx.save();ctx.translate(W/2,sinkY);ctx.rotate(Math.min(0.4,t*0.0012));
+    drawAsciiC(LAILA_RISE,LAILA_RISE_COLS,0,0,10,12,la*a,'#f0d0a0',4);
+    ctx.restore();
+    // Bubble columns rising past her
     ctx.font='11px monospace';ctx.fillStyle='#5577aa';
-    for(let i=0;i<9;i++){const bx=70+((i*79+t*0.55)%430),by=H-((t*0.45+i*85)%(H*0.72))-40;ctx.globalAlpha=0.35*a;ctx.fillText(['o','°','.','·','o'][i%5],bx,by);}
+    for(let i=0;i<14;i++){const bx=55+((i*83+t*0.55)%450),by=H-((t*0.5+i*71)%(H*0.8))-30;ctx.globalAlpha=0.35*a;ctx.fillText(['o','°','.','·','O'][i%5],bx,by);}
     ctx.globalAlpha=1;
     if(t>140){ctx.globalAlpha=Math.min(1,(t-140)/50)*a*0.7;ctx.font='italic 15px monospace';ctx.fillStyle='#4466aa';ctx.textAlign='center';ctx.fillText('the lake took her.',W/2,H-110);ctx.globalAlpha=1;}
     return;
@@ -2637,32 +3215,48 @@ function drawIntro(){
     ctx.fillStyle='rgba(30,12,8,0.4)';ctx.fillRect(0,0,W,H);
     const grad=ctx.createRadialGradient(W/2,0,0,W/2,0,380);grad.addColorStop(0,'rgba(240,200,150,0.06)');grad.addColorStop(1,'rgba(0,0,0,0)');
     ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
-    drawAscii(LAILA_SIT,W/2-28,H/2+10,'#f0d0a0',13,17,a);drawSmallFeather(W/2+32,H/2+8,Math.min(1,t/80)*a,'#f0f0ff',1.1);
-    if(runCount>0){const cnt=Math.min(runCount,8);for(let i=0;i<cnt;i++)drawSmallFeather(W/2-cnt*13+i*26,H/2-70,0.28*a,'#aabbff',0.7);}
+    drawAsciiField(a*0.30,frameCount,60,'#4a3322',0.06); // warm drifting motes
+    drawAsciiC(LAILA_GRAND,LAILA_GRAND_COLS,W/2-30,H/2+8,10,12,a,'#f0d0a0',5);
+    // The feather descends to her side, swaying
+    const fp=Math.min(1,t/200);
+    const fy=-30+(H/2+8+30)*(1-Math.pow(1-fp,2));
+    const fx=W/2+38+Math.sin(fp*Math.PI*2.5)*16*(1-fp);
+    drawSmallFeather(fx,fy,Math.min(1,t/60)*a,'#f0f0ff',1.1);
+    if(runCount>0){const cnt=Math.min(runCount,8);for(let i=0;i<cnt;i++)drawSmallFeather(W/2-cnt*13+i*26,H/2-80,0.28*a,'#aabbff',0.7);}
     const line1=runCount===0?'...':'Again.',line2=runCount===0?'A feather.':'The feather is still there.';
-    if(t>160){ctx.globalAlpha=Math.min(1,(t-160)/40)*a;ctx.font='18px monospace';ctx.fillStyle='#ccbbdd';ctx.textAlign='center';ctx.fillText(line1,W/2,H/2+78);ctx.globalAlpha=1;}
-    if(t>260){ctx.globalAlpha=Math.min(1,(t-260)/40)*a;ctx.font='bold 18px monospace';ctx.fillStyle='#ddc8ee';ctx.textAlign='center';ctx.fillText(line2,W/2,H/2+108);ctx.globalAlpha=1;}
+    if(t>160){ctx.globalAlpha=Math.min(1,(t-160)/40)*a;ctx.font='18px monospace';ctx.fillStyle='#ccbbdd';ctx.textAlign='center';ctx.fillText(line1,W/2,H/2+84);ctx.globalAlpha=1;}
+    if(t>260){ctx.globalAlpha=Math.min(1,(t-260)/40)*a;ctx.font='bold 18px monospace';ctx.fillStyle='#ddc8ee';ctx.textAlign='center';ctx.fillText(line2,W/2,H/2+114);ctx.globalAlpha=1;}
     return;
   }
   if(name==='why'){
     ctx.fillStyle='rgba(30,12,8,0.4)';ctx.fillRect(0,0,W,H);
-    drawAscii(LAILA_SIT,W/2-28,H/2+10,'#f0d0a0',13,17,a*0.5);drawSmallFeather(W/2+32,H/2+8,a*0.7,'#f0f0ff',1.1);
-    ctx.globalAlpha=Math.min(1,t/50)*a;ctx.font='bold 26px monospace';ctx.fillStyle='#ddc8ee';ctx.textAlign='center';ctx.fillText('Why?',W/2,H/2+108);ctx.globalAlpha=1;
+    drawAsciiField(a*0.22,frameCount,60,'#4a3322',0.06);
+    drawAsciiC(LAILA_GRAND,LAILA_GRAND_COLS,W/2-30,H/2+8,10,12,a*0.5,'#f0d0a0',3);
+    drawSmallFeather(W/2+38,H/2+8,a*0.7,'#f0f0ff',1.1);
+    ctx.globalAlpha=Math.min(1,t/50)*a;ctx.font='bold 26px monospace';ctx.fillStyle='#ddc8ee';ctx.textAlign='center';ctx.fillText('Why?',W/2,H/2+114);ctx.globalAlpha=1;
     return;
   }
   if(name==='start'){
     ctx.fillStyle='rgba(20,0,40,0.18)';ctx.fillRect(0,0,W,H*0.4);
     zoneParticles.forEach(p=>{ctx.globalAlpha=p.a;ctx.fillStyle='#7755bb';ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();});
     ctx.globalAlpha=1;
-    if(runCount>0){
+    if(lailaFree&&runCount===0){
+      // The loop is broken — one white feather, glowing softly
+      const fp=0.55+0.25*Math.sin(Date.now()/1100);
+      drawSmallFeather(W/2,92,fp,'#ffffff',1.1);
+      ctx.globalAlpha=0.45;ctx.font='italic 12px monospace';ctx.fillStyle='#8899bb';ctx.textAlign='center';
+      ctx.fillText('she is free.',W/2,130);ctx.globalAlpha=1;
+    } else if(runCount>0){
       const cnt=Math.min(runCount,8);
       for(let i=0;i<cnt;i++)drawSmallFeather(W/2-cnt*15+i*30,90,0.45,'#bbaaff',0.85);
+      if(lailaFree)drawSmallFeather(W/2+cnt*15+22,90,0.7,'#fff8d8',0.85); // the feather she earned
       ctx.globalAlpha=0.35;ctx.font='12px monospace';ctx.fillStyle='#554466';ctx.textAlign='center';
       ctx.fillText(`she has fallen ${runCount} time${runCount>1?'s':''}`,W/2,130);ctx.globalAlpha=1;
     }
     glow(COL.accent,26);ctx.font='bold 44px monospace';ctx.fillStyle='#cc99ff';ctx.textAlign='center';ctx.fillText("LAILA'S DESCENT",W/2,H/2-55);noGlow();
     ctx.font='15px monospace';ctx.fillStyle='#553366';ctx.textAlign='center';ctx.fillText('T H E   A B Y S S',W/2,H/2-14);
-    glow('#f0f0e0',6);drawAscii(OWL_ART,W/2,H/2+90,'rgba(255,255,240,0.14)',11,16,1);noGlow();
+    const tb=10+Math.sin(frameCount*0.02)*0.4; // the owl breathes behind the title
+    drawAsciiC(getGrandOwl(frameCount),['rgba(255,255,240,0.13)'],W/2,H/2+95,tb,Math.round(tb*1.3),1,'#f0f0e0',5);
     const pulse=0.55+0.45*Math.sin(Date.now()/700);
     ctx.globalAlpha=pulse;glow(COL.accent,10);ctx.font='bold 16px monospace';ctx.fillStyle='#aa77ee';ctx.textAlign='center';ctx.fillText('PRESS  SPACE  TO  BEGIN  YOUR  DESCENT',W/2,H/2+180);
     noGlow();ctx.font='12px monospace';ctx.fillStyle='#443355';ctx.fillText('or click anywhere',W/2,H/2+206);ctx.globalAlpha=1;
@@ -2884,54 +3478,118 @@ function drawEnemy(e){
   switch(e.type){
 
     case 'rotwood':{
-      ctx.translate(e.x,e.y);glow(col,8);ctx.strokeStyle='#2a1608';ctx.lineWidth=3;ctx.lineCap='round';
-      // Waterlogged log chunk — irregular stroked rect
-      ctx.fillStyle='#2a1608';ctx.beginPath();
-      ctx.moveTo(-e.w*0.5,-e.h*0.4);ctx.lineTo(e.w*0.48,-e.h*0.5);ctx.lineTo(e.w*0.52,e.h*0.5);ctx.lineTo(-e.w*0.48,e.h*0.48);ctx.closePath();ctx.fill();ctx.stroke();
-      // Grain lines
-      ctx.strokeStyle='#1a0e04';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(-e.w*0.3,-e.h*0.3);ctx.lineTo(-e.w*0.25,e.h*0.3);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(e.w*0.1,-e.h*0.4);ctx.lineTo(e.w*0.12,e.h*0.4);ctx.stroke();
+      const s=e.special;
+      ctx.translate(e.x,e.y);ctx.rotate(s.angle||0);
+      // Waterlogged log — ink silhouette, irregular bark edge, cold rim light from above
+      ctx.fillStyle='#1c0f06';ctx.strokeStyle='#0e0703';ctx.lineWidth=1.6;ctx.lineCap='round';
+      ctx.beginPath();
+      ctx.moveTo(-e.w*0.52,-e.h*0.34);
+      ctx.quadraticCurveTo(-e.w*0.30,-e.h*0.52,-e.w*0.05,-e.h*0.40);
+      ctx.quadraticCurveTo(e.w*0.22,-e.h*0.54,e.w*0.50,-e.h*0.36);
+      ctx.lineTo(e.w*0.55,e.h*0.30);
+      ctx.quadraticCurveTo(e.w*0.25,e.h*0.48,-e.w*0.06,e.h*0.38);
+      ctx.quadraticCurveTo(-e.w*0.32,e.h*0.50,-e.w*0.50,e.h*0.34);
+      ctx.closePath();ctx.fill();ctx.stroke();
+      // Broken branch stubs
+      ctx.strokeStyle='#1c0f06';ctx.lineWidth=3;
+      ctx.beginPath();ctx.moveTo(-e.w*0.18,-e.h*0.42);ctx.lineTo(-e.w*0.12,-e.h*0.78);ctx.stroke();
+      ctx.lineWidth=2.2;
+      ctx.beginPath();ctx.moveTo(e.w*0.28,e.h*0.40);ctx.lineTo(e.w*0.36,e.h*0.72);ctx.stroke();
+      // End-grain ring on the cut face
+      ctx.strokeStyle='#0e0703';ctx.lineWidth=1;
+      ctx.beginPath();ctx.ellipse(-e.w*0.46,0,3.2,e.h*0.30,0,0,Math.PI*2);ctx.stroke();
+      ctx.beginPath();ctx.ellipse(-e.w*0.46,0,1.4,e.h*0.14,0,0,Math.PI*2);ctx.stroke();
+      // Cold rim light along the upper edge — the light from the surface
+      ctx.strokeStyle='rgba(150,190,225,0.28)';ctx.lineWidth=1.2;
+      ctx.beginPath();ctx.moveTo(-e.w*0.48,-e.h*0.36);ctx.quadraticCurveTo(0,-e.h*0.52,e.w*0.46,-e.h*0.38);ctx.stroke();
+      // Grain
+      ctx.strokeStyle='rgba(10,6,2,0.8)';ctx.lineWidth=0.8;
+      ctx.beginPath();ctx.moveTo(-e.w*0.3,-e.h*0.18);ctx.quadraticCurveTo(0,-e.h*0.10,e.w*0.34,-e.h*0.16);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(-e.w*0.26,e.h*0.12);ctx.quadraticCurveTo(e.w*0.04,e.h*0.20,e.w*0.30,e.h*0.10);ctx.stroke();
       break;
     }
 
     case 'deeplight':{
       ctx.translate(e.x,e.y);
-      const dp=0.7+Math.sin(frameCount*0.08)*0.3;
-      glow('#88ccff',16);ctx.globalAlpha=dp;
-      const dg=ctx.createRadialGradient(0,0,0,0,0,e.w/2);
-      dg.addColorStop(0,'rgba(180,230,255,0.9)');dg.addColorStop(1,'rgba(136,204,255,0.1)');
-      ctx.fillStyle=dg;ctx.beginPath();ctx.arc(0,0,e.w/2,0,Math.PI*2);ctx.fill();
+      const s=e.special;
+      const dp=0.55+0.45*Math.sin((s.pulse||0)*Math.PI*2); // the pulse IS the countdown
+      // The lure stem — something holds this light
+      ctx.strokeStyle='rgba(8,16,26,0.85)';ctx.lineWidth=1.6;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(0,-e.h*0.5);ctx.quadraticCurveTo(3+Math.sin(frameCount*0.03)*2,-e.h*1.1,-2,-e.h*1.7);ctx.stroke();
+      // Layered cold glow
+      glow('#88ccff',10+dp*14);ctx.globalAlpha=0.5+dp*0.5;
+      const dg=ctx.createRadialGradient(0,0,0,0,0,e.w*0.7);
+      dg.addColorStop(0,'rgba(210,240,255,0.95)');dg.addColorStop(0.45,'rgba(136,204,255,0.45)');dg.addColorStop(1,'rgba(136,204,255,0)');
+      ctx.fillStyle=dg;ctx.beginPath();ctx.arc(0,0,e.w*0.7,0,Math.PI*2);ctx.fill();
+      // Hard core
+      ctx.fillStyle=`rgba(235,250,255,${0.6+dp*0.4})`;
+      ctx.beginPath();ctx.arc(0,0,2.4+dp*1.6,0,Math.PI*2);ctx.fill();
       ctx.globalAlpha=1;
       break;
     }
 
     case 'lakemoss':{
-      ctx.translate(e.x,e.y);glow('#4a6a3a',8);
-      const tv=Date.now()*0.0008;ctx.fillStyle='rgba(60,90,48,0.55)';
+      const s=e.special;
+      const jx=s.shiver>0?(Math.random()-0.5)*3:0, jy=s.shiver>0?(Math.random()-0.5)*3:0; // it notices you
+      ctx.translate(e.x+jx,e.y+jy);
+      // Lingering spore field — soft, wrong, beautiful
+      if(s.bloomR>0){
+        const bg2=ctx.createRadialGradient(0,0,0,0,0,s.bloomR);
+        bg2.addColorStop(0,'rgba(90,130,70,0.16)');bg2.addColorStop(0.7,'rgba(70,110,55,0.10)');bg2.addColorStop(1,'rgba(60,100,50,0)');
+        ctx.fillStyle=bg2;ctx.beginPath();ctx.arc(0,0,s.bloomR,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='rgba(150,190,120,0.4)';
+        for(let sp=0;sp<10;sp++){
+          const sa=sp*0.63+frameCount*0.006,sr=s.bloomR*(0.25+(sp%5)*0.15);
+          ctx.beginPath();ctx.arc(Math.cos(sa)*sr,Math.sin(sa)*sr*0.8,1.1,0,Math.PI*2);ctx.fill();
+        }
+        ctx.strokeStyle='rgba(110,150,85,0.30)';ctx.lineWidth=1.4;
+        ctx.beginPath();ctx.arc(0,0,s.bloomR,0,Math.PI*2);ctx.stroke();
+      }
+      // The moss body — near-camouflaged organic mass with drifting fronds
+      glow('#4a6a3a',6);
+      const tv=Date.now()*0.0008;
+      const idleA=s.bloomed||s.shiver>0?0.7:0.42; // harder to see when calm
+      ctx.fillStyle=`rgba(52,82,44,${idleA})`;
       ctx.beginPath();
-      for(let i=0;i<10;i++){const a=(i/10)*Math.PI*2,r=(e.w/2)*(0.6+0.4*Math.sin(a*2.8+tv));i===0?ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r*(e.h/e.w)):ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r*(e.h/e.w));}
+      for(let i=0;i<12;i++){const a=(i/12)*Math.PI*2,r=(e.w/2)*(0.55+0.45*Math.sin(a*2.8+tv));i===0?ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r*(e.h/e.w)):ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r*(e.h/e.w));}
       ctx.closePath();ctx.fill();
-      // Bloom ring if active
-      if(e.special.bloomR>0){
-        ctx.strokeStyle='rgba(80,120,60,0.35)';ctx.lineWidth=2;
-        ctx.beginPath();ctx.arc(0,0,e.special.bloomR,0,Math.PI*2);ctx.stroke();
+      // Fronds — thin tendrils swaying off the mass
+      ctx.strokeStyle=`rgba(70,105,58,${idleA*0.8})`;ctx.lineWidth=1;ctx.lineCap='round';
+      for(let f=0;f<5;f++){
+        const fa=f*1.26+0.4,fr=e.w*0.42;
+        const sway=Math.sin(frameCount*0.02+f*1.7)*4;
+        ctx.beginPath();ctx.moveTo(Math.cos(fa)*fr*0.7,Math.sin(fa)*fr*0.5);
+        ctx.quadraticCurveTo(Math.cos(fa)*fr*1.3+sway,Math.sin(fa)*fr*0.9-4,Math.cos(fa)*fr*1.7+sway*1.5,Math.sin(fa)*fr*1.1);ctx.stroke();
       }
       break;
     }
 
     case 'hand':{
       ctx.translate(e.x,e.y);
-      const sc=e.special.size||1;
+      const s=e.special;
+      const sc=s.size||1;
       const hue=Math.min(8+zoneWave*8,28);
       const fc=`hsl(${hue},80%,30%)`, fc2=`hsl(${hue},80%,18%)`, oc=`hsl(${hue},80%,11%)`;
-      glow(fc,12);ctx.save();ctx.scale(sc,sc);
+      // State acting: splay = fingers spread wide (the grab is coming),
+      // lunge = fingers snapped forward, limp = wrist drops, fingers droop
+      let splayK=0,droopK=0,bodyRot=0;
+      if(s.state==='splay')splayK=Math.min(1,(s.t||0)/18);
+      else if(s.state==='lunge'){splayK=0.25;bodyRot=Math.atan2(s.lungeVy||0,s.lungeVx||1)+Math.PI/2;}
+      else if(s.state==='limp'){droopK=Math.min(1,(s.t||0)/14);bodyRot=droopK*0.5;ctx.globalAlpha=0.85;}
+      ctx.rotate(bodyRot*0.4);
+      glow(s.state==='splay'?'#ff3300':fc,s.state==='splay'?18:12);
+      ctx.save();ctx.scale(sc,sc);
       const pw=e.w*0.70, fws=[e.w*0.12,e.w*0.13,e.w*0.13,e.w*0.11];
       const fhs=[e.h*0.52,e.h*0.60,e.h*0.57,e.h*0.44];
       const fxs=[-pw*0.34,-pw*0.11,pw*0.11,pw*0.34];
-      // Fingers (drawn first, behind palm)
+      // Fingers (drawn first, behind palm) — splay rotates them outward, limp folds them down
       fxs.forEach((fx,i)=>{
         const fw2=fws[i],fh2=fhs[i];
+        ctx.save();
+        ctx.translate(fx,e.h*0.05);
+        const out=(i-1.5)/1.5; // -1..1 across the hand
+        ctx.rotate(out*splayK*0.5+droopK*(0.9+out*0.15));
+        ctx.translate(-fx,-e.h*0.05);
         ctx.fillStyle=fc;ctx.strokeStyle=oc;ctx.lineWidth=1.1;
         ctx.beginPath();
         ctx.moveTo(fx-fw2/2,e.h*0.06);ctx.lineTo(fx-fw2/2,-fh2+fw2/2);
@@ -2941,6 +3599,7 @@ function drawEnemy(e){
         // Knuckle crease
         ctx.strokeStyle=oc;ctx.lineWidth=0.7;
         ctx.beginPath();ctx.moveTo(fx-fw2*0.3,-fh2*0.4);ctx.lineTo(fx+fw2*0.3,-fh2*0.4);ctx.stroke();
+        ctx.restore();
       });
       // Palm — cell shaded (light side + shadow side)
       ctx.fillStyle=fc;ctx.strokeStyle=oc;ctx.lineWidth=1.5;
@@ -2962,32 +3621,67 @@ function drawEnemy(e){
     }
 
     case 'seeker':{
-      ctx.translate(e.x,e.y);glow('#ffaa20',14);
-      // Eye body
-      ctx.fillStyle='#3a1800';ctx.beginPath();ctx.ellipse(0,0,e.w/2,e.h*0.38,0,0,Math.PI*2);ctx.fill();
-      // Iris
+      ctx.translate(e.x,e.y);
+      const s=e.special;
+      // Lid closure: 0 open → 1 shut. It fires the instant it reopens.
+      const lid=s.blink>0?Math.min(1,(22-s.blink)/10)*(s.blink>4?1:s.blink/4):0;
+      glow('#ffaa20',14-lid*10);
+      // Veined eye body
+      ctx.fillStyle='#2e1200';ctx.beginPath();ctx.ellipse(0,0,e.w/2,e.h*0.38,0,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(140,30,10,0.55)';ctx.lineWidth=0.9;
+      for(let v=0;v<5;v++){
+        const va=v*1.26+0.3;
+        ctx.beginPath();ctx.moveTo(Math.cos(va)*e.w*0.46,Math.sin(va)*e.h*0.34);
+        ctx.quadraticCurveTo(Math.cos(va+0.3)*e.w*0.3,Math.sin(va+0.3)*e.h*0.24,Math.cos(va)*e.w*0.18,Math.sin(va)*e.h*0.13);ctx.stroke();
+      }
+      // Iris + pupil, always tracking
       ctx.fillStyle='#aa6600';ctx.beginPath();ctx.arc(0,0,e.w*0.28,0,Math.PI*2);ctx.fill();
-      // Pupil tracking player
       const sa=Math.atan2(player.y-e.y,player.x-e.x);
       const px2=Math.cos(sa)*e.w*0.1,py2=Math.sin(sa)*e.w*0.1;
       ctx.fillStyle='#ffaa20';ctx.beginPath();ctx.arc(px2,py2,e.w*0.12,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#000';ctx.beginPath();ctx.arc(px2,py2,e.w*0.06,0,Math.PI*2);ctx.fill();
+      // The lids — flesh closing over the eye. Shut eyes mean the shot is coming.
+      if(lid>0){
+        ctx.fillStyle='#240e00';
+        ctx.beginPath();ctx.ellipse(0,-e.h*0.38*(1-lid),e.w*0.52,e.h*0.40*lid,0,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.ellipse(0,e.h*0.38*(1-lid),e.w*0.52,e.h*0.40*lid,0,0,Math.PI);ctx.fill();
+        ctx.strokeStyle='#1a0a00';ctx.lineWidth=1.2;
+        ctx.beginPath();ctx.moveTo(-e.w*0.5,0);ctx.lineTo(e.w*0.5,0);ctx.stroke();
+      }
       // Tendrils
-      ctx.strokeStyle='#3a1800';ctx.lineWidth=2;ctx.lineCap='round';
+      ctx.strokeStyle='#2e1200';ctx.lineWidth=2;ctx.lineCap='round';
       [0.4,0,-0.4].forEach((ang,i)=>{ctx.beginPath();ctx.moveTo(Math.sin(ang)*8,e.h*0.3);ctx.quadraticCurveTo(Math.sin(ang+0.3)*14,e.h*0.55,Math.sin(ang)*10,e.h*0.7+i*4);ctx.stroke();});
       break;
     }
 
     case 'handcluster':{
-      ctx.translate(e.x,e.y);glow('#aa1818',16);ctx.fillStyle='#8b0000';
-      // Draw 5 overlapping hands at offsets
+      ctx.translate(e.x,e.y);
+      const s=e.special;
+      // Pause = the cluster spreads open (wider, hungrier); surge = clenched tight
+      const spread=s.state==='pause'?1+Math.min(1,(s.t||0)/20)*0.45:1;
       const osc=Math.sin(frameCount*0.15)*2;
-      [[0,0],[-10,4],[10,-4],[-5,-8],[5,8]].forEach(([ox,oy])=>{
-        ctx.save();ctx.translate(ox+osc,oy);ctx.scale(0.7,0.7);
-        ctx.fillRect(-13,3,26,12);
-        [-9,-3,3,9].forEach(fx=>ctx.fillRect(fx-4,-18,7,18));
+      glow('#aa1818',16);
+      // Five real hands, fanned around a dark center
+      [[0,0,0],[-11,5,-0.5],[11,-5,0.5],[-6,-9,-0.9],[6,9,0.9]].forEach(([ox,oy,rot],hi)=>{
+        ctx.save();ctx.translate((ox+osc)*spread,oy*spread);ctx.rotate(rot*(spread-0.55));ctx.scale(0.5,0.5);
+        ctx.fillStyle=hi===0?'#9b1010':'#7a0a0a';ctx.strokeStyle='#3a0404';ctx.lineWidth=1.6;
+        // palm
+        ctx.beginPath();ctx.moveTo(-12,4);ctx.quadraticCurveTo(-14,16,0,17);ctx.quadraticCurveTo(14,16,12,4);ctx.closePath();ctx.fill();ctx.stroke();
+        // four fingers
+        [-9,-3,3,9].forEach((fx,i)=>{
+          const fh2=16+(i===1||i===2?4:0);
+          ctx.beginPath();ctx.moveTo(fx-3,5);ctx.lineTo(fx-3,-fh2+3);
+          ctx.quadraticCurveTo(fx-3,-fh2,fx,-fh2);ctx.quadraticCurveTo(fx+3,-fh2,fx+3,-fh2+3);
+          ctx.lineTo(fx+3,5);ctx.closePath();ctx.fill();ctx.stroke();
+        });
+        // thumb
+        ctx.save();ctx.translate(13,8);ctx.rotate(-0.6);
+        ctx.beginPath();ctx.moveTo(-2.5,6);ctx.lineTo(-2.5,-8);ctx.quadraticCurveTo(-2.5,-11,0,-11);ctx.quadraticCurveTo(2.5,-11,2.5,-8);ctx.lineTo(2.5,6);ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.restore();
         ctx.restore();
       });
+      // Dark hollow at the center — the thing they share
+      ctx.fillStyle='rgba(8,0,2,0.85)';ctx.beginPath();ctx.arc(0,0,5.5*spread,0,Math.PI*2);ctx.fill();
       break;
     }
 
@@ -3012,15 +3706,40 @@ function drawEnemy(e){
     }
 
     case 'glitch':{
-      if(!e.special.visible)break;
+      const s=e.special;
+      if(!s.visible){
+        // Static builds where it will land — read the corruption
+        if(s.teleTimer<=25&&s.nextX!==undefined){
+          const bld=1-s.teleTimer/25;
+          ctx.save();ctx.translate(s.nextX,s.nextY);
+          for(let i=0;i<Math.floor(4+bld*14);i++){
+            ctx.fillStyle=['#ff0000','#00ff00','#0066ff','#ffffff'][i%4];
+            ctx.globalAlpha=(0.15+bld*0.4)*Math.random();
+            ctx.fillRect(-14+Math.random()*28,-18+Math.random()*36,1.5+Math.random()*3,1.5);
+          }
+          ctx.restore();
+        }
+        break;
+      }
       ctx.translate(e.x,e.y);
-      // Corrupted hand shape — offset segments in neon
-      [[0,'#ff6600'],[-4,'#0066ff'],[3,'#00ff88']].forEach(([ox,gc])=>{
-        ctx.save();ctx.translate(ox,0);ctx.globalAlpha=0.7;ctx.fillStyle=gc;
-        ctx.fillRect(-10,3,20,10);[-8,-2,4,10].forEach(fx=>ctx.fillRect(fx-4,-15,6,16));
+      // Corrupted hand — real finger geometry, RGB-split, scanline-torn
+      [[0,0,'#ff6600',0.85],[-4,1,'#0066ff',0.5],[3,-1,'#00ff88',0.5]].forEach(([ox,oy,gc,ga])=>{
+        ctx.save();ctx.translate(ox,oy);ctx.globalAlpha=ga;ctx.fillStyle=gc;
+        // palm
+        ctx.beginPath();ctx.moveTo(-10,4);ctx.quadraticCurveTo(-11,13,0,14);ctx.quadraticCurveTo(11,13,10,4);ctx.closePath();ctx.fill();
+        // fingers with rounded tips
+        [-8,-2.5,3,8.5].forEach((fx,i)=>{
+          const fh2=14+(i===1||i===2?3:0);
+          ctx.beginPath();ctx.moveTo(fx-2.6,4);ctx.lineTo(fx-2.6,-fh2+2.6);
+          ctx.quadraticCurveTo(fx-2.6,-fh2,fx,-fh2);ctx.quadraticCurveTo(fx+2.6,-fh2,fx+2.6,-fh2+2.6);
+          ctx.lineTo(fx+2.6,4);ctx.closePath();ctx.fill();
+        });
         ctx.restore();
       });
-      // Pixelated edge noise
+      // Scanline tear — a slice of it is missing
+      const tearY=-14+(frameCount*1.7)%30;
+      ctx.fillStyle='#000';ctx.fillRect(-15,tearY,30,2.5);
+      // Edge noise
       glow('#ff6600',10);ctx.fillStyle='#ff6600';
       for(let i=0;i<4;i++)ctx.fillRect(-12+Math.random()*24,-18+Math.random()*36,2,2);
       break;
@@ -3029,38 +3748,57 @@ function drawEnemy(e){
     case 'decoy':{
       const s=e.special;
       if(s.disguised){
-        // Looks like a HUD feather
-        ctx.translate(e.x,e.y);ctx.rotate(Math.sin(Date.now()/800)*0.1);
-        ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1.2;ctx.lineCap='round';glow('#f0f0f0',6);
-        const dr=8;ctx.beginPath();ctx.moveTo(0,-dr);ctx.quadraticCurveTo(dr*0.7,0,0,dr);ctx.quadraticCurveTo(-dr*0.7,0,0,-dr);ctx.stroke();
+        // Indistinguishable from a HUD feather — until you count them
+        ctx.translate(e.x,e.y);ctx.rotate(Math.sin(Date.now()/800)*0.08);
+        ctx.strokeStyle='#f0f0f0';ctx.lineWidth=1.3;ctx.lineCap='round';glow('#f8f8f8',8);
+        const dr=9;ctx.beginPath();ctx.moveTo(0,-dr);ctx.quadraticCurveTo(dr*0.7,0,0,dr);ctx.quadraticCurveTo(-dr*0.7,0,0,-dr);ctx.stroke();
         ctx.beginPath();ctx.moveTo(0,-dr);ctx.lineTo(0,dr);ctx.stroke();
       } else {
-        ctx.translate(e.x,e.y);glow('#ff4400',18);ctx.fillStyle='#cc2200';
-        ctx.beginPath();ctx.arc(0,0,10,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle='#ff6600';ctx.beginPath();ctx.arc(-2,-2,5,0,Math.PI*2);ctx.fill();
+        // The feather unfurls wrong — black quill, a red eye where the shaft was
+        ctx.translate(e.x,e.y);ctx.rotate(Math.sin(frameCount*0.3)*0.18);
+        glow('#ff2200',14);
+        ctx.fillStyle='#0a0408';ctx.strokeStyle='#1a0a12';ctx.lineWidth=1.4;
+        const dr=12;
+        ctx.beginPath();ctx.moveTo(0,-dr*1.2);ctx.quadraticCurveTo(dr,0,0,dr*1.2);ctx.quadraticCurveTo(-dr,0,0,-dr*1.2);ctx.closePath();ctx.fill();ctx.stroke();
+        // barbs split apart
+        ctx.strokeStyle='rgba(40,16,28,0.9)';ctx.lineWidth=0.9;
+        for(let bb=0;bb<5;bb++){const by=-dr+bb*dr*0.45;ctx.beginPath();ctx.moveTo(0,by);ctx.lineTo(7-bb,by+3);ctx.stroke();ctx.beginPath();ctx.moveTo(0,by);ctx.lineTo(-7+bb,by+3);ctx.stroke();}
+        // the eye
+        ctx.fillStyle='#cc1111';ctx.beginPath();ctx.arc(0,0,3.6,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#000';ctx.beginPath();ctx.arc(0,0,1.6,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.8)';ctx.beginPath();ctx.arc(-1,-1.2,0.7,0,Math.PI*2);ctx.fill();
       }
       break;
     }
 
     case 'echo':{
-      ctx.translate(e.x,e.y);
       const comps=e.special.comps;
-      const offs=[{ox:-16,col:'#ff4444'},{ox:0,col:'#44ff44'},{ox:16,col:'#4444ff'}];
-      offs.forEach(({ox,col:cc},i)=>{
-        if(comps[i].dead)return;
-        ctx.save();ctx.translate(ox,0);ctx.globalAlpha=0.62;
-        // Mini Laila silhouette
-        ctx.fillStyle=cc;
-        ctx.beginPath();ctx.arc(0,-e.h/2+8,7,0,Math.PI*2);ctx.fill();
-        ctx.beginPath();ctx.moveTo(-7,0);ctx.lineTo(-14,e.h/2);ctx.lineTo(14,e.h/2);ctx.lineTo(7,0);ctx.closePath();ctx.fill();
-        ctx.restore();
+      const chans=[
+        {hairCol:'#cc2222',dressCol:'#551111',skinCol:'#882222',eyeCol:'#ff6666',eyeGlow:'#660000'},
+        {hairCol:'#22cc22',dressCol:'#115511',skinCol:'#228822',eyeCol:'#66ff66',eyeGlow:'#006600'},
+        {hairCol:'#3344ee',dressCol:'#111155',skinCol:'#222288',eyeCol:'#7788ff',eyeGlow:'#000088'},
+      ];
+      comps.forEach((c,i)=>{
+        const p=echoCompPos(e,i);
+        if(c.dead){
+          // a ghost flickers where it will reassemble — the warning
+          if(c.reTimer<70&&c.reTimer%10<5){
+            ctx.save();ctx.globalAlpha=0.18;
+            drawLailaVariant(p.x,p.y,{scale:0.55,alpha:0.18,...chans[i],floatOff:i*2.1});
+            ctx.restore();
+          }
+          return;
+        }
+        const fl=c.flicker>0?(c.flicker%6<3?0.25:0.75):0.62;
+        drawLailaVariant(p.x,p.y,{scale:0.55,alpha:fl,mirror:i===2,...chans[i],floatOff:i*2.1});
       });
-      ctx.globalAlpha=1;
       break;
     }
 
     case 'signal':{
-      ctx.translate(e.x,e.y);glow('#00ccff',14);ctx.strokeStyle='#00ccff';ctx.lineWidth=1.5;
+      ctx.translate(e.x,e.y);
+      if(e.special.matTimer>0)ctx.globalAlpha=Math.max(0.05,1-e.special.matTimer/40)*(0.6+0.4*Math.sin(frameCount*0.4)); // static-flicker materialization
+      glow('#00ccff',14);ctx.strokeStyle='#00ccff';ctx.lineWidth=1.5;
       // Hexagon body
       ctx.beginPath();
       for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2-Math.PI/6;ctx.lineTo(Math.cos(a)*e.w/2,Math.sin(a)*e.w/2);}
@@ -3068,43 +3806,94 @@ function drawEnemy(e){
       // Inner detail
       ctx.strokeStyle='rgba(0,204,255,0.4)';ctx.lineWidth=1;
       ctx.beginPath();for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2-Math.PI/6;ctx.lineTo(Math.cos(a)*e.w*0.3,Math.sin(a)*e.w*0.3);}ctx.closePath();ctx.stroke();
-      // Pulse rings
+      // Pulse rings — drawn gaps match the real safe gaps exactly, rotating with the body
       e.special.waves.forEach(w=>{
-        ctx.globalAlpha=w.opacity*0.5;ctx.strokeStyle='#00ccff';ctx.lineWidth=1;
-        // Draw ring with 4 gaps at N/E/S/W
-        for(let seg=0;seg<8;seg++){const a1=(seg/8)*Math.PI*2,a2=((seg+0.7)/8)*Math.PI*2;ctx.beginPath();ctx.arc(0,0,w.r,a1,a2);ctx.stroke();}
+        if(w.r<=0)return;
+        ctx.globalAlpha=w.opacity*0.55;ctx.strokeStyle='#00ccff';ctx.lineWidth=1.6;
+        for(let k=0;k<4;k++){
+          const a1=w.gapOff+k*Math.PI/2+0.3927, a2=w.gapOff+(k+1)*Math.PI/2-0.3927;
+          ctx.beginPath();ctx.arc(0,0,w.r,a1,a2);ctx.stroke();
+        }
       });
       ctx.globalAlpha=1;
       break;
     }
 
     case 'root':{
-      ctx.translate(e.x,e.y);glow('#2a1a00',8);ctx.strokeStyle='#1a0e00';ctx.lineWidth=2.5;ctx.lineCap='round';
-      const tv2=Date.now()*0.0005;
-      // 3 interweaving root tendrils
-      [[-0.4,0.3],[0,0.5],[0.35,-0.2]].forEach((c,i)=>{
-        const osc2=Math.sin(tv2+i)*4;
-        ctx.beginPath();ctx.moveTo(0,e.h*0.5);
-        ctx.quadraticCurveTo(c[0]*e.w+osc2,-e.h*0.1,c[1]*e.w+osc2,-e.h*0.5);ctx.stroke();
+      const s=e.special;
+      if(!s.segs)break;
+      // The vine — a gnarled dark path from the lake bed toward Laila
+      ctx.strokeStyle='#0f0a02';ctx.lineWidth=5;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(s.segs[0].x,s.segs[0].y);
+      for(let i=1;i<s.segs.length;i++){
+        const pr=s.segs[i-1],cu=s.segs[i];
+        ctx.quadraticCurveTo(pr.x+(cu.x-pr.x)*0.5+Math.sin(i*3.7)*7,pr.y+(cu.y-pr.y)*0.5,cu.x,cu.y);
+      }
+      ctx.stroke();
+      // Second pass, thinner + lighter — woody core
+      ctx.strokeStyle='#241a06';ctx.lineWidth=2;
+      ctx.beginPath();ctx.moveTo(s.segs[0].x,s.segs[0].y);
+      for(let i=1;i<s.segs.length;i++){
+        const pr=s.segs[i-1],cu=s.segs[i];
+        ctx.quadraticCurveTo(pr.x+(cu.x-pr.x)*0.5+Math.sin(i*3.7)*7,pr.y+(cu.y-pr.y)*0.5,cu.x,cu.y);
+      }
+      ctx.stroke();
+      // Rootlets off each joint
+      ctx.strokeStyle='rgba(15,10,2,0.8)';ctx.lineWidth=1.2;
+      s.segs.forEach((p,i)=>{
+        if(i===0)return;
+        const ra=i*2.4;
+        ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.quadraticCurveTo(p.x+Math.cos(ra)*10,p.y+Math.sin(ra)*8,p.x+Math.cos(ra)*16,p.y+Math.sin(ra)*15);ctx.stroke();
       });
+      // The tip — a pale bud, faintly luminous. The only thing that bleeds.
+      const tip=s.segs[s.segs.length-1];
+      const tipPulse=0.6+0.4*Math.sin(frameCount*0.07);
+      glow('#aacc88',10*tipPulse);
+      ctx.fillStyle=`rgba(150,180,120,${0.5+tipPulse*0.3})`;
+      ctx.beginPath();ctx.ellipse(tip.x,tip.y,5.5,7.5,Math.sin(frameCount*0.02)*0.3,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='rgba(220,240,200,0.55)';
+      ctx.beginPath();ctx.arc(tip.x,tip.y-1.5,2,0,Math.PI*2);ctx.fill();
+      if(s.retract>0){glow('#ffffff',14);ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(tip.x,tip.y,9,0,Math.PI*2);ctx.stroke();}
       break;
     }
 
     case 'chain':{
       const s=e.special;
-      const segs=[{x:e.x,y:e.y,hp:e.hp},{x:s.s2x,y:s.s2y,hp:s.s2hp},{x:s.s3x,y:s.s3y,hp:s.s3hp}];
-      // Draw connecting lines first
-      ctx.strokeStyle='rgba(42,37,53,0.6)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
-      for(let i=0;i<segs.length-1;i++){
-        if(segs[i].hp>0&&segs[i+1].hp>0){ctx.beginPath();ctx.moveTo(segs[i].x,segs[i].y);ctx.lineTo(segs[i+1].x,segs[i+1].y);ctx.stroke();}
+      if(!s.pts)break;
+      const shake=s.state==='windup'?(Math.random()-0.5)*1.4:0; // the creak
+      // Sweep motion blur — ghosts trail the arc
+      if(s.state==='sweep'){
+        for(let g2=1;g2<=2;g2++){
+          const ga=s.ang-s.dir*0.052*g2*2;
+          ctx.strokeStyle=`rgba(42,37,53,${0.16/g2})`;ctx.lineWidth=3;
+          ctx.beginPath();ctx.moveTo(s.ax,s.ay);
+          ctx.lineTo(s.ax+Math.sin(ga)*s.len,s.ay+Math.cos(ga)*s.len);ctx.stroke();
+        }
       }
-      ctx.setLineDash([]);
-      // Draw each segment
-      segs.forEach((sg,i)=>{
-        if(sg.hp<=0)return;
-        ctx.save();ctx.translate(sg.x,sg.y);
-        glow('#2a2535',10);ctx.fillStyle=i===0?'#3a3050':'#2a2535';
-        ctx.beginPath();ctx.ellipse(0,0,11,8,0,0,Math.PI*2);ctx.fill();
+      // The chain itself — small links from the anchor down
+      ctx.save();ctx.translate(s.ax+shake,s.ay);ctx.rotate(-s.ang);
+      const linkN=Math.floor(s.len/16);
+      for(let li=0;li<linkN;li++){
+        const ly=li*16+8;
+        ctx.globalAlpha=0.55+0.30*(li/linkN);
+        ctx.fillStyle='#2d2840';ctx.strokeStyle='#100d1e';ctx.lineWidth=0.9;
+        ctx.beginPath();ctx.ellipse(0,ly,3.4,6,(li%2)*Math.PI/2,0,Math.PI*2);
+        ctx.fill();ctx.stroke();
+      }
+      ctx.restore();ctx.globalAlpha=1;
+      // The three binding links — heavier, older. Break them while it hangs.
+      s.pts.forEach((p,i)=>{
+        if(s.links[i]<=0)return;
+        ctx.save();ctx.translate(p.x+shake,p.y);
+        const hittable=s.state!=='sweep';
+        glow(hittable?'#5a5078':'#2a2535',hittable?12:5);
+        ctx.fillStyle=hittable?'#3a3052':'#241f33';ctx.strokeStyle='#0d0a18';ctx.lineWidth=1.4;
+        ctx.beginPath();ctx.ellipse(0,0,11,8.5,Math.sin(frameCount*0.01+i)*0.2,0,Math.PI*2);ctx.fill();ctx.stroke();
+        ctx.fillStyle='rgba(3,2,10,0.9)';
+        ctx.beginPath();ctx.ellipse(0,0,5.5,4,0,0,Math.PI*2);ctx.fill();
+        // hp pips
+        if(s.links[i]===2){ctx.fillStyle='rgba(150,140,190,0.6)';ctx.beginPath();ctx.arc(-7,-6,1.3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(7,-6,1.3,0,Math.PI*2);ctx.fill();}
+        else{ctx.fillStyle='rgba(150,140,190,0.6)';ctx.beginPath();ctx.arc(0,-7,1.3,0,Math.PI*2);ctx.fill();}
         ctx.restore();
       });
       break;
@@ -3112,27 +3901,38 @@ function drawEnemy(e){
 
     case 'owlguardian':{
       ctx.translate(e.x,e.y);
-      const sweeping=!e.special.perched;
-      ctx.globalAlpha=sweeping?0.9:0.7;
-      glow('#4a3a6a',sweeping?18:10);ctx.fillStyle='#0d0a18';
-      // Wings
-      ctx.beginPath();ctx.moveTo(-e.w*0.12,e.h*0.05);ctx.bezierCurveTo(-e.w*0.55,-e.h*0.28,-e.w*0.78,e.h*0.22,-e.w*0.5,e.h*0.4);ctx.bezierCurveTo(-e.w*0.28,e.h*0.3,-e.w*0.12,e.h*0.18,-e.w*0.12,e.h*0.05);ctx.fill();
-      ctx.beginPath();ctx.moveTo(e.w*0.12,e.h*0.05);ctx.bezierCurveTo(e.w*0.55,-e.h*0.28,e.w*0.78,e.h*0.22,e.w*0.5,e.h*0.4);ctx.bezierCurveTo(e.w*0.28,e.h*0.3,e.w*0.12,e.h*0.18,e.w*0.12,e.h*0.05);ctx.fill();
-      // Body + head
+      const s=e.special;
+      const sweeping=!s.perched&&!s.exhaust;
+      const exhausted=s.exhaust>0;
+      const droop=exhausted?Math.min(1,(90-s.exhaust)/20)*0.5+0.5:0; // wings fall
+      ctx.globalAlpha=sweeping?0.92:exhausted?0.85:0.7;
+      glow('#4a3a6a',sweeping?18:exhausted?6:10);ctx.fillStyle='#0d0a18';
+      // Wings — drooped when exhausted
+      const wd=droop*e.h*0.35;
+      ctx.beginPath();ctx.moveTo(-e.w*0.12,e.h*0.05);ctx.bezierCurveTo(-e.w*0.55,-e.h*0.28+wd,-e.w*0.78,e.h*0.22+wd,-e.w*0.5,e.h*0.4+wd*0.6);ctx.bezierCurveTo(-e.w*0.28,e.h*0.3+wd*0.4,-e.w*0.12,e.h*0.18,-e.w*0.12,e.h*0.05);ctx.fill();
+      ctx.beginPath();ctx.moveTo(e.w*0.12,e.h*0.05);ctx.bezierCurveTo(e.w*0.55,-e.h*0.28+wd,e.w*0.78,e.h*0.22+wd,e.w*0.5,e.h*0.4+wd*0.6);ctx.bezierCurveTo(e.w*0.28,e.h*0.3+wd*0.4,e.w*0.12,e.h*0.18,e.w*0.12,e.h*0.05);ctx.fill();
+      // Body + head — head bows when spent
       ctx.fillStyle='#0a0815';ctx.beginPath();ctx.ellipse(0,e.h*0.15,e.w*0.22,e.h*0.35,0,0,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.arc(0,-e.h*0.22,e.w*0.18,0,Math.PI*2);ctx.fill();
-      // Amber eyes (dim — this is the shadow version)
-      const ep=sweeping?0.8+0.2*Math.sin(frameCount*0.2):0.4;
-      glow('#ffaa00',12*ep);ctx.fillStyle=`rgba(255,170,0,${ep*0.7})`;
-      ctx.beginPath();ctx.arc(-e.w*0.08,-e.h*0.22,e.w*0.058,0,Math.PI*2);ctx.fill();
-      ctx.beginPath();ctx.arc(e.w*0.08,-e.h*0.22,e.w*0.058,0,Math.PI*2);ctx.fill();
-      // Swoop feather trails
+      ctx.beginPath();ctx.arc(0,-e.h*0.22+droop*5,e.w*0.18,0,Math.PI*2);ctx.fill();
+      // Eyes: FLARE before the swoop — the only warning it gives
+      let ep=sweeping?0.8+0.2*Math.sin(frameCount*0.2):0.35;
+      if(s.flare>0)ep=1.2+0.6*Math.sin(frameCount*0.6); // ignition
+      if(exhausted)ep=0.15;
+      glow('#ffaa00',14*Math.min(1.4,ep));ctx.fillStyle=`rgba(255,${s.flare>0?140:170},0,${Math.min(1,ep*0.8)})`;
+      ctx.beginPath();ctx.arc(-e.w*0.08,-e.h*0.22+droop*5,e.w*(s.flare>0?0.075:0.058),0,Math.PI*2);ctx.fill();
+      ctx.beginPath();ctx.arc(e.w*0.08,-e.h*0.22+droop*5,e.w*(s.flare>0?0.075:0.058),0,Math.PI*2);ctx.fill();
+      // Wind-wake trails while sweeping
       if(sweeping){
         ctx.strokeStyle='rgba(74,58,106,0.4)';ctx.lineWidth=1.5;ctx.lineCap='round';
         for(let ft=0;ft<6;ft++){
           const foff=(ft-3)*8;
-          ctx.beginPath();ctx.moveTo(foff,-e.h*0.1);ctx.lineTo(foff-Math.cos(e.special.swoopAngle)*20,e.h*0.1);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(foff,-e.h*0.1);ctx.lineTo(foff-Math.cos(s.swoopAngle)*20,e.h*0.1);ctx.stroke();
         }
+      }
+      // Exhausted shiver — small heaving breaths
+      if(exhausted){
+        ctx.strokeStyle='rgba(255,170,0,0.18)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.arc(0,e.h*0.1,e.w*0.3+Math.sin(frameCount*0.15)*3,0,Math.PI*2);ctx.stroke();
       }
       ctx.globalAlpha=1;
       break;
@@ -3189,16 +3989,37 @@ function drawBossHPBar(x,y,w,h,hp,maxHp){
 // ── per-zone boss draw handlers ───────────────────────────────────────────────
 function drawBoss_z1(){
   const{x,y,w,h,phase}=boss;
+  // Phase 2: the light dies between sweeps — darkness breathes in
+  if(phase===2&&!boss.beamActive&&boss.beamTelegraph>0){
+    const dk=Math.sin(Math.PI*(1-boss.beamTelegraph/160))*0.32;
+    ctx.fillStyle=`rgba(1,3,8,${dk})`;ctx.fillRect(0,0,W,H);
+  }
   ctx.globalAlpha=0.72;glow('#b8d4f0',22);drawOwlBody(x,y,w,h,'#d8eeff','#c0d8f0',0.85);ctx.globalAlpha=1;noGlow();
   if(boss.beamActive){
     const bh2=phase===2?7:12,by=y+h*0.25;
     if(boss.beamTelegraph>-30){ctx.globalAlpha=0.25;ctx.fillStyle='#b8d4f0';ctx.fillRect(boss.beamDir>0?0:boss.beamX-30,by-bh2,boss.beamDir>0?boss.beamX+30:W-boss.beamX+30,bh2*2);ctx.globalAlpha=1;}
-    glow('#b8d4f0',14);ctx.fillStyle='rgba(180,212,240,0.45)';ctx.strokeStyle='#c8e4ff';ctx.lineWidth=1;ctx.fillRect(0,by-bh2,boss.beamX,bh2*2);ctx.strokeRect(0,by-bh2,boss.beamX,bh2*2);noGlow();
+    const bxL=boss.beamDir>0?0:boss.beamX, bxW=boss.beamDir>0?boss.beamX:W-boss.beamX;
+    glow('#b8d4f0',14);ctx.fillStyle='rgba(180,212,240,0.45)';ctx.strokeStyle='#c8e4ff';ctx.lineWidth=1;ctx.fillRect(bxL,by-bh2,bxW,bh2*2);ctx.strokeRect(bxL,by-bh2,bxW,bh2*2);noGlow();
   }
   if(boss.breatheText>0){const ta=Math.min(1,boss.breatheText/40)*Math.min(1,(boss.breatheText)/40);ctx.globalAlpha=ta*0.35;ctx.fillStyle='#e8f4ff';ctx.font='italic 20px monospace';ctx.textAlign='center';ctx.fillText(csText.breatheWord,W/2,H/2);ctx.globalAlpha=1;}
 }
 function drawBoss_z2(){
   const{x,y,w,h,phase}=boss;
+  // The rushing shadow — the swoop's path, announced
+  if(boss.shadowTele>0){
+    const tp=1-boss.shadowTele/40;
+    ctx.save();ctx.globalAlpha=0.16+0.10*Math.sin(frameCount*0.5);
+    ctx.strokeStyle='#1a0508';ctx.lineWidth=34;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(boss.swoopSX,boss.swoopSY);
+    ctx.quadraticCurveTo(W/2,player.y-40,boss.swoopEX,boss.swoopEY);ctx.stroke();
+    // the shadow itself races along the path
+    const st=tp%1,mx=W/2,my=player.y-40;
+    const shx=boss.swoopSX*(1-st)**2+2*mx*st*(1-st)+boss.swoopEX*st**2;
+    const shy=boss.swoopSY*(1-st)**2+2*my*st*(1-st)+boss.swoopEY*st**2;
+    ctx.globalAlpha=0.30;ctx.fillStyle='#0d0306';
+    ctx.beginPath();ctx.ellipse(shx,shy,46,14,0,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
   const wingOsc=Math.sin(frameCount*0.18)*12;
   glow('#ffe880',24);ctx.globalAlpha=0.92;
   ctx.save();ctx.translate(x,y);
@@ -3231,9 +4052,17 @@ function drawBoss_z3(){
 }
 function drawBoss_z4(){
   const{x:sx,y:sy,w:sw,h:sh}=boss;
+  // Dash afterimages — she passes through you and leaves herself behind
+  if(boss.trail)boss.trail.forEach(tp=>{
+    ctx.save();ctx.globalAlpha=tp.a*0.5;ctx.fillStyle='#02080a';
+    ctx.beginPath();ctx.ellipse(tp.x,tp.y,sw*0.22,sh*0.4,0,0,Math.PI*2);ctx.fill();ctx.restore();
+  });
   const ep=0.5+0.5*Math.sin(frameCount*0.08);
+  // During the walk, her eyes settle green — recognition, not menace
+  const eyeC=boss.walking?'#00cc66':`rgba(200,0,0,${ep})`;
+  const eyeG=boss.walking?'#004422':'#880000';
   glow('#001800',10);
-  drawLailaVariant(sx,sy,{floatOff:3.14,scale:2.0,mirror:true,alpha:1,hairCol:'#160806',dressCol:'#030e06',skinCol:'#0a1208',eyeCol:`rgba(200,0,0,${ep})`,eyeGlow:'#880000',eyePulse:false,l1Mod:([px,py],i)=>([2,3,7,8].includes(i)?[px*1.18,py-5]:[1,9].includes(i)?[px*1.08,py-2]:[px,py])});
+  drawLailaVariant(sx,sy,{floatOff:3.14,scale:2.0,mirror:true,alpha:1,hairCol:'#160806',dressCol:'#030e06',skinCol:'#0a1208',eyeCol:eyeC,eyeGlow:eyeG,eyePulse:false,l1Mod:([px,py],i)=>([2,3,7,8].includes(i)?[px*1.18,py-5]:[1,9].includes(i)?[px*1.08,py-2]:[px,py])});
   noGlow();
   ctx.strokeStyle='rgba(42,37,53,0.45)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.beginPath();ctx.ellipse(sx,sy,sw*0.4,sh*0.45,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
 }
@@ -3341,9 +4170,14 @@ function drawMidHand(){
 function drawHUD(){
   // 5-feather health, top left
   for(let i=0;i<player.maxHp;i++){
-    const active=i<player.hp;
+    // Zone 3 fourth-wall event: feathers fill in reverse, jittering — the HUD lies
+    let active=i<player.hp, jx=0, jy=0;
+    if(hudHpReversed){
+      active=(player.maxHp-1-i)<player.hp;
+      jx=(Math.random()-0.5)*2.2; jy=(Math.random()-0.5)*2.2;
+    }
     ctx.save();
-    if(!active){ctx.globalAlpha=0.18;ctx.translate(18+i*22,23);ctx.rotate(0.3);}else ctx.translate(18+i*22,20);
+    if(!active){ctx.globalAlpha=0.18;ctx.translate(18+i*22+jx,23+jy);ctx.rotate(0.3);}else ctx.translate(18+i*22+jx,20+jy);
     const sc=active?1:0.7;
     ctx.strokeStyle=active?'#f8f8f8':'#333';ctx.lineWidth=1.4*sc;ctx.lineCap='round';
     if(active)glow('#f8f8f8',8);
@@ -3361,7 +4195,7 @@ function drawHUD(){
   noGlow();ctx.restore();
   // Ability indicators, bottom left
   let ay=H-18;
-  if(player.hasStillness){ctx.globalAlpha=player.stillnessActive?1:0.38;ctx.fillStyle='#ffffff';ctx.font='10px monospace';ctx.textAlign='left';ctx.fillText('[E] STILL',14,ay);ay-=16;ctx.globalAlpha=1;}
+  if(player.hasStillness){ctx.globalAlpha=player.stillnessActive?1:(player.stillnessCD>0?0.15:0.38);ctx.fillStyle='#ffffff';ctx.font='10px monospace';ctx.textAlign='left';ctx.fillText('[E] STILL',14,ay);ay-=16;ctx.globalAlpha=1;}
   if(player.hasDrift){ctx.globalAlpha=player.driftCD>0?0.22:0.38;ctx.fillStyle='#44ffcc';ctx.font='10px monospace';ctx.textAlign='left';ctx.fillText('[SHIFT] DRIFT',14,ay);ctx.globalAlpha=1;}
   // Wave cleared — subtle corner flash only
   if(enemies.length===0&&!boss&&waveDelay>0&&waveDelay<ZONE_WAVE_DELAYS[currentZone]&&bossSpawnTimer===0){
@@ -3397,11 +4231,14 @@ function drawHUD(){
     ctx.fillStyle='#664488';ctx.font='16px monospace';ctx.fillText(`Best: ${hi}`,W/2,H/2+80);
     glow(COL.accent,14);ctx.fillStyle=COL.accent;ctx.font='bold 16px monospace';ctx.fillText('PRESS  ENTER  TO  FALL  AGAIN',W/2,H/2+118);noGlow();ctx.textAlign='left';
   }
-  if(gameState==='victory'){
-    ctx.fillStyle='rgba(0,0,0,0.82)';ctx.fillRect(0,0,W,H);
-    glow('#ffffff',40);ctx.fillStyle='#ffffff';ctx.font='bold 28px monospace';ctx.textAlign='center';ctx.fillText('she is free',W/2,H/2-20);noGlow();
-    ctx.globalAlpha=0.5;ctx.font='16px monospace';ctx.fillStyle='#ccddff';ctx.fillText('PRESS  ENTER  TO  RETURN',W/2,H/2+40);ctx.globalAlpha=1;ctx.textAlign='left';
-  }
+}
+
+function drawVictoryPrompt(){
+  if(gameState!=='victory')return;
+  // THE END card is already on screen (cutscene hold) — just a quiet prompt beneath it
+  const va=0.30+0.18*Math.sin(Date.now()/800);
+  ctx.globalAlpha=va;ctx.font='13px monospace';ctx.fillStyle='#8899cc';ctx.textAlign='center';
+  ctx.fillText('PRESS  ENTER  TO  RETURN',W/2,H-64);ctx.globalAlpha=1;ctx.textAlign='left';
 }
 
 // ── main draw ──────────────────────────────────────────────────────────────────
@@ -3409,7 +4246,12 @@ function draw(){
   if(gameState==='intro'){drawIntro();return;}
 
   // Cutscene overrides normal draw
-  if(cutscene.active){drawCutscene();drawHUD();return;}
+  if(cutscene.active){
+    drawCutscene();
+    if(cutscene.type!=='true_ending')drawHUD(); // the ending plays clean, no HUD
+    else drawVictoryPrompt();
+    drawPauseOverlay();return;
+  }
 
   // Zone transition fade
   if(zoneTransTimer>0){
@@ -3458,7 +4300,20 @@ function draw(){
     }
     noGlow();ctx.restore();
   });
-  eBullets.forEach(b=>{glow(b.col,10);ctx.fillStyle=b.col;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();});
+  eBullets.forEach(b=>{
+    if(b.feather){ // a real feather shape, swaying as it drifts
+      ctx.save();ctx.translate(b.x,b.y);ctx.rotate(Math.sin((b.age||0)*0.06)*0.5);
+      glow(b.col,8);ctx.strokeStyle=b.col;ctx.lineWidth=1.3;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(0,-b.r*1.4);ctx.quadraticCurveTo(b.r,0,0,b.r*1.4);ctx.quadraticCurveTo(-b.r,0,0,-b.r*1.4);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(0,-b.r*1.4);ctx.lineTo(0,b.r*1.4);ctx.stroke();
+      ctx.restore();
+    } else if(b.dark!==undefined){ // the Shadow's mirrored weapon — dark core, green rim
+      glow('#00cc66',12);ctx.fillStyle='#020a06';ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='rgba(0,204,102,0.7)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.stroke();
+    } else {
+      glow(b.col,10);ctx.fillStyle=b.col;ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();
+    }
+  });
   noGlow();
 
   drops.forEach(drawDrop);enemies.forEach(drawEnemy);drawBoss();drawMidHand();drawPlayer();
@@ -3469,6 +4324,18 @@ function draw(){
   drawBreatheCall();
   drawZ3Events();
   drawHUD();
+  drawPauseOverlay();
+}
+
+function drawPauseOverlay(){
+  if(!paused)return;
+  ctx.fillStyle='rgba(2,4,10,0.62)';ctx.fillRect(0,0,W,H);
+  ctx.globalAlpha=0.55+0.15*Math.sin(Date.now()/900);
+  ctx.fillStyle='#aabbdd';ctx.font='italic 17px monospace';ctx.textAlign='center';
+  ctx.fillText('she rests, for a moment',W/2,H/2-6);
+  ctx.globalAlpha=0.35;ctx.font='11px monospace';ctx.fillStyle='#556688';
+  ctx.fillText('ESC to continue  ·  M to mute',W/2,H/2+26);
+  ctx.globalAlpha=1;ctx.textAlign='left';
 }
 
 // ── loop ────────────────────────────────────────────────────────────────────────
