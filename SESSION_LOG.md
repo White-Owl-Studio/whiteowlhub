@@ -797,3 +797,40 @@ When orb is pressed on a playable game:
 - Decide on the uncommitted Laila's Descent game changes (commit or discard)
 - When more listings go live, append to `src/data/shop.ts` (+ drop images in `public/shop/`, run `convert-webp`, set `.webp` paths)
 - Same standing items (UI/design review, tarot cards, R2 uploads, curation decisions)
+
+---
+
+## Session 16 — 2026-06-21
+
+**Goal:** Resolve the carried-over Laila game changes; set up a full-site copy review pass.
+
+### What was done
+
+**1. Laila's Descent overhaul — committed + pushed (`c03ad3e`)**
+Settled the +1172/−305 uncommitted change that Session 15 flagged as at-risk. Reviewed the full diff — it was a major, coherent overhaul, not "tuning":
+- Responsive canvas (`height: min(94vh, calc(94vw*780/560))`) so it fits the fullscreen iframe host
+- Every enemy rebuilt into readable multi-state attack patterns with telegraphs/wind-ups (rotwood, deeplight, lakemoss, hand, seeker, handcluster, reflection, glitch, decoy, echo, signal, root, chain, owl guardian)
+- True ending: victory breaks the loop, Laila becomes the owl; persists `lailaFree` to localStorage; start screen reflects freedom
+- New cinematic intro: full-frame per-line-colored ASCII (breathing/blinking Grand Owl, colored Laila, nest, drowning, rising-water rows)
+- Pause (Esc/P), mute (M), skip repeat-run wake sequence; debug cheats gated behind god mode
+- Pushed to `main` → Cloudflare auto-deploy (game file serves regardless of the coming-soon gate, so it's live).
+
+**2. Copy audit system built — `COPY_AUDIT.md` (`2c1f124`)**
+Michael wants a full text pass over every written word on the site. Built a single tracking file at repo root — the source of truth:
+- **71 items**, grouped by page, each with ID / source file / current text / `Revised:` slot
+- Status legend: 🔲 Pending · ✅ Approved · ⭑ Rewritten (awaiting OK) · ✏️ Applied
+- Scope (Michael's choice): visible copy + SEO meta + meaningful alt text. Auto-generated alts inherit parent approval. **In-game text excluded.**
+- Progress tally at top (currently **0 / 71**).
+- 5 flags surfaced: CS-02 "Breath"→"Breathe"? · F-14 Torn Apart placeholder copy · footer email mismatch (hello@ vs gmail) · A-10 Superplay still a client? · About Press section markup removed.
+
+**3. Copy review started — order: top-to-bottom by page**
+Presented the **GLOBAL** section (G-01..G-05) with per-item recommendations. Nothing approved yet — session ended before Michael responded.
+
+### Resume point (next session)
+- **Pick up at GLOBAL / G-01.** Recommendations already given: approve G-01/G-02/G-04/G-05 as-is; **G-03 needs the email decision** (recommend `hello@whiteowlhub.com`). Then proceed Home → Films → Work → About → Shop → Playthings → Coven → Coming-soon.
+- Workflow per item: Michael says "OK" (mark ✅) or gives a direction (I draft → he approves → I apply to source + mark ✏️). Update the `0 / 71` tally as we go.
+- `COPY_AUDIT.md` is the canonical tracker — read it first next session.
+
+### Notes
+- GitHub MCP token still stale (401 on `get_me`); git remote's embedded token works fine for push.
+- `.astro/settings.json` trivial timestamp change left uncommitted (ignore, as before).
