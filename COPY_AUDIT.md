@@ -17,7 +17,7 @@ narrative text (Laila's Descent, the truck game) is **out of scope**.
 - ✏️ **Applied** — approved rewrite written into the source file
 
 ## Progress
-**0 / 71 reviewed** · last updated 2026-06-21
+**5 / 71 reviewed** · last updated 2026-07-23 · GLOBAL section (G-01…G-05) complete
 
 ---
 
@@ -32,35 +32,37 @@ narrative text (Laila's Descent, the truck game) is **out of scope**.
 
 ## GLOBAL — site-wide (Nav, Footer)
 
-### G-01 · Nav labels 🔲
+### G-01 · Nav labels ✅
 `components/Nav.astro`
-> Our Films · Our Work · About Us · Witchy Shop · Online Playthings · The Coven
+> Our Films · Our Work · About Us · Witchy Shop · Online Playthings
+(The Coven dropped — hidden for launch, Phase 5.) Approved as-is; "Online Playthings" kept.
 
-**Revised:** —
+**Revised:** — (approved as-is)
 
-### G-02 · Footer tagline 🔲
+### G-02 · Footer tagline ✏️
 `components/Footer.astro`
-> Tales of courage in broken worlds. / Stories made to last.
+> ~~Tales of courage in broken worlds. / Stories made to last.~~
 
-**Revised:** —
+**Revised:** "Tales of courage in broken worlds / Narrative Driven Art" — APPLIED to footer.
+✅ Decided (Option A, 2026-07-23): "Narrative Driven Art" replaces "Stories made to last." **site-wide** — also applied to Base.astro default meta, index.astro home meta, about.astro manifesto (pre-resolves A-05 tagline line), films.astro biography quote (pre-resolves F-07 quote), and the CLAUDE.md locked tagline. It is now the studio tagline.
 
-### G-03 · Footer contact block 🔲
+### G-03 · Footer contact block ✏️
 `components/Footer.astro`
-> **Contact** / hello@whiteowlhub.com / Tel Aviv · Negev Desert · Israel
+> **Contact** / hello@whiteowlhub.com / ~~Tel Aviv~~ · Negev Desert · Israel
 
-**Revised:** —
+**Revised:** location "Tel Aviv" → "Mitzpe Ramon" — APPLIED. Email `hello@whiteowlhub.com` confirmed (Phase 0). Still to sync: coming-soon page still shows the gmail (CS section).
 
-### G-04 · Footer socials heading 🔲
+### G-04 · Footer socials heading ✏️
 `components/Footer.astro`
 > **Find Us** — Instagram · YouTube · TikTok · LinkedIn · Ko-Fi
 
-**Revised:** —
+**Revised:** added **Facebook** → Instagram · YouTube · Facebook · TikTok · LinkedIn · Ko-Fi — APPLIED.
 
-### G-05 · Footer bottom bar 🔲
+### G-05 · Footer bottom bar ✅
 `components/Footer.astro`
 > © {year} White Owl Studio. All rights reserved. ✦ whiteowlhub.com
 
-**Revised:** —
+**Revised:** — (approved as-is)
 
 ---
 

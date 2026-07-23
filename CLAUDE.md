@@ -77,7 +77,7 @@ public/
 - Stage 7 🔲 The Coven — auth, game saves, secret content (re-enables SSR)
 
 ## Creative decisions locked
-- Studio tagline: "Tales of courage in broken worlds. Stories made to last."
+- Studio tagline: "Tales of courage in broken worlds. Narrative Driven Art." (changed from "Stories made to last." on 2026-07-23)
 - Logo: `logo.gif` + thin "White Owl Studio" text below
 - Nav links: gold by default, section accent on hover
 - Pre-stage creative review required before each stage — walk through all content/design decisions with Michael before coding
