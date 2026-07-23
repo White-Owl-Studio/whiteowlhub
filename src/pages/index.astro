@@ -422,16 +422,22 @@ import Base from '../layouts/Base.astro';
      SPREAD
   ══════════════ */
   .spread {
-    display: none; /* hidden until deck click */
+    display: none; /* set to 'flex' via JS on reveal */
     position: relative;
     z-index: 2;
-    grid-template-columns: repeat(3, clamp(115px, 14vw, 150px));
-    grid-template-rows: repeat(2, auto);
+    flex-wrap: wrap;
+    justify-content: center;
     gap: clamp(10px, 1.8vw, 20px);
+    /* Cap the width to exactly three cards so a 5-card spread wraps to 3 + 2,
+       and justify-content centres the short bottom row under the middle. */
+    max-width: calc(clamp(115px, 14vw, 150px) * 3 + clamp(10px, 1.8vw, 20px) * 2);
+    margin-inline: auto;
   }
 
   /* ── Card ── */
   .card {
+    width: clamp(115px, 14vw, 150px);
+    flex: 0 0 auto;
     aspect-ratio: 5 / 9;
     display: block;
     text-decoration: none;
@@ -569,9 +575,8 @@ import Base from '../layouts/Base.astro';
     .hero { padding: 72px 16px 20px; }
 
     .spread {
-      grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(3, auto);
-      max-width: 320px;
+      /* Two cards per row on mobile; a lone last card still centres. */
+      max-width: calc(clamp(115px, 14vw, 150px) * 2 + clamp(10px, 1.8vw, 20px));
     }
 
     .card {
@@ -616,7 +621,7 @@ import Base from '../layouts/Base.astro';
     setTimeout(() => {
       // 2. Hide deck, show spread grid
       deckWrap.style.display = 'none';
-      spreadEl.style.display = 'grid';
+      spreadEl.style.display = 'flex';
 
       // 3. Stagger cards into view
       const cards = Array.from(spreadEl.querySelectorAll<HTMLElement>('.card'));
