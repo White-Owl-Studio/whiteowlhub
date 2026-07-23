@@ -4,7 +4,7 @@
 The official White Owl Studio website at **whiteowlhub.com**. An Astro v5 static site with a tarot-inspired dark aesthetic. Built in stages following the plan at `~/.claude/plans/crystalline-humming-blanket.md`.
 
 ## Working directory
-`C:\Users\Micha\OneDrive\Desktop\Work\Claude\ClaudeCodeTest\whiteowlhub\`
+`F:\Work\Claude\ClaudeCodeTest\whiteowlhub\`
 
 ## How to continue
 1. Read `SESSION_LOG.md` — what was done and when

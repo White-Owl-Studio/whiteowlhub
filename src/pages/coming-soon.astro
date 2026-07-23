@@ -256,10 +256,10 @@
   </main>
 
   <script>
-    const bgCanvas  = document.getElementById('grain-bg');
-    const topCanvas = document.getElementById('grain-top');
-    const bgCtx     = bgCanvas.getContext('2d');
-    const topCtx    = topCanvas.getContext('2d');
+    const bgCanvas  = document.getElementById('grain-bg') as HTMLCanvasElement;
+    const topCanvas = document.getElementById('grain-top') as HTMLCanvasElement;
+    const bgCtx     = bgCanvas.getContext('2d')!;
+    const topCtx    = topCanvas.getContext('2d')!;
     let w = 0, h = 0;
 
     function resize() {
