@@ -34,7 +34,7 @@ Everything below is what must be true before flipping them.
 
 ## Phase 2 — Security & infra
 - 🔲 Add `public/_headers` (Cloudflare Pages) with CSP, `X-Content-Type-Options`, frame-ancestors/`X-Frame-Options`, `Referrer-Policy`, HSTS.
-- ⚑ Git remote has a PAT embedded in the URL in plaintext (`git remote -v`) — move to a credential helper; refresh the stale GitHub MCP token.
+- ✅ Git remote PAT removed from the URL (2026-07-23). Was `https://TOKEN@github.com/…` in plaintext AND shadowing Git Credential Manager (causing a login popup on every push). Cleaned the URL → GCM now stores the GitHub credential in Windows Credential Manager; pushes are silent + the plaintext token is gone from `.git/config`. Still to do: refresh the stale GitHub MCP token (separate from git).
 - 🔲 Confirm `robots.txt` + sitemap for launch (sitemap integration present; coming-soon is correctly `noindex`).
 
 ## Phase 3 — Copy pass (71 items)
