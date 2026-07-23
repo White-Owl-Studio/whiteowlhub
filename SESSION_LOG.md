@@ -834,3 +834,29 @@ Presented the **GLOBAL** section (G-01..G-05) with per-item recommendations. Not
 ### Notes
 - GitHub MCP token still stale (401 on `get_me`); git remote's embedded token works fine for push.
 - `.astro/settings.json` trivial timestamp change left uncommitted (ignore, as before).
+
+---
+
+## Session 17 — 2026-07-23
+
+**Goal:** Begin a full QA pass to prepare the site for soft launch. Plan the work, then execute the low-risk foundation.
+
+### Context recovered
+- **Repo moved** to `F:\Work\Claude\ClaudeCodeTest\whiteowlhub` (F: is a removable drive that changes letter / disconnected mid-session once). Fixed the path in `CLAUDE.md`.
+
+### What was done
+1. **Planned the launch** — full QA sweep of code/assets/config → `LAUNCH_QA.md` (8-phase tracker) + `POST_LAUNCH_ROADMAP.md` (the master plan `crystalline-humming-blanket.md` is gone from disk, so this reconstructs the Coven/Stage-7 build plan + all deferred work).
+2. **Phase 0 decisions (locked):** ship Shop + Games, **defer The Coven**; canonical email `hello@whiteowlhub.com`; drop Film VI "Torn Apart"; fix "Breath"→"Breathe"; keep Superplay.
+3. **Phase 1 (perf/build)** — `a3e324e`: moved 106 redundant PNG/JPG originals (each had a referenced `.webp`) out of `public/` into tracked `_source-art/` → deploy **291 MB → 47 MB**; fonts `@import` → `<link>` + dropped unused Cormorant; fixed all 12 `astro check` errors (`coming-soon.astro` canvas casts); added `npm run check`.
+4. **Phase 5 (feature-gating)** — `0d16397`: hid The Coven reversibly — nav entry commented, home card VI wrapped in `{false && (…)}`, `/coven`→`/` 302 via `public/_redirects` (dev still serves it), excluded from sitemap. Page/UI stay in repo.
+5. **Git auth fixed** — login popup on every push (the real cause of "slow" pushes). Removed plaintext PAT from remote URL; the fix that worked was **`gh auth setup-git`** (git now uses the gh CLI keyring token). Pushes now ~2s silent.
+6. **Copy pass — GLOBAL (5/71)** — `4f42267`: Facebook added to footer; location Tel Aviv→Mitzpe Ramon; **studio tagline changed site-wide "Stories made to last." → "Narrative Driven Art"** (footer, Base/home meta, About manifesto, Films quote, CLAUDE.md).
+7. **Home card spread centred** — `a71fb92`: grid → centered flexbox so the 5-card spread centres its short bottom row.
+
+### Known launch bug found
+- `/ui/og-default.jpg` and `/ui/apple-touch-icon.png` are referenced in `Base.astro` but **don't exist** → broken social-share previews. Tracked in LAUNCH_QA Phase 4.
+
+### Resume point (next session)
+- Continue the copy pass at **HOME / H-01** in `COPY_AUDIT.md` (meta desc, "Spread your cards?" prompt, 6 card subtitles), then Films → Work → About → Shop → Playthings → Coven → Coming-soon.
+- Pre-decided still to apply: coming-soon "Breath"→"Breathe" (CS-02) + gmail→`hello@` email; drop Torn Apart (F-14).
+- Everything committed + pushed through `6d0e72c`. Live preview: `npm run dev` → localhost:4321 (bypasses the gate).
