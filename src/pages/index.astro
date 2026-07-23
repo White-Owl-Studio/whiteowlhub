@@ -230,7 +230,8 @@ import Base from '../layouts/Base.astro';
       </div>
     </a>
 
-    <!-- VI — The Coven -->
+    {/* VI — The Coven — hidden for soft launch. See POST_LAUNCH_ROADMAP.md (Stage 7). Uncomment to restore. */}
+    {false && (
     <a href="/coven" class="card" style="--accent:#3a7a50;--r:3deg;--dy:2px;--i:5" aria-label="The Coven">
       <div class="card-inner">
         <span class="numeral">VI</span>
@@ -261,6 +262,7 @@ import Base from '../layouts/Base.astro';
         </div>
       </div>
     </a>
+    )}
 
   </nav><!-- /spread -->
 

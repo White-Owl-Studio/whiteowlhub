@@ -7,5 +7,8 @@ import sitemap from '@astrojs/sitemap';
 export default defineConfig({
   output: 'static',
   site: 'https://whiteowlhub.com',
-  integrations: [sitemap()],
+  integrations: [
+    // Exclude /coven from the sitemap — hidden for soft launch (see POST_LAUNCH_ROADMAP.md).
+    sitemap({ filter: (page) => !page.includes('/coven') }),
+  ],
 });

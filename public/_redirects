@@ -1,0 +1,7 @@
+# Cloudflare Pages redirects.
+# The Coven (Stage 7) is hidden for the soft launch — see POST_LAUNCH_ROADMAP.md.
+# This only affects the deployed site; local `npm run dev` still serves /coven for continued development.
+# To bring the Coven back: delete this rule, uncomment the nav entry (Nav.astro) and home card VI
+# (index.astro), and remove the /coven exclusion in astro.config.mjs.
+/coven    /    302
+/coven/*  /    302

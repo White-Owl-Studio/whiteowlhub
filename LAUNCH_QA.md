@@ -47,8 +47,9 @@ Everything below is what must be true before flipping them.
 - 🔲 `films.astro` has placeholder `<div>`s for biography photos and some posters — supply real images or gate.
 - 🔲 Featured-art review across film cards + the portfolio editorial grid.
 
-## Phase 5 — Feature-gating (implements Phase 0.1)
-- 🔲 Hide The Coven: nav entry (`Nav.astro`), home tarot card VI (`index.astro`), and route `/coven`.
+## Phase 5 — Feature-gating (implements Phase 0.1) · ✅ DONE (2026-07-23)
+- ✅ Hid The Coven, reversibly: nav entry commented out (`Nav.astro`); home tarot card VI wrapped in `{false && (…)}` (`index.astro`) → home now shows 5 cards; `/coven` route redirected to `/` in production via `public/_redirects` (dev still serves it); `/coven` excluded from the sitemap (`astro.config.mjs` filter). The page + UI stay in the repo — see `POST_LAUNCH_ROADMAP.md` to restore.
+- 🔲 Optional polish: home spread is now 5 cards (3+2 desktop / 2+2+1 mobile) with an orphan last row — centre/rebalance if desired.
 
 ## Phase 6 — Cross-device, a11y & QA sweep
 - 🔲 Responsive check every page + both games on real viewports.
