@@ -2,6 +2,16 @@ name = "whiteowlhub"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Cloudflare Pages: static site builds to dist/; Pages Functions live in /functions.
+pages_build_output_dir = "dist"
+
 [vars]
 # Public env vars go here
+
+# D1 database for the launch list + coming-soon survey (functions/api/subscribe.js).
+# database_id is filled in after `wrangler d1 create whiteowlhub-signups` — see SESSION_LOG.
+[[d1_databases]]
+binding = "DB"
+database_name = "whiteowlhub-signups"
+database_id = "cec7ce2b-d5d4-4502-b37f-8685e244fd51"
 

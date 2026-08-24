@@ -10,7 +10,7 @@
   <title>White Owl Studio</title>
   <meta name="description" content="Something new is growing here." />
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" href="/ui/logo.gif" />
+  <link rel="icon" type="image/svg+xml" href="/ui/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Crimson+Pro:ital,wght@0,300;1,300;1,400&display=swap" rel="stylesheet" />
@@ -130,9 +130,8 @@
 
     .socials span {
       font-family: 'Cinzel', serif;
-      font-size: 0.5rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
+      font-size: 0.62rem;
+      letter-spacing: 0.03em;
       transition: color 0.3s ease;
     }
 
@@ -156,6 +155,213 @@
       z-index: 1;
     }
 
+    /* ── Launch list + survey ── */
+    .signup {
+      width: min(92vw, 420px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      margin-bottom: clamp(2.5rem, 5vw, 3.5rem);
+    }
+
+    /* Reveal trigger — the resting-state CTA. Collapses away when the form opens.
+       Aura: a soft gold glow fades in ~1s after load, then breathes gently. The page's
+       #grain-top overlay sits above it, giving the glow a subtle grainy texture. */
+    .reveal {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      color: #050409;
+      background: #f5d060;
+      border: 1px solid #f5d060;
+      padding: 0.8rem 2.4rem;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.15s ease, filter 0.3s ease,
+                  max-height 0.5s cubic-bezier(.22,.61,.36,1),
+                  opacity 0.35s ease, padding 0.5s cubic-bezier(.22,.61,.36,1),
+                  margin 0.5s cubic-bezier(.22,.61,.36,1);
+      max-height: 4rem;
+      animation: revealAuraIn 1.6s ease 1s both,
+                 revealAuraPulse 3.8s ease-in-out 2.6s infinite;
+    }
+    .reveal:hover { filter: brightness(1.06); transform: translateY(-1px); }
+    .reveal:active { transform: translateY(1px); }
+    .signup.open .reveal {
+      max-height: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      margin: 0;
+      opacity: 0;
+      pointer-events: none;
+      border-width: 0;
+      animation: none;
+    }
+
+    /* one-time fade-in of the glow, then a slow breathing pulse (aligned start value) */
+    @keyframes revealAuraIn {
+      from { box-shadow: 0 0 0 0 rgba(245, 208, 96, 0); }
+      to   { box-shadow: 0 0 16px 1px rgba(245, 208, 96, 0.16); }
+    }
+    @keyframes revealAuraPulse {
+      0%, 100% { box-shadow: 0 0 16px 1px rgba(245, 208, 96, 0.16); }
+      50%      { box-shadow: 0 0 30px 5px rgba(245, 208, 96, 0.30); }
+    }
+
+    /* Collapsible body — grid-rows 0fr→1fr animates the natural height, pushing socials down. */
+    .form-body {
+      display: grid;
+      grid-template-rows: 0fr;
+      width: 100%;
+      opacity: 0;
+      transition: grid-template-rows 0.55s cubic-bezier(.22,.61,.36,1), opacity 0.5s ease;
+    }
+    .signup.open .form-body { grid-template-rows: 1fr; opacity: 1; }
+    .form-body-inner {
+      overflow: hidden;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding-top: 0.25rem;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal, .form-body { transition-duration: 0.01ms; }
+      .reveal { animation: none; box-shadow: 0 0 16px 1px rgba(245, 208, 96, 0.16); }
+    }
+
+    .signup-lead {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(0.78rem, 1.4vw, 0.95rem);
+      letter-spacing: 0.06em;
+      color: #f5d060;
+      opacity: 0.8;
+    }
+    .field { width: 100%; }
+    .signup input[type="email"],
+    .signup textarea {
+      width: 100%;
+      background: rgba(10, 8, 20, 0.55);
+      border: 1px solid rgba(112, 64, 184, 0.28);
+      color: #e4dac8;
+      font-family: 'Crimson Pro', serif;
+      font-size: 1rem;
+      padding: 0.7rem 0.9rem;
+      outline: none;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .signup textarea {
+      resize: vertical;
+      min-height: 2.7rem;
+      font-style: italic;
+      font-weight: 300;
+    }
+    .signup input::placeholder,
+    .signup textarea::placeholder { color: #806878; font-style: italic; }
+    .signup input[type="email"]:focus,
+    .signup textarea:focus {
+      border-color: rgba(112, 64, 184, 0.6);
+      box-shadow: 0 0 14px rgba(112, 64, 184, 0.2);
+    }
+
+    /* interest chips */
+    .interests {
+      border: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .interests legend {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      color: #806878;
+      margin-bottom: 0.6rem;
+      width: 100%;
+      text-align: center;
+    }
+    .chip {
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.02em;
+      color: #806878;
+      padding: 0.45rem 0.8rem;
+      border: 1px solid rgba(112, 64, 184, 0.22);
+      transition: color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+      user-select: none;
+    }
+    .chip input { position: absolute; opacity: 0; pointer-events: none; }
+    .chip:hover { border-color: rgba(112, 64, 184, 0.5); color: #e4dac8; }
+    .chip:has(input:checked) {
+      color: #f5d060;
+      border-color: rgba(245, 208, 96, 0.5);
+      background: rgba(112, 64, 184, 0.12);
+      box-shadow: 0 0 12px rgba(112, 64, 184, 0.18);
+    }
+    .chip:has(input:focus-visible) { outline: 1px dashed rgba(245, 208, 96, 0.6); outline-offset: 3px; }
+
+    .submit {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      color: #050409;
+      background: #f5d060;
+      border: 1px solid #f5d060;
+      padding: 0.75rem 2.2rem;
+      cursor: pointer;
+      transition: box-shadow 0.3s ease, transform 0.15s ease, opacity 0.3s ease;
+    }
+    .submit:hover { box-shadow: 0 0 20px rgba(245, 208, 96, 0.35); }
+    .submit:active { transform: translateY(1px); }
+    .submit:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
+
+    .form-status {
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+      font-size: 0.95rem;
+      min-height: 1.2rem;
+      color: #806878;
+    }
+    .form-status.ok  { color: #f5d060; }
+    .form-status.err { color: #c98b8b; }
+
+    /* honeypot — hidden from humans, offered to bots */
+    .hp {
+      position: absolute !important;
+      left: -9999px !important;
+      width: 1px; height: 1px;
+      opacity: 0; pointer-events: none;
+    }
+
+    /* success: collapse the inputs, leave only the closing line */
+    .signup.done .signup-lead,
+    .signup.done .field,
+    .signup.done .interests,
+    .signup.done textarea,
+    .signup.done .submit { display: none; }
+    .signup.done .form-body-inner { padding-top: 0; }
+
+    /* Owl easter egg — a whisper at the very bottom. Muted until you look for it. */
+    .owl-whisper {
+      display: inline-block;
+      margin-top: clamp(2.5rem, 6vw, 4rem);
+      font-family: 'Crimson Pro', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 0.8rem;
+      letter-spacing: 0.02em;
+      color: rgba(128, 104, 120, 0.55);
+      text-decoration: none;
+      transition: color 0.4s ease;
+    }
+    .owl-whisper:hover,
+    .owl-whisper:focus-visible { color: #f5d060; }
+
     @media (max-width: 380px) {
       .socials { grid-template-columns: repeat(3, 72px); }
       .socials li:nth-child(5),
@@ -172,9 +378,46 @@
 
   <main class="page">
     <div class="inner">
-      <img src="/ui/logo.gif" alt="White Owl Studio" class="logo" />
+      <img src="/ui/logo.webp" alt="White Owl Studio" class="logo" width="200" height="166" />
       <p class="studio-name">White Owl Studio</p>
-      <p class="message">Breath, something new<br/>is growing here.</p>
+      <p class="message">Breathe, something new<br/>is growing here.</p>
+
+      <form class="signup" id="signup-form" novalidate>
+        <button type="button" class="reveal" id="reveal-btn" aria-expanded="false" aria-controls="form-body">Join the list</button>
+
+        <div class="form-body" id="form-body">
+          <div class="form-body-inner">
+            <p class="signup-lead">Be first through the door</p>
+
+            <div class="field">
+              <input
+                type="email" id="email" name="email" required
+                placeholder="Your email address" autocomplete="email"
+                aria-label="Email address"
+              />
+            </div>
+
+            <fieldset class="interests">
+              <legend>What brings you here?</legend>
+              <label class="chip"><input type="checkbox" name="interests" value="animation" />Looking for animation</label>
+              <label class="chip"><input type="checkbox" name="interests" value="work"      />Work / opportunities</label>
+              <label class="chip"><input type="checkbox" name="interests" value="content"   />Extra WOS content</label>
+              <label class="chip"><input type="checkbox" name="interests" value="merch"     />Witchy merch</label>
+            </fieldset>
+
+            <textarea
+              id="message" name="message" rows="2" maxlength="1000"
+              placeholder="Anything you'd love to see? (optional)"
+              aria-label="Optional message"></textarea>
+
+            <!-- honeypot: hidden from humans, catches bots -->
+            <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp" />
+
+            <button type="submit" class="submit">Join the mailing list</button>
+            <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+      </form>
 
       <ul class="socials">
 
@@ -242,7 +485,7 @@
         </li>
 
         <li>
-          <a href="mailto:michaelbjacob@gmail.com" aria-label="Email">
+          <a href="mailto:hello@whiteowlhub.com" aria-label="Email">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <rect x="2" y="4" width="20" height="16" rx="2"/>
               <path d="M2 7l10 7 10-7"/>
@@ -252,6 +495,8 @@
         </li>
 
       </ul>
+
+      <a class="owl-whisper" href="https://www.owlresearchinstitute.org/snowy-owls-take-the-journey" target="_blank" rel="noopener noreferrer">Were you hoping to find actual white owls?</a>
     </div>
   </main>
 
@@ -308,6 +553,66 @@
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) { clearInterval(grainTimer); }
       else { grainTimer = setInterval(drawBgGrain, 1000/6); drawBgGrain(); }
+    });
+
+    /* ── Launch-list signup ── */
+    const form      = document.getElementById('signup-form') as HTMLFormElement;
+    const statusEl  = document.getElementById('form-status') as HTMLParagraphElement;
+    const submitBtn = form.querySelector('.submit') as HTMLButtonElement;
+    const revealBtn = document.getElementById('reveal-btn') as HTMLButtonElement;
+    const emailInput = document.getElementById('email') as HTMLInputElement;
+    const EMAIL_RE  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    /* Reveal: open the form with an eased expand, then focus the email field. */
+    revealBtn.addEventListener('click', () => {
+      form.classList.add('open');
+      revealBtn.setAttribute('aria-expanded', 'true');
+      // Wait for the expand to settle before focusing (avoids scroll jump mid-animation).
+      window.setTimeout(() => emailInput.focus({ preventScroll: true }), 480);
+    });
+
+    function setStatus(msg: string, kind: '' | 'ok' | 'err') {
+      statusEl.textContent = msg;
+      statusEl.className = 'form-status' + (kind ? ' ' + kind : '');
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const email     = String(fd.get('email') || '').trim();
+      const interests = fd.getAll('interests').map(String);
+      const message   = String(fd.get('message') || '').trim();
+      const website   = String(fd.get('website') || ''); // honeypot
+
+      if (!EMAIL_RE.test(email)) {
+        setStatus('Please enter a valid email.', 'err');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+      setStatus('', '');
+
+      try {
+        const res = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ email, interests, message, website }),
+        });
+        const out = await res.json().catch(() => ({}));
+        if (res.ok && out.ok) {
+          form.classList.add('done');
+          setStatus('Welcome, fellow traveler. We’ll be in touch.', 'ok');
+        } else {
+          setStatus(out.error || 'Something went wrong. Please try again.', 'err');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Join the mailing list';
+        }
+      } catch {
+        setStatus('Network error. Please try again.', 'err');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Join the list';
+      }
     });
   </script>
 </body>
