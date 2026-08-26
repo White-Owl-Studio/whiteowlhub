@@ -860,3 +860,47 @@ Presented the **GLOBAL** section (G-01..G-05) with per-item recommendations. Not
 - Continue the copy pass at **HOME / H-01** in `COPY_AUDIT.md` (meta desc, "Spread your cards?" prompt, 6 card subtitles), then Films → Work → About → Shop → Playthings → Coven → Coming-soon.
 - Pre-decided still to apply: coming-soon "Breath"→"Breathe" (CS-02) + gmail→`hello@` email; drop Torn Apart (F-14).
 - Everything committed + pushed through `6d0e72c`. Live preview: `npm run dev` → localhost:4321 (bypasses the gate).
+
+---
+
+## Session 18 — 2026-08-23 → 08-26
+
+**Goal:** Before resuming the copy audit — (1) fix what the web/Lighthouse test flagged, (2) add an email list + survey to the coming-soon page. Grew to include an interaction/copy overhaul, live deploy, email notifications, and analytics.
+
+### Context
+- **Drive is now `G:`** (ADATA HD710 PRO, removable — was F:). Repo: `G:\Work\Claude\ClaudeCodeTest\whiteowlhub`.
+
+### 1. Performance — web-test fixes (all traced to ONE file: `logo.gif`)
+- The 541 KB / 595×494 / 12-frame animated `logo.gif` (shown at ~80px, also the favicon) was the entire report (image delivery 536 KiB, CLS, unsized-image).
+- Replaced it with a resized **animated `logo.webp` (48 KB, −91%)** everywhere (Nav, Footer, coming-soon hero, Organization schema). Kept the animation (chosen over the 12 KB static after a side-by-side).
+- Favicon → existing `favicon.svg` (0.5 KB); dropped the heavy GIF fallback in `Base.astro`.
+- Added `width`/`height` to the coming-soon logo (fixes CLS + unsized-image flag).
+- GIF masters moved to `_source-art/ui/`. Only remaining report item: ~0.011 CLS from web-font swap (already "good").
+
+### 2. Launch list + survey (NEW)  — see memory `project_whiteowlhub_signup_list`
+- `coming-soon.astro`: signup form **hidden behind the "Join the list" button**, eases open (grid-rows 0fr→1fr + fade, pushes socials down), auto-focuses email. Email + interest tags + optional message, validation, honeypot.
+- Backend: **Cloudflare Pages Function** `functions/api/subscribe.js` → **D1** `whiteowlhub-signups` (id `cec7ce2b-…`, EEUR). Static site stays static; Function runs alongside. `wrangler.toml` gained `pages_build_output_dir` + `[[d1_databases]]` binding `DB` — attaches automatically on Git deploy (verified in prod). Schema: `migrations/0001_create_signups.sql`.
+- Removed a stale `.wrangler/deploy/config.json` (old SSR artifact) that blocked `wrangler pages dev`.
+
+### 3. Copy/UX survey (all applied)
+- Kept hidden-form entry; **added a pulsing grainy gold aura** on the reveal button (fades in ~1s after load; page grain overlay gives the grain).
+- Interest tags reframed to audience: **Looking for animation / Work / opportunities / Extra WOS content / Witchy merch** (values `animation,work,content,merch` — must match `ALLOWED_INTERESTS`). Legend → "What brings you here?".
+- Email placeholder → "Your email address"; message → "Anything you'd love to see? (optional)"; submit → "Join the mailing list"; success → "Welcome, fellow traveler. We'll be in touch."
+- **Owl easter egg**: whisper-quiet line at the very bottom, "Were you hoping to find actual white owls?" → links (new tab) to owlresearchinstitute.org.
+- **Dropped ALL-CAPS → natural small-caps** on the form + social-tile labels; kept "WHITE OWL STUDIO" wordmark capped (Michael's call).
+- Also applied here (were pending copy-audit): **"Breath"→"Breathe" (CS-02)** and contact email **→ `hello@whiteowlhub.com` (G-03)**.
+
+### 4. Email notifications (Resend) — LIVE
+- `subscribe.js` `notifySignup()` emails the studio on each signup (fire-and-forget `waitUntil`, best-effort). Secret `RESEND_API_KEY` in Pages prod. From `onboarding@resend.dev` → `michaelbjacob@gmail.com`. Tested live, confirmed received. Broadcasting *to* subscribers still needs domain verification + a send-all flow.
+
+### 5. Analytics
+- Cloudflare **Web Analytics** enabled for whiteowlhub.com (free, aggregate traffic; not per-click).
+
+### Deploys (to `main`, Cloudflare Git-integration = live)
+- `6c828ad` — logo optimization + signup form/Function/D1 + copy + de-caps.
+- `f45aec4` — Resend signup notification.
+- Verified live end-to-end on whiteowlhub.com (form saves to real D1, email fires). All test rows cleaned up → **DB currently 0 rows.**
+
+### Resume point (next session)
+- **The copy audit** — still at **HOME / H-01** in `COPY_AUDIT.md` (unchanged from Session 17). Note CS-02 + G-03 are now DONE on coming-soon.
+- Known launch bug still open: missing `/ui/og-default.jpg` + `/ui/apple-touch-icon.png` (LAUNCH_QA Phase 4).
