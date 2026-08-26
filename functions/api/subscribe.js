@@ -12,7 +12,36 @@ function json(body, status = 200) {
   });
 }
 
-export async function onRequestPost({ request, env }) {
+// Fire-and-forget email ping to the studio when someone signs up.
+// Dormant unless RESEND_API_KEY is set — never blocks or breaks the signup itself.
+async function notifySignup(env, { email, interests, message, country }) {
+  if (!env.RESEND_API_KEY) return; // not configured yet — skip silently
+  const to = env.NOTIFY_TO || 'michaelbjacob@gmail.com';
+  const from = env.NOTIFY_FROM || 'White Owl signups <onboarding@resend.dev>';
+  const lines = [
+    `New signup on whiteowlhub.com`,
+    ``,
+    `Email:      ${email}`,
+    `Interested: ${interests || '(none picked)'}`,
+    `Message:    ${message || '(none)'}`,
+    `Country:    ${country || '(unknown)'}`,
+  ].join('\n');
+
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'authorization': `Bearer ${env.RESEND_API_KEY}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ from, to, subject: `New signup: ${email}`, text: lines }),
+    });
+  } catch {
+    // Notification is best-effort; the signup is already saved.
+  }
+}
+
+export async function onRequestPost({ request, env, waitUntil }) {
   // No DB bound (e.g. binding missing on the deploy) — fail loud but graceful.
   if (!env.DB) {
     return json({ ok: false, error: 'The list is being prepared. Please try again soon.' }, 503);
@@ -62,6 +91,11 @@ export async function onRequestPost({ request, env }) {
   } catch (err) {
     return json({ ok: false, error: 'Something went wrong. Please try again.' }, 500);
   }
+
+  // Ping the studio by email — runs after the response so it never adds latency.
+  const notify = notifySignup(env, { email, interests, message, country });
+  if (typeof waitUntil === 'function') waitUntil(notify);
+  else await notify;
 
   return json({ ok: true });
 }
